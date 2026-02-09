@@ -1,0 +1,3 @@
+ReflexeFlash
+Jeu de reflexes rapide pour valider la procedure d integration.
+Le meilleur score est sauvegarde dans le fichier highscore.

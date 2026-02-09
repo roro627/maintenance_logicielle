@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Borne
+Comment=
+Exec=/usr/bin/lxterminal -e /home/pi/git/maintenance_logicielle/borne_arcade/lancerBorne.sh
+Icon=gtk-dialog-authentication
+NotShowIn=GNOME;KDE;
+Hidden=false
+Terminal=true
+X-KeepTerminal=false

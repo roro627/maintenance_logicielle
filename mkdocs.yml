@@ -1,0 +1,15 @@
+site_name: Borne Arcade - Documentation Maintenance
+site_description: Documentation technique, installation, exploitation et ajout de jeux
+site_dir: docs/build
+nav:
+  - Accueil: index.md
+  - Technique: technique.md
+  - Installation: installation.md
+  - Deploiement: deploiement.md
+  - Tests: tests.md
+  - Utilisateur: utilisateur.md
+  - Ajout de jeu: ajout_jeu.md
+  - Compatibilite dependances: compatibilite_dependances.md
+  - Couts: couts.md
+theme:
+  name: mkdocs

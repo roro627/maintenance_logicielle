@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+RACINE_DEPOT="$(git rev-parse --show-toplevel)"
+"${RACINE_DEPOT}/scripts/deploiement/post_pull_update.sh"

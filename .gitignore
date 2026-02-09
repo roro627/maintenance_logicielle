@@ -1,0 +1,82 @@
+# Systeme et editeurs
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.iml
+*.code-workspace
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+*.jmod
+hs_err_pid*
+replay_pid*
+
+# Dossiers de build Java courants
+bin/
+build/
+target/
+out/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+.venv/
+venv/
+ENV/
+.env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+
+# Lua / LÖVE2D
+*.luac
+*.love
+
+# Logs et sorties temporaires
+*.log
+*.tmp
+*.temp
+*.bak
+
+# Rapports et sorties d outils
+coverage/
+htmlcov/
+.junit/
+reports/
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+
+# Fichiers generes localement
+*.pid
+*.seed
+
+# Secret files
+*.key
+*.pem
+*.crt
+
+# Dossiers specifiques projet (sorties)
+borne_arcade/clean/
+borne_arcade/.gradle/
+borne_arcade/.classpath
+borne_arcade/.project
+borne_arcade/.settings/
