@@ -25,3 +25,8 @@ cp borne_arcade/borne.desktop ~/.config/autostart/borne.desktop
 ```bash
 ./scripts/tests/test_installation.sh
 ```
+
+## Notes clavier borne
+Le script d installation copie automatiquement le layout clavier `borne`:
+- en local: `~/.xkb/symbols/borne`
+- et tente aussi une copie systeme si les droits le permettent.

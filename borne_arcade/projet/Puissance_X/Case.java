@@ -27,6 +27,6 @@ class Case {
 
 	@Override
 	public String toString() {
-		return (contenu == 0 ? " " : new Integer(contenu).toString());
+		return (contenu == 0 ? " " : Integer.toString(contenu));
 	}
 }

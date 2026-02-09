@@ -14,6 +14,7 @@ main() {
   "${SCRIPT_DIR}/test_installation.sh"
   "${SCRIPT_DIR}/test_ajout_jeu.sh"
   "${SCRIPT_DIR}/test_unitaires_java.sh"
+  "${SCRIPT_DIR}/test_anti_regressions.sh"
   "${SCRIPT_DIR}/test_jeux.sh"
   "${SCRIPT_DIR}/test_documentation.sh"
 

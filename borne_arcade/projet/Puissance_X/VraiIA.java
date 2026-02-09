@@ -41,7 +41,7 @@ class VraiIA implements Joueur {
 			if (i == this.noJoueur)
 				this.noJoueur = this.joueurs.size();
 			if (config.getJoueur(i) != null)
-				this.joueurs.add(new Integer(i));
+				this.joueurs.add(Integer.valueOf(i));
 		}
 		this.nbJoueurs = this.joueurs.size();
 		this.nbPuissance = config.getNbPuissance();

@@ -132,7 +132,7 @@ class ChoixValeurItem extends ElementMenu {
 				pas = Math.min(etape, (2 * ANIMATION_VITESSE) - etape) / ANIMATION_VITESSE;
 			int decallage = (int)(ANIMATION_FACTEUR_DEPLACEMENT * Math.cos(Math.PI * pas));
 
-			Point tailleNombre = this.mesurer(new Integer(this.valeur).toString(), graphics);
+			Point tailleNombre = this.mesurer(Integer.toString(this.valeur), graphics);
 
 			int styleOriginal = this.style;
 			this.style = Font.BOLD;

@@ -31,7 +31,7 @@ public class Graphique {
     Font fontSelect;
 	public static boolean[] textesAffiches;
 	public static Bruitage musiqueFond;
-	private static String[] tableauMusiques;
+    private static String[] tableauMusiques;
 	private static int cptMus;
 
 
@@ -129,26 +129,33 @@ public class Graphique {
 	//Comptage du nombre de musiques disponibles
 	Path cheminMusiques = FileSystems.getDefault().getPath("sound/bg/");
 	cptMus=0;
-	try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(cheminMusiques)) {
-	    for (Path path : directoryStream) {
-		cptMus++;
+	if(Files.isDirectory(cheminMusiques)){
+	    try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(cheminMusiques)) {
+		for (Path path : directoryStream) {
+		    cptMus++;
+		}
+	    } catch (IOException e) {
+		cptMus = 0;
 	    }
-	} catch (IOException e) {
-	    e.printStackTrace();
-	}
-	//Creation d'un tableau de musiques
-	tableauMusiques = new String[cptMus];
-	try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(cheminMusiques)) {
-	    int i = cptMus-1;
-	    for (Path path : directoryStream) {
-		tableauMusiques[i]=path.getFileName().toString();
-		i--;
+	    //Creation d'un tableau de musiques
+	    tableauMusiques = new String[cptMus];
+	    try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(cheminMusiques)) {
+		int i = cptMus-1;
+		for (Path path : directoryStream) {
+		    tableauMusiques[i]=path.getFileName().toString();
+		    i--;
+		}
+	    } catch (IOException e) {
+		cptMus = 0;
+		tableauMusiques = new String[0];
 	    }
-	} catch (IOException e) {
-	    e.printStackTrace();
+	}else{
+	    tableauMusiques = new String[0];
 	}
 	//Choix d'une musique aleatoire et lecture de celle-ci
-	this.lectureMusiqueFond();
+	if(cptMus>0){
+	    this.lectureMusiqueFond();
+	}
     }
 
     /**
@@ -281,6 +288,9 @@ public class Graphique {
      * Lance une musique de fond choisie aleatoirement.
      */
     public static void lectureMusiqueFond() {
+    	if(cptMus<=0 || tableauMusiques==null || tableauMusiques.length==0){
+    	    return;
+    	}
     	musiqueFond = new Bruitage ("sound/bg/"+tableauMusiques[(int)(Math.random()*cptMus)]);
     	musiqueFond.lecture();
     }
@@ -289,7 +299,9 @@ public class Graphique {
 	 * Stoppe la musique de fond en cours.
 	 */
 	public static void stopMusiqueFond(){
-		musiqueFond.arret();
+		if(musiqueFond!=null){
+		    musiqueFond.arret();
+		}
 	}
 	
 	/**

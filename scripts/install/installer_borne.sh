@@ -98,6 +98,42 @@ configurer_hook_git() {
 }
 
 #######################################
+# Installe le layout clavier borne au niveau utilisateur
+# et tente une installation systeme si possible.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+installer_layout_clavier_borne() {
+  local source_layout="${REPERTOIRE_BORNE}/borne"
+  local destination_locale="${HOME}/.xkb/symbols/borne"
+  local destination_systeme="/usr/share/X11/xkb/symbols/borne"
+  local prefixe_commande=()
+
+  if [[ ! -f "${source_layout}" ]]; then
+    journaliser "Layout clavier borne absent, etape ignoree"
+    return 0
+  fi
+
+  mkdir -p "$(dirname "${destination_locale}")"
+  cp "${source_layout}" "${destination_locale}"
+
+  if [[ "${BORNE_MODE_TEST:-0}" == "1" ]]; then
+    journaliser "Mode test actif: installation systeme du layout ignoree"
+    return 0
+  fi
+
+  if command -v sudo >/dev/null 2>&1 && [[ "$(id -u)" -ne 0 ]]; then
+    prefixe_commande=(sudo)
+  fi
+
+  if [[ -w "/usr/share/X11/xkb/symbols" || "${#prefixe_commande[@]}" -gt 0 || "$(id -u)" -eq 0 ]]; then
+    "${prefixe_commande[@]}" cp "${source_layout}" "${destination_systeme}" || true
+  fi
+}
+
+#######################################
 # Cree les fichiers highscore manquants pour chaque jeu.
 # Arguments:
 #   aucun
@@ -127,6 +163,7 @@ main() {
   journaliser "Debut installation borne"
   installer_dependances_systeme
   installer_dependances_python
+  installer_layout_clavier_borne
   configurer_permissions_scripts
   configurer_hook_git
   initialiser_fichiers_highscore

@@ -10,6 +10,7 @@
 - Presence des artefacts de jeux.
 - Compilation Java des composants borne.
 - Procedure d ajout de jeu.
+- Anti regression chemins et deprecations Java (`test_anti_regressions.sh`).
 
 ## Systeme
 - Installation automatisee.

@@ -27,11 +27,11 @@ public class Pointeur {
 	    //System.out.println(Graphique.tableau[getValue()].getChemin());
 	    try {
 		Graphique.stopMusiqueFond();
-		Process process = Runtime.getRuntime().exec("./"+Graphique.tableau[getValue()].getNom()+".sh");
+		ProcessBuilder constructeur = new ProcessBuilder("./"+Graphique.tableau[getValue()].getNom()+".sh");
+		Process process = constructeur.start();
 		process.waitFor();		//ajouté afin d'attendre la fin de l'exécution du jeu pour reprendre le contrôle sur le menu
 		Graphique.lectureMusiqueFond();
 	    } catch (IOException e) {
-		// TODO Auto-generated catch block
 		e.printStackTrace();
 	    } catch(Exception e){	//on catche toutes les exceptions, nécessaire pour le waitFor()
 			e.printStackTrace();

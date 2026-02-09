@@ -46,3 +46,11 @@ cp borne_arcade/borne.desktop ~/.config/autostart/borne.desktop
 ```
 
 Au prochain redemarrage, la borne se lancera automatiquement.
+
+## Depannage rapide
+- Si le menu se lance sans musique de fond, verifier `borne_arcade/sound/bg/` (optionnel).
+- Si le mapping clavier borne ne s applique pas, relancer:
+```bash
+./scripts/install/installer_borne.sh
+```
+Le script installe automatiquement le layout `borne` en local (`~/.xkb/symbols/borne`).

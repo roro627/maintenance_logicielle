@@ -28,8 +28,19 @@ EXTINCTION_AUTO="${EXTINCTION_AUTO:-0}"
 #   0
 #######################################
 appliquer_clavier_borne() {
+  local chemin_layout_local="${HOME}/.xkb/symbols/${CLAVIER_BORNE}"
+
+  if [[ -f "${SCRIPT_DIR}/${CLAVIER_BORNE}" && ! -f "${chemin_layout_local}" ]]; then
+    mkdir -p "${HOME}/.xkb/symbols"
+    cp "${SCRIPT_DIR}/${CLAVIER_BORNE}" "${chemin_layout_local}"
+  fi
+
   if command -v setxkbmap >/dev/null 2>&1; then
-    setxkbmap "${CLAVIER_BORNE}" || true
+    if [[ -f "${chemin_layout_local}" ]]; then
+      setxkbmap -I"${HOME}/.xkb" "${CLAVIER_BORNE}" >/dev/null 2>&1 || true
+    else
+      setxkbmap "${CLAVIER_BORNE}" >/dev/null 2>&1 || true
+    fi
   fi
 }
 

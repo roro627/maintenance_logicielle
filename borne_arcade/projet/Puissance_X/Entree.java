@@ -17,7 +17,7 @@ class Entree extends KeyAdapter {
     }
 
     private boolean verifTouche(int touche, int intervalRepetition) {
-	Integer toucheInteger = new Integer(touche);
+	Integer toucheInteger = Integer.valueOf(touche);
 	synchronized (derniereRecupTouche)
 	    {
 		if (derniereRecupTouche.containsKey(toucheInteger))
@@ -25,7 +25,7 @@ class Entree extends KeyAdapter {
 			long derniereRecup = derniereRecupTouche.get(toucheInteger), maintenant = this.maintenant();
 			if (maintenant - derniereRecup >= intervalRepetition)
 			    {
-				derniereRecupTouche.put(toucheInteger, new Long(maintenant));
+				derniereRecupTouche.put(toucheInteger, Long.valueOf(maintenant));
 				return true;
 			    }
 		    }
@@ -57,16 +57,16 @@ class Entree extends KeyAdapter {
 
     @Override
     public void keyPressed(KeyEvent e) {
-	Integer touche = new Integer(e.getKeyCode());
+	Integer touche = Integer.valueOf(e.getKeyCode());
 	synchronized (derniereRecupTouche)
 	    {
 		if (!derniereRecupTouche.containsKey(touche))
-		    derniereRecupTouche.put(touche, new Long(0));
+		    derniereRecupTouche.put(touche, Long.valueOf(0));
 	    }
     }
     @Override
     public void keyReleased(KeyEvent e) {
-	Integer touche = new Integer(e.getKeyCode());
+	Integer touche = Integer.valueOf(e.getKeyCode());
 	synchronized (derniereRecupTouche)
 	    {
 		if (derniereRecupTouche.containsKey(touche))
