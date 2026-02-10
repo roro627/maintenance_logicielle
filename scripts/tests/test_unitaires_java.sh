@@ -13,7 +13,8 @@ source "${SCRIPT_DIR}/../lib/outils_communs.sh"
 #   0
 #######################################
 compiler_tests_unitaires_java() {
-  preparer_classes_mg2d_cache
+  local classpath_mg2d
+  classpath_mg2d="$(obtenir_classpath_mg2d)"
   (
     cd "${REPERTOIRE_BORNE}"
     local fichiers_a_compiler
@@ -27,7 +28,7 @@ compiler_tests_unitaires_java() {
       tests/unit/TestUnitaireAnalyseurConfigJeu.java
     )
 
-    javac -cp ".:${DOSSIER_CACHE_MG2D_CLASSES}" "${fichiers_a_compiler[@]}"
+    javac -cp ".:${classpath_mg2d}" "${fichiers_a_compiler[@]}"
   )
 }
 
@@ -39,13 +40,15 @@ compiler_tests_unitaires_java() {
 #   0
 #######################################
 executer_tests_unitaires_java() {
+  local classpath_mg2d
   local classes
   classes=(
     TestUnitaireHighScore
     TestUnitaireClavierBorneArcade
     TestUnitaireAnalyseurConfigJeu
   )
-  local classpath_java=".:${DOSSIER_CACHE_MG2D_CLASSES}:tests/unit"
+  classpath_mg2d="$(obtenir_classpath_mg2d)"
+  local classpath_java=".:${classpath_mg2d}:tests/unit"
 
   local classe
   for classe in "${classes[@]}"; do

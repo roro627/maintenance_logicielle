@@ -19,6 +19,23 @@ CHEMIN_MG2D="${CHEMIN_MG2D:-${RACINE_PROJET}/MG2D}"
 DELAI_EXTINCTION_SECONDES="${DELAI_EXTINCTION_SECONDES:-30}"
 CLAVIER_BORNE="${CLAVIER_BORNE:-borne}"
 EXTINCTION_AUTO="${EXTINCTION_AUTO:-0}"
+CLASSPATH_MG2D=""
+
+#######################################
+# Prepare le classpath MG2D optimal
+# (jar valide sinon cache compile).
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+preparer_classpath_mg2d_menu() {
+  if declare -F obtenir_classpath_mg2d >/dev/null 2>&1; then
+    CLASSPATH_MG2D="$(obtenir_classpath_mg2d)"
+    return 0
+  fi
+  CLASSPATH_MG2D="${CHEMIN_MG2D}"
+}
 
 #######################################
 # Applique le mapping clavier borne si disponible.
@@ -55,7 +72,8 @@ lancer_menu() {
   cd "${SCRIPT_DIR}"
   ./clean.sh
   ./compilation.sh
-  java -cp ".:${CHEMIN_MG2D}" Main
+  preparer_classpath_mg2d_menu
+  java -cp ".:${CLASSPATH_MG2D}" Main
 }
 
 #######################################

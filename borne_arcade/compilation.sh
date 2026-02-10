@@ -15,7 +15,7 @@ fi
 
 CHEMIN_MG2D="${CHEMIN_MG2D:-${RACINE_PROJET}/MG2D}"
 COMMANDE_PYTHON="${COMMANDE_PYTHON:-python3}"
-DOSSIER_SORTIE_MG2D="${DOSSIER_CACHE_MG2D_CLASSES:-${RACINE_PROJET}/.cache/mg2d_classes}"
+CLASSPATH_MG2D="${CHEMIN_MG2D}"
 
 #######################################
 # Trouve le compilateur Lua disponible.
@@ -45,41 +45,20 @@ trouver_compilateur_lua() {
 }
 
 #######################################
-# Compile MG2D dans un repertoire dedie
-# pour ne jamais ecrire de .class dans MG2D/.
+# Prepare le classpath MG2D: jar valide
+# prioritaire, sinon classes en cache.
 # Arguments:
 #   aucun
 # Retour:
 #   0
 #######################################
-preparer_classes_mg2d() {
-  if declare -F preparer_classes_mg2d_cache >/dev/null 2>&1; then
-    preparer_classes_mg2d_cache
-    DOSSIER_SORTIE_MG2D="${DOSSIER_CACHE_MG2D_CLASSES}"
+preparer_classpath_mg2d() {
+  if declare -F obtenir_classpath_mg2d >/dev/null 2>&1; then
+    CLASSPATH_MG2D="$(obtenir_classpath_mg2d)"
     return 0
   fi
 
-  local repertoire_sources_mg2d="${CHEMIN_MG2D}/MG2D"
-  local sources_mg2d=()
-  local fichier
-
-  [[ -d "${repertoire_sources_mg2d}" ]] || {
-    echo "Repertoire MG2D introuvable: ${repertoire_sources_mg2d}"
-    return 1
-  }
-
-  while IFS= read -r fichier; do
-    sources_mg2d+=("${fichier}")
-  done < <(find "${repertoire_sources_mg2d}" -type f -name '*.java' -print | sort)
-
-  if [[ "${#sources_mg2d[@]}" -eq 0 ]]; then
-    echo "Aucune source Java MG2D detectee dans ${repertoire_sources_mg2d}"
-    return 1
-  fi
-
-  mkdir -p "${DOSSIER_SORTIE_MG2D}"
-  find "${DOSSIER_SORTIE_MG2D}" -type f -name '*.class' -delete
-  javac -d "${DOSSIER_SORTIE_MG2D}" "${sources_mg2d[@]}"
+  CLASSPATH_MG2D="${CHEMIN_MG2D}"
 }
 
 #######################################
@@ -102,7 +81,7 @@ compiler_menu() {
   fi
 
   echo "Compilation du menu de la borne d arcade"
-  javac -cp ".:${DOSSIER_SORTIE_MG2D}" "${fichiers_java[@]}"
+  javac -cp ".:${CLASSPATH_MG2D}" "${fichiers_java[@]}"
 }
 
 #######################################
@@ -136,7 +115,7 @@ compiler_jeux_java() {
     if [[ "${#fichiers_java[@]}" -gt 0 ]]; then
       a_valider=1
       echo "Compilation Java du jeu $(basename "${dossier_jeu}")"
-      javac -cp ".:${SCRIPT_DIR}:../..:${DOSSIER_SORTIE_MG2D}" "${fichiers_java[@]}"
+      javac -cp ".:${SCRIPT_DIR}:../..:${CLASSPATH_MG2D}" "${fichiers_java[@]}"
     fi
 
     if [[ "${#fichiers_python[@]}" -gt 0 ]]; then
@@ -192,7 +171,7 @@ PYCODE
 #   0
 #######################################
 main() {
-  preparer_classes_mg2d
+  preparer_classpath_mg2d
   compiler_menu
   compiler_jeux_java
 }

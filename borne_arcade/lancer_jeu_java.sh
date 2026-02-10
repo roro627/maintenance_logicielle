@@ -15,6 +15,22 @@ else
 fi
 
 #######################################
+# Retourne le classpath MG2D optimal
+# (jar valide sinon cache compile).
+# Arguments:
+#   aucun
+# Retour:
+#   ecrit le classpath sur stdout
+#######################################
+obtenir_classpath_mg2d_lancement() {
+  if declare -F obtenir_classpath_mg2d >/dev/null 2>&1; then
+    obtenir_classpath_mg2d
+    return 0
+  fi
+  echo "${CHEMIN_MG2D}"
+}
+
+#######################################
 # Lance un jeu Java de la borne.
 # Arguments:
 #   $1: nom du dossier jeu
@@ -29,6 +45,7 @@ main() {
   shift 2
   local options_java=("$@")
   local mode_smoke_test="${BORNE_MODE_TEST_JEU:-0}"
+  local classpath_mg2d
 
   local resolution_x="${RESOLUTION_X:-1280}"
   local resolution_y="${RESOLUTION_Y:-1024}"
@@ -50,9 +67,10 @@ main() {
     xdotool mousemove "${resolution_x}" "${resolution_y}" || true
   fi
 
+  classpath_mg2d="$(obtenir_classpath_mg2d_lancement)"
   cd "${SCRIPT_DIR}/projet/${nom_jeu}"
   touch highscore
-  java "${options_java[@]}" -cp ".:../..:${CHEMIN_MG2D}" "${classe_principale}"
+  java "${options_java[@]}" -cp ".:../..:${classpath_mg2d}" "${classe_principale}"
 }
 
 main "$@"

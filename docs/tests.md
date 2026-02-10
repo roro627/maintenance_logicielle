@@ -23,6 +23,10 @@
   - regle AGENTS.md presente,
   - absence de `.class` dans `MG2D/`,
   - artefacts essentiels MG2D presents.
+- Classpath MG2D robuste (`test_classpath_mg2d.sh`) :
+  - utilise `MG2D.jar` si complet,
+  - bascule automatique vers cache compile sinon,
+  - verifie le chargement de `MG2D.geometrie.Dessin`.
 - Lint automatise (`test_lint.sh`) :
   - shellcheck sur scripts shell,
   - checkstyle sur Java maintenu,
