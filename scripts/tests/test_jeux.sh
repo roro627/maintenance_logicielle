@@ -34,16 +34,53 @@ verifier_lanceurs() {
 }
 
 #######################################
-# Lance un jeu de reference pour valider le retour processus.
+# Lance un jeu avec un mode smoke-test non interactif.
+# Arguments:
+#   $1: nom du jeu
+# Retour:
+#   0
+#######################################
+tester_lancement_jeu_smoke() {
+  local nom_jeu="$1"
+  local chemin_lanceur="${REPERTOIRE_BORNE}/${nom_jeu}.sh"
+  local fichier_log="/tmp/${nom_jeu}_test.log"
+
+  [[ -x "${chemin_lanceur}" ]] || arreter_sur_erreur "Jeu introuvable ou non executable: ${nom_jeu}.sh"
+
+  (
+    cd "${REPERTOIRE_BORNE}"
+    BORNE_MODE_TEST_JEU=1 "./${nom_jeu}.sh" >"${fichier_log}" 2>&1
+  )
+}
+
+#######################################
+# Verifie le lancement smoke de tous les jeux du catalogue.
 # Arguments:
 #   aucun
 # Retour:
 #   0
 #######################################
-tester_lancement_jeu_reference() {
+tester_lancement_tous_les_jeux() {
+  local dossier_jeu
+  local nom_jeu
+  for dossier_jeu in "${REPERTOIRE_BORNE}/projet"/*; do
+    [[ -d "${dossier_jeu}" ]] || continue
+    nom_jeu="$(basename "${dossier_jeu}")"
+    tester_lancement_jeu_smoke "${nom_jeu}"
+  done
+}
+
+#######################################
+# Execute les tests unitaires Python de Neon Sumo.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+tester_unitaire_neon_sumo() {
   (
-    cd "${REPERTOIRE_BORNE}"
-    ./ReflexeFlash.sh >/tmp/reflexeflash_test.log 2>&1
+    cd "${RACINE_PROJET}"
+    "${COMMANDE_PYTHON}" -m unittest borne_arcade/projet/NeonSumo/tests/test_logique.py
   )
 }
 
@@ -58,7 +95,8 @@ main() {
   charger_configuration_borne
   compiler_borne
   verifier_lanceurs
-  tester_lancement_jeu_reference
+  tester_unitaire_neon_sumo
+  tester_lancement_tous_les_jeux
   journaliser "Test jeux: OK"
 }
 

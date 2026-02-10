@@ -1,0 +1,65 @@
+{
+  "ecran": {
+    "largeur": 1280,
+    "hauteur": 1024,
+    "plein_ecran": true
+  },
+  "performance": {
+    "fps": 60
+  },
+  "match": {
+    "duree_max_manche": 90.0,
+    "victoires_pour_gagner": 2,
+    "compte_a_rebours": 3.0,
+    "duree_ecran_resultat": 2.0,
+    "duree_ecran_fin": 8.0
+  },
+  "ux": {
+    "delai_attract": 30.0
+  },
+  "physique": {
+    "rayon_capsule": 28.0,
+    "distance_depart": 220.0,
+    "acceleration": 900.0,
+    "friction_base": 1.6,
+    "friction_frein": 5.5,
+    "vitesse_max": 540.0
+  },
+  "cooldowns": {
+    "dash": 1.2,
+    "bump": 0.8,
+    "bouclier": 2.4,
+    "taunt": 1.0
+  },
+  "gameplay": {
+    "impulsion_dash": 380.0,
+    "impulsion_bump": 290.0,
+    "rayon_bump": 52.0,
+    "duree_bouclier": 0.5,
+    "reduction_knockback_bouclier": 0.25,
+    "delai_sortie_arene": 0.2
+  },
+  "ultime": {
+    "gain_par_seconde": 0.065,
+    "gain_par_impact": 0.16,
+    "rayon": 170.0,
+    "impulsion": 510.0
+  },
+  "arene": {
+    "rayon_depart": 360.0,
+    "rayon_min": 135.0,
+    "vitesse_retrecissement": 4.0,
+    "multiplicateur_sudden_death": 3.5,
+    "largeur_zone_danger": 30.0
+  },
+  "couleurs": {
+    "fond": [10, 8, 24],
+    "arene_interieur": [20, 20, 35],
+    "arene_bord": [0, 255, 255],
+    "arene_danger": [255, 80, 80],
+    "joueur_1": [0, 180, 255],
+    "joueur_2": [255, 80, 210],
+    "bouclier": [255, 255, 120],
+    "ui": [235, 235, 245]
+  }
+}

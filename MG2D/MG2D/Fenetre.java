@@ -32,6 +32,8 @@ import java.awt.Dimension;
 
 import javax.swing.JFrame;
 
+import javax.swing.ImageIcon;
+
 import java.awt.Robot;
 import java.util.Calendar;
 import java.util.Date;
@@ -166,6 +168,58 @@ public class Fenetre extends JFrame {
 	affichageNbPrimitives=false;
     }
 
+    /**
+     * Crée une fenêtre possédant un titre, une largeur et une hauteur.
+     * <br /><br />
+     * Attention, la taille précisée en paramètre correspond à la taille de la zone d'affichage. La taille de la fenêtre sera légérement plus grande.<br />
+     * <br /><br />
+     * Par défaut, la fenêtre est centrée et ne peut pas être redimensionnée.
+     * @param ttitre Titre de la Fenetre.
+     * @param largeur Largeur de l'espace de travail.
+     * @param hauteur Hauteur de l'espace de travail.
+     * @param icon Chemin vers l'icon de la fenêtre.
+     */
+    public Fenetre ( String ttitre, int largeur, int hauteur, String icon) {
+
+	//Non instanciation du clavier et de la souris
+	c=null;
+	s=null;
+
+	d = new Dimension ( largeur, hauteur );
+	p = new Panneau ();
+
+	p.setPreferredSize ( d ); // On indique que l'on souhaite avoir un Panneau de la Dimension (largeur, hauteur) //
+
+	this.setContentPane ( p );
+
+	this.pack(); // Permet d'attribuer automatiquement la dimension de la Fenetre grâce à ce qui la compose (ici en l'occurence, le Panneau) //
+
+	this.setTitle ( new String(ttitre) );
+	titre=new String(ttitre);
+	this.setIconImage(new ImageIcon(icon).getImage());
+
+	this.setLocationRelativeTo ( null );
+	this.setDefaultCloseOperation ( JFrame.EXIT_ON_CLOSE );
+	this.setResizable ( false ); // On empêche le redimensionnement pour éviter les problèmes de centrages des objets //
+
+	this.setVisible ( true );
+
+	if ( p.getWidth() != d.getWidth() || p.getHeight() != d.getHeight() ) { // Si le Panneau ne fait toujours pas la taille voulue, on force le changement //
+
+	    p.setSize ( d );
+	    p.setMinimumSize( d );
+	    p.setMaximumSize( d );
+	    this.pack();
+	    // Je ne comprends pas pourquoi ces 2 lignes sont nécessaires mais il ne faut pas les enlever !
+	    revalidate();
+	    pack();
+	}
+	dernierEvt = new Date().getTime();
+	affichageFPS=false;
+	dernierAffichage=dernierEvt;
+	affichageNbPrimitives=false;
+    }
+
     // Accesseurs //
 
     // Getter //
@@ -180,7 +234,7 @@ public class Fenetre extends JFrame {
     }
 
     /**
-     * Retourne un clavier par défaut permettant une interaction entre le programme et l'utilisateur.<br ∕>
+     * Retourne un clavier par défaut permettant une interaction entre le programme et l'utilisateur.<br>
      * Permet une gestion des touches par le clavier prédéfini dans la bibliothèque.<br />
      * Cette gestion se limite à la gestion des touches a/z/e/q/s/d, espace, entrée et les flèches directionnelles.
      * @return Un clavier classique.
@@ -193,7 +247,7 @@ public class Fenetre extends JFrame {
     }
 
     /**
-     * Retourne un clavier par défaut permettant une interaction entre le programme et l'utilisateur.<br ∕>
+     * Retourne un clavier par défaut permettant une interaction entre le programme et l'utilisateur.<br>
      * Permet une gestion des clics de la souris prédéfini dans la bibliothèque.<br />
      * Cette gestion permet de détecter les clics gauche, droit, milieu et de connaitre la position du pointeur dans la fenêtre.
      * @return Une souris classique.
@@ -250,7 +304,7 @@ public class Fenetre extends JFrame {
     }
 
     /**
-     * Applique un rafraichissement de la fenêtre.<br ∕>
+     * Applique un rafraichissement de la fenêtre.<br>
      * Cette méthode va mettre à jour l'affichage.<br /><br />
      * Permet d'appliquer la méthode repaint() à la fenêtre. Méthode présente dans un soucis de "Francisation" du code.
      */

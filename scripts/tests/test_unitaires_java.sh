@@ -13,19 +13,21 @@ source "${SCRIPT_DIR}/../lib/outils_communs.sh"
 #   0
 #######################################
 compiler_tests_unitaires_java() {
+  preparer_classes_mg2d_cache
   (
     cd "${REPERTOIRE_BORNE}"
-    javac -cp ".:${CHEMIN_MG2D}" \
-      LigneHighScore.java \
-      HighScore.java \
-      ClavierBorneArcade.java \
-      AnalyseurConfigJeu.java \
-      projet/ReflexeFlash/EtatJeu.java \
-      projet/ReflexeFlash/Jeu.java \
-      tests/unit/TestUnitaireHighScore.java \
-      tests/unit/TestUnitaireClavierBorneArcade.java \
-      tests/unit/TestUnitaireAnalyseurConfigJeu.java \
-      tests/unit/TestUnitaireEtatReflexeFlash.java
+    local fichiers_a_compiler
+    fichiers_a_compiler=(
+      LigneHighScore.java
+      HighScore.java
+      ClavierBorneArcade.java
+      AnalyseurConfigJeu.java
+      tests/unit/TestUnitaireHighScore.java
+      tests/unit/TestUnitaireClavierBorneArcade.java
+      tests/unit/TestUnitaireAnalyseurConfigJeu.java
+    )
+
+    javac -cp ".:${DOSSIER_CACHE_MG2D_CLASSES}" "${fichiers_a_compiler[@]}"
   )
 }
 
@@ -42,14 +44,14 @@ executer_tests_unitaires_java() {
     TestUnitaireHighScore
     TestUnitaireClavierBorneArcade
     TestUnitaireAnalyseurConfigJeu
-    TestUnitaireEtatReflexeFlash
   )
+  local classpath_java=".:${DOSSIER_CACHE_MG2D_CLASSES}:tests/unit"
 
   local classe
   for classe in "${classes[@]}"; do
     (
       cd "${REPERTOIRE_BORNE}"
-      java -cp ".:${CHEMIN_MG2D}:tests/unit:projet/ReflexeFlash" "${classe}"
+      java -cp "${classpath_java}" "${classe}"
     )
   done
 }

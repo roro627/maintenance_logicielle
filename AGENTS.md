@@ -43,7 +43,7 @@ You have access to external tools and should use them when it improves correctne
   - `highscore`: persistent high score storage
   - Source code (Java, Python, or Lua depending on game)
 - **Main launcher**: `borne_arcade/Main.java` displays game selection menu.
-- **MG2D library**: Source in `MG2D/MG2D/`, documentation in `MG2D/doc_MG2D/`.
+- **MG2D library (canonical source)**: the only allowed source is `https://github.com/synave/MG2D`; local mirror is `MG2D/` and must stay aligned with upstream.
 - **Launcher scripts**: Root-level `.sh` files launch individual games.
 
 ## Persistence
@@ -59,7 +59,7 @@ You have access to external tools and should use them when it improves correctne
 - **Backward compatibility**: Migrated code must remain compatible with arcade hardware (custom buttons, display resolution).
 - **Deployment automation**: After `git pull`, updates must install automatically without manual intervention.
 - **Version compatibility**: Pay extreme attention to library version compatibility during migration (Java, Python, system libraries).
-- **MG2D library integrity**: Do NOT modify the MG2D library source code; only use it as-is. All customizations must be implemented in game code or wrapper classes.
+- **MG2D library integrity**: Do NOT modify any file under `MG2D/` (source, assets, docs, scripts). If a correction is needed, re-sync from `https://github.com/synave/MG2D` instead of editing locally. All customizations must be implemented in game code or wrapper classes.
 
 ## Quality gates
 

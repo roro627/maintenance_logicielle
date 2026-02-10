@@ -13,7 +13,11 @@ source "${SCRIPT_DIR}/../lib/outils_communs.sh"
 #   0
 #######################################
 verifier_pipeline_post_pull() {
-  BORNE_MODE_TEST=1 EVITER_TEST_DEPLOIEMENT=1 "${RACINE_PROJET}/scripts/deploiement/post_pull_update.sh"
+  if [[ "${TEST_DEPLOIEMENT_SIMULATION:-0}" == "1" ]]; then
+    BORNE_MODE_TEST=1 EVITER_TEST_DEPLOIEMENT=1 "${RACINE_PROJET}/scripts/deploiement/post_pull_update.sh"
+  else
+    EVITER_TEST_DEPLOIEMENT=1 "${RACINE_PROJET}/scripts/deploiement/post_pull_update.sh"
+  fi
   [[ -f "${RACINE_PROJET}/.etat_derniere_maj" ]] || arreter_sur_erreur "Marqueur .etat_derniere_maj absent"
 }
 

@@ -80,3 +80,6 @@ borne_arcade/.gradle/
 borne_arcade/.classpath
 borne_arcade/.project
 borne_arcade/.settings/
+.etat_derniere_maj
+scripts/outils/
+site/

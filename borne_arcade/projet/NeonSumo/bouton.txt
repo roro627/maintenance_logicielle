@@ -1,0 +1,1 @@
+Joystick:Dash (B1):Frein (B2):Bump (B3):Bouclier (B4):Taunt (B5):Ultime (B6)

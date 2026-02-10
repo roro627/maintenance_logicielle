@@ -5,6 +5,39 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=../lib/outils_communs.sh
 source "${SCRIPT_DIR}/../lib/outils_communs.sh"
 
+COMMANDE_PYTHON_VENV=""
+
+#######################################
+# Indique si sudo peut etre utilise en mode non interactif.
+# Arguments:
+#   aucun
+# Retour:
+#   0 si sudo -n est disponible, 1 sinon
+#######################################
+sudo_non_interactif_disponible() {
+  command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1
+}
+
+#######################################
+# Prepare un environnement virtuel Python dedie au projet.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+preparer_venv_python_projet() {
+  local dossier_venv="${RACINE_PROJET}/.venv"
+  local python_hote="${COMMANDE_PYTHON}"
+
+  if [[ ! -x "${dossier_venv}/bin/python" ]]; then
+    journaliser "Creation environnement virtuel Python: ${dossier_venv}"
+    "${python_hote}" -m venv "${dossier_venv}"
+  fi
+
+  COMMANDE_PYTHON_VENV="${dossier_venv}/bin/python"
+  [[ -x "${COMMANDE_PYTHON_VENV}" ]] || arreter_sur_erreur "Python venv introuvable: ${COMMANDE_PYTHON_VENV}"
+}
+
 #######################################
 # Installe les dependances apt necessaires.
 # Arguments:
@@ -24,10 +57,15 @@ installer_dependances_systeme() {
   fi
 
   local paquets
-  paquets=(git openjdk-17-jdk python3 python3-venv python3-pip checkstyle pylint shellcheck xdotool love)
+  paquets=(git openjdk-17-jdk python3 python3-venv python3-pip checkstyle pylint shellcheck xdotool love lua5.4)
   local prefixe_commande=()
-  if command -v sudo >/dev/null 2>&1 && [[ "$(id -u)" -ne 0 ]]; then
-    prefixe_commande=(sudo)
+  if [[ "$(id -u)" -ne 0 ]]; then
+    if sudo_non_interactif_disponible; then
+      prefixe_commande=(sudo)
+    else
+      journaliser "Privileges insuffisants pour apt-get: installation systeme ignoree"
+      return 0
+    fi
   fi
 
   journaliser "Mise a jour index apt"
@@ -53,13 +91,15 @@ installer_dependances_python() {
     return 0
   fi
 
+  preparer_venv_python_projet
+
   journaliser "Installation outils python globaux"
-  "${COMMANDE_PYTHON}" -m pip install --upgrade pip mkdocs pytest
+  "${COMMANDE_PYTHON_VENV}" -m pip install --upgrade pip mkdocs pytest pylint
 
   local requirements
   while IFS= read -r requirements; do
     journaliser "Installation dependances python depuis ${requirements}"
-    "${COMMANDE_PYTHON}" -m pip install -r "${requirements}"
+    "${COMMANDE_PYTHON_VENV}" -m pip install -r "${requirements}"
   done < <(find "${REPERTOIRE_BORNE}/projet" -maxdepth 2 -name requirements.txt | sort)
 }
 
@@ -124,13 +164,39 @@ installer_layout_clavier_borne() {
     return 0
   fi
 
-  if command -v sudo >/dev/null 2>&1 && [[ "$(id -u)" -ne 0 ]]; then
-    prefixe_commande=(sudo)
+  if [[ "$(id -u)" -ne 0 ]]; then
+    if sudo_non_interactif_disponible; then
+      prefixe_commande=(sudo)
+    else
+      journaliser "Privileges insuffisants pour copier le layout systeme"
+      return 0
+    fi
   fi
 
   if [[ -w "/usr/share/X11/xkb/symbols" || "${#prefixe_commande[@]}" -gt 0 || "$(id -u)" -eq 0 ]]; then
     "${prefixe_commande[@]}" cp "${source_layout}" "${destination_systeme}" || true
   fi
+}
+
+#######################################
+# Installe l autostart utilisateur de la borne.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+installer_autostart_borne() {
+  local source_desktop="${REPERTOIRE_BORNE}/borne.desktop"
+  local dossier_autostart="${HOME}/.config/autostart"
+  local destination_desktop="${dossier_autostart}/borne.desktop"
+
+  if [[ ! -f "${source_desktop}" ]]; then
+    journaliser "Fichier borne.desktop absent: autostart ignore"
+    return 0
+  fi
+
+  mkdir -p "${dossier_autostart}"
+  cp "${source_desktop}" "${destination_desktop}"
 }
 
 #######################################
@@ -164,6 +230,7 @@ main() {
   installer_dependances_systeme
   installer_dependances_python
   installer_layout_clavier_borne
+  installer_autostart_borne
   configurer_permissions_scripts
   configurer_hook_git
   initialiser_fichiers_highscore

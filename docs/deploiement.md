@@ -4,8 +4,9 @@
 Apres `git pull`, la borne execute automatiquement:
 1. installation/mise a jour outils,
 2. compilation,
-3. tests,
-4. generation documentation.
+3. lint,
+4. tests,
+5. generation documentation.
 
 ## Mecanisme
 - Hook versionne: `.githooks/post-merge`
@@ -21,3 +22,8 @@ chmod +x .githooks/post-merge scripts/deploiement/post_pull_update.sh
 ```bash
 ./scripts/tests/test_deploiement.sh
 ```
+
+Le pipeline verifie aussi la compatibilite de versions via
+`scripts/tests/test_versions_compatibilite.sh`.
+
+La documentation regeneree par le pipeline est publiee dans `site/`.

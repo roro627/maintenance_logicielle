@@ -1,0 +1,5 @@
+# Repertoires Python maintenus et verifies par pylint.
+# Chemins relatifs a la racine du projet.
+
+scripts
+borne_arcade/projet/NeonSumo

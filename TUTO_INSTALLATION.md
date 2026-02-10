@@ -11,12 +11,19 @@
 ./scripts/install/installer_borne.sh
 ```
 
-## 3) Compiler le menu et les jeux Java
+Ce script cree automatiquement `./.venv` pour les dependances Python.
+
+## 3) Compiler/valider tous les jeux
 
 ```bash
 ./borne_arcade/clean.sh
 ./borne_arcade/compilation.sh
 ```
+
+`compilation.sh`:
+- compile les jeux Java,
+- verifie la syntaxe des jeux Python,
+- verifie la syntaxe des jeux Lua (si `luac` est installe).
 
 ## 4) Lancer la borne
 
@@ -38,13 +45,18 @@ Le hook `post-merge` lancera automatiquement installation, compilation, tests et
 ./scripts/tests/lancer_suite.sh
 ```
 
-## 7) Sur Raspberry Pi (autostart)
+## 6 bis) Regenerer la documentation
 
 ```bash
-mkdir -p ~/.config/autostart
-cp borne_arcade/borne.desktop ~/.config/autostart/borne.desktop
+./scripts/docs/generer_documentation.sh
 ```
 
+La documentation HTML est generee dans `site/`.
+
+## 7) Sur Raspberry Pi (autostart)
+
+L autostart est configure automatiquement par `installer_borne.sh`
+(`~/.config/autostart/borne.desktop`).
 Au prochain redemarrage, la borne se lancera automatiquement.
 
 ## Depannage rapide

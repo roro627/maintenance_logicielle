@@ -9,8 +9,11 @@
 ## Principes
 - DRY: fonctions shell mutualisees dans `scripts/lib/outils_communs.sh`.
 - KISS: scripts explicites et idempotents.
-- Configuration centralisee: `borne_arcade/config/borne.env`.
+- Configuration centralisee: `borne_arcade/config/borne.env` (`JEU_REFERENCE_TEST`, resolution, clavier, etc.).
+- Versions minimales centralisees: `config/versions_minimales.env`.
+- Perimetre lint Python centralise: `config/pylint_repertoires.txt`.
 - Pas de nombres magiques dans le nouveau code.
 
 ## Integrite MG2D
-Aucun fichier sous `MG2D/MG2D` et `MG2D/doc_MG2D` ne doit etre modifie par les scripts de maintenance.
+Le dossier `MG2D/` est un miroir de `https://github.com/synave/MG2D`.
+Aucun fichier sous `MG2D/` ne doit etre modifie par les scripts de maintenance.

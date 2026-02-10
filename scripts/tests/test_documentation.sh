@@ -14,13 +14,13 @@ source "${SCRIPT_DIR}/../lib/outils_communs.sh"
 #######################################
 verifier_generation_documentation() {
   "${RACINE_PROJET}/scripts/docs/generer_documentation.sh"
-  [[ -d "${RACINE_PROJET}/docs/build" ]] || arreter_sur_erreur "Repertoire docs/build absent"
-
-  if [[ -f "${RACINE_PROJET}/docs/build/index.html" ]]; then
-    return 0
-  fi
-
-  [[ -f "${RACINE_PROJET}/docs/build/index.md" ]] || arreter_sur_erreur "Index de documentation absent"
+  [[ -d "${RACINE_PROJET}/site" ]] || arreter_sur_erreur "Repertoire site absent"
+  [[ -f "${RACINE_PROJET}/site/index.html" ]] || arreter_sur_erreur "Index HTML de documentation absent"
+  [[ -f "${RACINE_PROJET}/site/installation/index.html" ]] || arreter_sur_erreur "Guide installation non genere"
+  [[ -f "${RACINE_PROJET}/site/ajout_jeu/index.html" ]] || arreter_sur_erreur "Guide ajout de jeu non genere"
+  [[ -f "${RACINE_PROJET}/site/technique/index.html" ]] || arreter_sur_erreur "Documentation technique non generee"
+  [[ -f "${RACINE_PROJET}/site/utilisateur/index.html" ]] || arreter_sur_erreur "Guide utilisateur non genere"
+  [[ -f "${RACINE_PROJET}/site/validation_materielle/index.html" ]] || arreter_sur_erreur "Validation materielle non generee"
 }
 
 #######################################

@@ -1,1 +1,0 @@
-packageSearchIndex = [{"l":"All Packages","url":"allpackages-index.html"},{"l":"MG2D"},{"l":"MG2D.audio"},{"l":"MG2D.geometrie"}]

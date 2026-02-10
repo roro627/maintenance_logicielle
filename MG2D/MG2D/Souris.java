@@ -97,7 +97,7 @@ public class Souris implements MouseListener, MouseMotionListener {
     }
 
     /**
-     * Méthode inutile - Implémentation de la méthode présente dans l'interface MouseListener.<br ∕>
+     * Méthode inutile - Implémentation de la méthode présente dans l'interface MouseListener.<br>
      * Cette méthode est appelée lorsque la souris entre dans la zone d'affichage alors qu'elle était à l'extérieur précédemment.
      */
     @Override
@@ -105,7 +105,7 @@ public class Souris implements MouseListener, MouseMotionListener {
     }
 
     /**
-     * Méthode inutile - Implémentation de la méthode présente dans l'interface MouseListener.<br ∕>
+     * Méthode inutile - Implémentation de la méthode présente dans l'interface MouseListener.<br>
      * Cette méthode est appelée lorsque la souris sort de la zone d'affichage alors qu'elle était à l'intérieur précédemment.
      */
     @Override

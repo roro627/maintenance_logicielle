@@ -28,9 +28,23 @@ main() {
   local classe_principale="$2"
   shift 2
   local options_java=("$@")
+  local mode_smoke_test="${BORNE_MODE_TEST_JEU:-0}"
 
   local resolution_x="${RESOLUTION_X:-1280}"
   local resolution_y="${RESOLUTION_Y:-1024}"
+
+  if [[ "${mode_smoke_test}" == "1" ]]; then
+    [[ -d "${SCRIPT_DIR}/projet/${nom_jeu}" ]] || {
+      echo "Dossier jeu introuvable: ${nom_jeu}" >&2
+      return 1
+    }
+    if [[ ! -f "${SCRIPT_DIR}/projet/${nom_jeu}/${classe_principale}.java" ]] \
+      && [[ ! -f "${SCRIPT_DIR}/projet/${nom_jeu}/${classe_principale}.class" ]]; then
+      echo "Classe principale introuvable pour ${nom_jeu}: ${classe_principale}" >&2
+      return 1
+    fi
+    return 0
+  fi
 
   if command -v xdotool >/dev/null 2>&1; then
     xdotool mousemove "${resolution_x}" "${resolution_y}" || true
