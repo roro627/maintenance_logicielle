@@ -136,6 +136,36 @@ arreter_sur_erreur() {
 }
 
 #######################################
+# Verifie que le dossier build est
+# accessible en ecriture par l utilisateur
+# courant, puis le cree si necessaire.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+verifier_acces_ecriture_build() {
+  local dossier_build="${DOSSIER_BUILD_RACINE:-${RACINE_PROJET}/build}"
+  local dossier_parent_build=""
+
+  if [[ -d "${dossier_build}" ]]; then
+    [[ -w "${dossier_build}" ]] \
+      || arreter_sur_erreur \
+        "Dossier build non accessible en ecriture: ${dossier_build}" \
+        "Recuperez les droits avec: sudo chown -R \"${USER}:${USER}\" \"${dossier_build}\" puis relancez la commande."
+    return 0
+  fi
+
+  dossier_parent_build="$(dirname "${dossier_build}")"
+  [[ -w "${dossier_parent_build}" ]] \
+    || arreter_sur_erreur \
+      "Impossible de creer ${dossier_build}: dossier parent non accessible en ecriture (${dossier_parent_build})." \
+      "Installez le projet dans un dossier utilisateur (ex: ${HOME}/git/maintenance_logicielle) ou corrigez les droits."
+
+  mkdir -p "${dossier_build}"
+}
+
+#######################################
 # Compile les sources MG2D vers un cache
 # pour eviter de modifier MG2D/.
 # Arguments:

@@ -16,11 +16,14 @@ pour Raspberry Pi OS et la borne arcade.
 - pytest: 8.0 minimum.
 - mkdocs: 1.5 minimum.
 - pygame: 2.5 minimum.
+- librosa: 0.10 minimum (PianoTile), avec fallback runtime si absent.
 
 ### Bibliotheques
 - MG2D: miroir local strict du depot officiel `https://github.com/synave/MG2D`, non modifie localement.
 - JavaZoom JLayer: version embarquee dans `borne_arcade/javazoom`.
 - pygame: requis pour certains jeux Python.
+- librosa: requis prefere pour l analyse rythme PianoTile (`borne_arcade/projet/PianoTile/requirements.txt`).
+- libsndfile1: dependance systeme audio pour l ecosysteme librosa.
 
 ## Procedure avant ajout de dependance
 
@@ -34,6 +37,7 @@ pour Raspberry Pi OS et la borne arcade.
 - Les versions minimales sont centralisees dans `config/versions_minimales.env`.
 - Le script `scripts/tests/test_versions_compatibilite.sh` valide Java, Python, pip, pytest, mkdocs, pygame,
   et Lua/LÖVE si necessaire.
+- L installation auto verifie et installe les paquets systeme manquants (dont `libsndfile1`) via `scripts/install/installer_borne.sh`.
 
 ## Commandes
 
@@ -46,6 +50,7 @@ pour Raspberry Pi OS et la borne arcade.
 - Si une version est trop ancienne: mettre a jour via `apt` ou `pip` selon l outil.
 - Si LÖVE ou Lua manque: installer `love` et `lua5.4`.
 - Si pygame manque dans la venv: relancer `./scripts/install/installer_borne.sh`.
+- Si librosa manque: relancer `./scripts/install/installer_borne.sh` ou installer via `./.venv/bin/pip install -r borne_arcade/projet/PianoTile/requirements.txt`.
 
 ## Liens associes
 

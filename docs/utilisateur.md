@@ -12,6 +12,14 @@ commandes principales et depannage rapide.
 - Bouton J1A: lancer le jeu.
 - Bouton J1Z: quitter le menu (confirmation).
 
+### Mode maintenance cache
+- Le mode est verrouille au lancement de la borne.
+- Deblocage: sequence secrete configuree dans `borne_arcade/config/maintenance_mode.properties`.
+- Ouverture apres debloquage: bouton configure (par defaut `J1B`).
+- Reverrouillage manuel: dans `MaintenanceMode`, bouton `J1C` (touche `H`).
+- Au redemarrage, le mode maintenance redevient verrouille automatiquement.
+- Si le jeu maintenance est selectionne sans debloquage, son lancement est refuse.
+
 ### En jeu
 Chaque jeu decrit ses commandes dans `borne_arcade/projet/<jeu>/bouton.txt`.
 
@@ -19,6 +27,11 @@ Chaque jeu decrit ses commandes dans `borne_arcade/projet/<jeu>/bouton.txt`.
 - But: ejecter l adversaire hors de l arene.
 - Match: BO3.
 - B1 Dash, B2 Frein, B3 Bump, B4 Bouclier, B5 Taunt, B6 Ultime.
+
+### PianoTile (resume)
+- Le jeu tente d utiliser `librosa` pour analyser le rythme.
+- Si `librosa` est indisponible, un mode fallback genere des notes automatiquement
+  pour garder le jeu jouable.
 
 ## Validation
 

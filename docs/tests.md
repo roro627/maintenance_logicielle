@@ -19,6 +19,12 @@ TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 .
 ./scripts/tests/test_smoke.sh
 ```
 
+### Validation CI/CD equivalente GitHub Actions
+
+```bash
+~/.local/bin/act -W .github/workflows/qualite.yml -j verification --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:act-latest
+```
+
 ## Couverture
 
 ### Unitaires
@@ -34,6 +40,8 @@ TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 .
 - deploiement post-pull,
 - generation documentation,
 - architecture et couts,
+- mode maintenance cache (presence, verrouillage, integration menu),
+- robustesse PianoTile en absence de `librosa`,
 - validation materielle (checklist).
 
 ### Qualite outillage
@@ -54,12 +62,14 @@ Scripts principaux:
 - `scripts/tests/test_integrite_mg2d.sh`
 - `scripts/tests/test_architecture.sh`
 - `scripts/tests/test_couts.sh`
+- `scripts/tests/test_anti_regressions.sh`
 
 ## Depannage
 
 - En cas d echec, relancer le script de test en erreur seul.
 - Consulter `logs/` pour les pipelines post-pull/bootstrap.
 - Corriger la cause puis relancer `./scripts/tests/lancer_suite.sh`.
+- En cas d echec CI locale, corriger puis relancer `act` jusqu a statut vert.
 
 ## Liens associes
 

@@ -6,6 +6,30 @@ RACINE_PROJET="$(cd "${SCRIPT_DIR}/.." && pwd)"
 DOSSIER_BUILD_RACINE="${DOSSIER_BUILD_RACINE:-${RACINE_PROJET}/build}"
 
 #######################################
+# Verifie l acces en ecriture au dossier
+# build avant nettoyage.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+verifier_acces_ecriture_build_clean() {
+  if [[ -f "${RACINE_PROJET}/scripts/lib/outils_communs.sh" ]]; then
+    # shellcheck source=/dev/null
+    source "${RACINE_PROJET}/scripts/lib/outils_communs.sh"
+    charger_configuration_borne
+    verifier_acces_ecriture_build
+    return 0
+  fi
+
+  if [[ -d "${DOSSIER_BUILD_RACINE}" ]] && [[ ! -w "${DOSSIER_BUILD_RACINE}" ]]; then
+    echo "ERREUR: Dossier build non accessible en ecriture: ${DOSSIER_BUILD_RACINE}" >&2
+    echo "ACTION RECOMMANDEE: sudo chown -R \"${USER}:${USER}\" \"${DOSSIER_BUILD_RACINE}\" puis relancez ./borne_arcade/clean.sh." >&2
+    return 1
+  fi
+}
+
+#######################################
 # Nettoie les classes Java construites
 # dans le dossier de build du projet.
 # Arguments:
@@ -37,6 +61,7 @@ nettoyer_classes_et_temporaires() {
 #   0
 #######################################
 main() {
+  verifier_acces_ecriture_build_clean
   nettoyer_build_java
   nettoyer_classes_et_temporaires
 }

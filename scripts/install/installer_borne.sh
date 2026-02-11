@@ -152,7 +152,7 @@ installer_dependances_systeme() {
   local prefixe_elevation=""
   local -a commande_apt=()
   local paquet
-  paquets=(git openjdk-17-jdk python3 python3-venv python3-pip checkstyle pylint shellcheck xdotool love lua5.4)
+  paquets=(git openjdk-17-jdk python3 python3-venv python3-pip checkstyle pylint shellcheck xdotool love lua5.4 libsndfile1)
 
   for paquet in "${paquets[@]}"; do
     if paquet_systeme_installe "${paquet}"; then

@@ -33,25 +33,26 @@ conformement aux attentes de `consignes.md`.
 | Ajout et stabilisation du jeu NeonSumo | 1 lot | 0 | 0 | 16 | Gameplay, collisions, HUD, docs, tests |
 | Validation sur borne physique | 1 session | 0 | 0 | 5 | Checklist materielle et verification terrain |
 | Durcissement conformite consignes | 1 lot | 0 | 0 | 7 | lint, docstrings, messages erreurs |
+| Mode maintenance cache + securisation menu | 1 lot | 0 | 0 | 9 | deblocage secret, operations, verrouillage session |
 | Consommables maintenance borne | 1 pack | 18 | 18 | 1 | Nettoyant contact, attaches, adaptateurs |
 | Stock de securite carte microSD | 1 unite | 12 | 12 | 1 | Image systeme de secours |
 | Cablage/connexions de remplacement | 1 kit | 15 | 15 | 2 | Remplacement rapide en cas de panne |
-| Total |  |  | 45 | 80 | Cout direct cumule + charge projet |
+| Total |  |  | 45 | 89 | Cout direct cumule + charge projet |
 
 ## Synthese budgetaire
 
 - **Cout financier estime (direct)**: **45 EUR**
-- **Charge estimee**: **80 h**
-- **Cout valorise du temps**: **80 h x 30 EUR/h = 2400 EUR**
-- **Projection budget global (direct + valorise)**: **2445 EUR**
+- **Charge estimee**: **89 h**
+- **Cout valorise du temps**: **89 h x 30 EUR/h = 2670 EUR**
+- **Projection budget global (direct + valorise)**: **2715 EUR**
 
 ## Detail par categorie
 
 ### Temps
-- Conception et pilotage: 8 h
-- Developpement scripts/jeux: 35 h
-- Qualite/tests: 23 h
-- Documentation et transfert: 14 h
+- Conception et pilotage: 9 h
+- Developpement scripts/jeux: 41 h
+- Qualite/tests: 24 h
+- Documentation et transfert: 15 h
 
 ### Materiel
 - Consommables et stock securite: 45 EUR
@@ -79,6 +80,7 @@ conformement aux attentes de `consignes.md`.
 - 2026-02-10: durcissement complet conformite consignes.
 - 2026-02-10: stabilisation pipeline qualite et deploiement.
 - 2026-02-10: enrichissement complet du modele de cout (temps, materiel, licences, exploitation).
+- 2026-02-11: ajout du lot mode maintenance cache, fix permissions build et robustesse PianoTile.
 
 ## Liens associes
 

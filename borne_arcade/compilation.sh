@@ -21,6 +21,40 @@ DOSSIER_BUILD_CLASSES_MENU="${DOSSIER_BUILD_CLASSES_MENU:-${DOSSIER_BUILD_RACINE
 DOSSIER_BUILD_CLASSES_JEUX="${DOSSIER_BUILD_CLASSES_JEUX:-${DOSSIER_BUILD_RACINE}/classes/jeux}"
 
 #######################################
+# Verifie l acces en ecriture au dossier
+# build, via la librairie commune si
+# disponible, sinon avec fallback local.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+verifier_acces_ecriture_build_compilation() {
+  if declare -F verifier_acces_ecriture_build >/dev/null 2>&1; then
+    verifier_acces_ecriture_build
+    return 0
+  fi
+
+  if [[ -d "${DOSSIER_BUILD_RACINE}" ]]; then
+    if [[ ! -w "${DOSSIER_BUILD_RACINE}" ]]; then
+      echo "ERREUR: Dossier build non accessible en ecriture: ${DOSSIER_BUILD_RACINE}" >&2
+      echo "ACTION RECOMMANDEE: sudo chown -R \"${USER}:${USER}\" \"${DOSSIER_BUILD_RACINE}\" puis relancez ./borne_arcade/compilation.sh." >&2
+      return 1
+    fi
+    return 0
+  fi
+
+  local dossier_parent_build
+  dossier_parent_build="$(dirname "${DOSSIER_BUILD_RACINE}")"
+  if [[ ! -w "${dossier_parent_build}" ]]; then
+    echo "ERREUR: Impossible de creer ${DOSSIER_BUILD_RACINE} (parent non accessible: ${dossier_parent_build})." >&2
+    echo "ACTION RECOMMANDEE: placez le projet dans un dossier utilisateur (ex: ${HOME}/git/maintenance_logicielle) ou corrigez les droits." >&2
+    return 1
+  fi
+  mkdir -p "${DOSSIER_BUILD_RACINE}"
+}
+
+#######################################
 # Retourne le dossier de classes Java
 # cible pour un jeu donne.
 # Arguments:
@@ -229,6 +263,7 @@ PYCODE
 #   0
 #######################################
 main() {
+  verifier_acces_ecriture_build_compilation
   preparer_classpath_mg2d
   preparer_dossiers_build_java
   compiler_menu

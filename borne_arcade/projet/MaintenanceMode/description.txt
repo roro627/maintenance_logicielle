@@ -1,0 +1,3 @@
+ModeMaintenance - Outils d exploitation borne
+Debloquable via sequence secrete dans le menu principal.
+Permet git pull, pipeline post-pull, mise a jour OS et diagnostic rapide.

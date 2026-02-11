@@ -1,0 +1,14 @@
+{
+  "fenetre": {
+    "largeur": 1280,
+    "hauteur": 720,
+    "fps": 30
+  },
+  "temps_max_secondes": {
+    "diagnostic": 20,
+    "git_pull": 240,
+    "pipeline_post_pull": 600,
+    "mise_a_jour_os": 1800
+  },
+  "fichier_verrouillage": ".verrouillage_mode_maintenance"
+}

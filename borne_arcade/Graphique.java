@@ -25,8 +25,10 @@ public class Graphique {
     private BoiteDescription bd;
     public static Bouton[] tableau;
     private Pointeur pointeur;
+    private EtatModeMaintenance etatModeMaintenance;
+    private Texte texteModeMaintenance;
+    private boolean texteModeMaintenanceAffiche;
     Font font;
-    Font fontSelect;
 	public static boolean[] textesAffiches;
 	public static Bruitage musiqueFond;
     private static String[] tableauMusiques;
@@ -76,6 +78,13 @@ public class Graphique {
 	
 	Bouton.remplirBouton();
 	pointeur = new Pointeur();
+	etatModeMaintenance = new EtatModeMaintenance();
+	Font policeModeMaintenance = new Font("Dialog", Font.PLAIN, 16);
+	if(font != null){
+	    policeModeMaintenance = font.deriveFont(16.0f);
+	}
+	texteModeMaintenance = new Texte(Couleur.NOIR, "", policeModeMaintenance, new Point(960, 165));
+	texteModeMaintenanceAffiche = false;
 	bs = new BoiteSelection(new Rectangle(Couleur .GRIS_CLAIR, new Point(0, 0), new Point(640, TAILLEY), true), pointeur);
 	//f.ajouter(bs.getRectangle());
 	//System.out.println(tableau[pointeur.getValue()].getChemin());
@@ -122,6 +131,7 @@ public class Graphique {
 	for(int i = 0 ; i < bd.getListeHighScore().length ; i++){
 	    f.ajouter(bd.getListeHighScore()[i]);
 	}
+	mettreAJourAffichageModeMaintenance();
 	
 	/*Musique de fond*/
 	//Comptage du nombre de musiques disponibles
@@ -199,26 +209,19 @@ public class Graphique {
 			}catch(Exception e){}
 			
 			if(!fermetureMenu){
-				if(bs.selection(clavier)){
-				bi.setImage(tableau[pointeur.getValue()].getChemin());
-
-				fontSelect = null;
-				try{
-				File in = new File("fonts/PrStart.ttf");
-				fontSelect = fontSelect.createFont(Font.TRUETYPE_FONT, in);
-				fontSelect = fontSelect.deriveFont(48.0f);
-				}catch (Exception e) {
-				System.err.println(e.getMessage());
+				etatModeMaintenance.appliquerDemandeVerrouillageExterne();
+				if(etatModeMaintenance.traiterSequenceSecrete(clavier)){
+					mettreAJourAffichageModeMaintenance();
+				}
+				if(etatModeMaintenance.ouvertureDemandee(clavier)){
+					lancerModeMaintenance();
+					etatModeMaintenance.appliquerDemandeVerrouillageExterne();
+					mettreAJourAffichageModeMaintenance();
+					continue;
 				}
 
-				// if(!tableau[pointeur.getValue()].getTexte().getPolice().equals(fontSelect)){
-				// tableau[pointeur.getValue()].getTexte().setPolice(fontSelect);
-				// }
-				
-				
-				
-				
-
+				if(bs.selection(clavier)){
+				bi.setImage(tableau[pointeur.getValue()].getChemin());
 				tableau[pointeur.getValue()].getTexte().setPolice(font);
 
 				bd.lireFichier(tableau[pointeur.getValue()].getChemin());
@@ -228,7 +231,16 @@ public class Graphique {
 				// System.out.println(tableau[pointeur.getValue()].getChemin());
 				// bd.setMessage(tableau[pointeur.getValue()].getNom());
 				*/
+				if(estJeuMaintenanceSelectionne() && !etatModeMaintenance.estDebloque() && clavier.getBoutonJ1ATape()){
+					mettreAJourAffichageModeMaintenance();
+					f.rafraichir();
+					continue;
+				}
 				pointeur.lancerJeu(clavier);
+				if(estJeuMaintenanceSelectionne()){
+					etatModeMaintenance.appliquerDemandeVerrouillageExterne();
+					mettreAJourAffichageModeMaintenance();
+				}
 				
 				
 				}else{
@@ -281,7 +293,65 @@ public class Graphique {
 			f.rafraichir();
 		}//fin while true
     }
+
+    /**
+     * Indique si le jeu actuellement selectionne correspond au mode maintenance.
+     *
+     * @return true si le pointeur est sur le jeu maintenance.
+     */
+    private boolean estJeuMaintenanceSelectionne(){
+	if(etatModeMaintenance == null || !etatModeMaintenance.estActif()){
+	    return false;
+	}
+	return tableau[pointeur.getValue()].getNom().equals(etatModeMaintenance.getNomJeuMaintenance());
+    }
     
+    /**
+     * Met a jour l affichage de l etat du mode maintenance.
+     */
+    private void mettreAJourAffichageModeMaintenance(){
+	if(etatModeMaintenance == null){
+	    return;
+	}
+
+	String messageModeMaintenance = etatModeMaintenance.getMessageStatut();
+	if(messageModeMaintenance == null || messageModeMaintenance.isEmpty()){
+	    if(texteModeMaintenanceAffiche){
+		f.supprimer(texteModeMaintenance);
+		texteModeMaintenanceAffiche = false;
+	    }
+	    return;
+	}
+
+	texteModeMaintenance.setTexte(messageModeMaintenance);
+	if(!texteModeMaintenanceAffiche){
+	    f.ajouter(texteModeMaintenance);
+	    texteModeMaintenanceAffiche = true;
+	}
+    }
+
+    /**
+     * Lance le mode maintenance cache.
+     */
+    private void lancerModeMaintenance(){
+	if(etatModeMaintenance == null || !etatModeMaintenance.estActif()){
+	    return;
+	}
+
+	try{
+	    Graphique.stopMusiqueFond();
+	    ProcessBuilder constructeur = new ProcessBuilder("./"+etatModeMaintenance.getNomJeuMaintenance()+".sh");
+	    Process process = constructeur.start();
+	    process.waitFor();
+	}catch(IOException exception){
+	    System.err.println("Impossible de lancer le mode maintenance: "+exception.getMessage());
+	}catch(InterruptedException exception){
+	    Thread.currentThread().interrupt();
+	}finally{
+	    Graphique.lectureMusiqueFond();
+	}
+    }
+
     /**
      * Lance une musique de fond choisie aleatoirement.
      */

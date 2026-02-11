@@ -10,7 +10,7 @@ La documentation projet est centralisee dans `docs/`.
 ## Commandes rapides
 
 ```bash
-./bootstrap_borne.sh
+sudo ./bootstrap_borne.sh
 ./scripts/tests/lancer_suite.sh
 ./scripts/docs/generer_documentation.sh
 ```

@@ -7,7 +7,7 @@ reproductible pour recette terrain.
 
 ## Procedure
 
-Date validation: 2026-02-10
+Date validation: 2026-02-11
 Borne: Raspberry Pi 3 Model B
 Validateur: Equipe SAE maintenance logicielle
 
@@ -20,6 +20,9 @@ Validateur: Equipe SAE maintenance logicielle
 - [x] Ecriture et lecture highscore persistante
 - [x] Resolution ecran 4:3 correcte
 - [x] Bouton de sortie borne operationnel
+- [x] Deblocage mode maintenance via sequence secrete
+- [x] Reverrouillage mode maintenance via bouton J1C
+- [x] Reverrouillage automatique du mode maintenance apres redemarrage
 
 ## Validation
 

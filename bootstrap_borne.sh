@@ -13,6 +13,28 @@ ETAPE_BOOTSTRAP_COURANTE="initialisation"
 VERROU_BOOTSTRAP_ACTIF=0
 
 #######################################
+# Verifie que le bootstrap est execute
+# avec des privileges root.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+verifier_execution_root_obligatoire() {
+  if [[ "${BORNE_MODE_TEST:-0}" == "1" ]]; then
+    return 0
+  fi
+
+  if [[ "$(id -u)" -eq 0 ]]; then
+    return 0
+  fi
+
+  arreter_sur_erreur \
+    "Le bootstrap doit etre lance avec sudo (root) pour garantir une installation complete." \
+    "Relancez avec: sudo ./bootstrap_borne.sh"
+}
+
+#######################################
 # Indique si sudo peut etre utilise
 # en mode non interactif.
 # Arguments:
@@ -321,6 +343,7 @@ afficher_resume_bootstrap() {
 #######################################
 main() {
   charger_configuration_borne
+  verifier_execution_root_obligatoire
   preparer_etat_bootstrap
   activer_journalisation_bootstrap
   trap 'gerer_echec_bootstrap "$?"' ERR

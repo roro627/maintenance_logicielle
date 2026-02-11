@@ -14,8 +14,9 @@ lanceur, tests et documentation).
    - `highscore`
    - `photo_small.png`
 3. Ajouter le code du jeu (Java/Python/Lua).
-4. Creer le lanceur `borne_arcade/<nom_jeu>.sh`.
-5. Rendre le lanceur executable.
+4. Si le jeu Python a des dependances, ajouter `requirements.txt` dans `borne_arcade/projet/<nom_jeu>/`.
+5. Creer le lanceur `borne_arcade/<nom_jeu>.sh`.
+6. Rendre le lanceur executable.
 
 ## Commandes
 
@@ -23,6 +24,7 @@ lanceur, tests et documentation).
 ./scripts/tests/test_ajout_jeu.sh
 ./scripts/tests/test_catalogue_jeux_complet.sh
 ./scripts/tests/test_jeux.sh
+./scripts/tests/test_anti_regressions.sh
 ```
 
 ## Validation

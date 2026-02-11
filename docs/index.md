@@ -22,7 +22,7 @@ Toutes les pages documentaires suivent la meme trame:
 
 ## Parcours recommande
 
-1. Lire `installation.md` puis executer `./bootstrap_borne.sh`.
+1. Lire `installation.md` puis executer `sudo ./bootstrap_borne.sh`.
 2. Lire `architecture.md` pour la structure du depot.
 3. Executer `./scripts/tests/lancer_suite.sh` pour verifier l etat global.
 4. Lire `utilisateur.md` et `ajout_jeu.md` selon le besoin.

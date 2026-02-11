@@ -10,7 +10,7 @@ la compilation, le lint, les tests et la regeneration documentation.
 ### Activation
 
 ```bash
-./bootstrap_borne.sh
+sudo ./bootstrap_borne.sh
 git config core.hooksPath .githooks
 chmod +x .githooks/post-merge scripts/deploiement/post_pull_update.sh
 ```
@@ -26,6 +26,12 @@ Mecanismes utilises:
 - pipeline local `scripts/deploiement/post_pull_update.sh`,
 - verrou anti-concurrence `.post_pull.lock`,
 - journaux `logs/post_pull_update_YYYYMMDD_HHMMSS.log`.
+
+### Validation CI/CD locale (obligatoire en fin de run)
+
+```bash
+~/.local/bin/act -W .github/workflows/qualite.yml -j verification --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:act-latest
+```
 
 ## Validation
 
