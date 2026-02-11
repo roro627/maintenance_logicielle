@@ -16,25 +16,25 @@ verifier_preuve_validation_materielle() {
   local fichier_preuve="${RACINE_PROJET}/docs/validation_materielle.md"
   [[ -f "${fichier_preuve}" ]] || arreter_sur_erreur "Preuve validation materielle absente: ${fichier_preuve}"
 
-  rg -q "^Date validation: [0-9]{4}-[0-9]{2}-[0-9]{2}$" "${fichier_preuve}" \
+  grep -Eq "^Date validation: [0-9]{4}-[0-9]{2}-[0-9]{2}$" "${fichier_preuve}" \
     || arreter_sur_erreur "Date validation manquante dans ${fichier_preuve}"
-  rg -q "^Borne: Raspberry Pi 3 Model B$" "${fichier_preuve}" \
+  grep -Eq "^Borne: Raspberry Pi 3 Model B$" "${fichier_preuve}" \
     || arreter_sur_erreur "Borne cible incorrecte dans ${fichier_preuve}"
-  rg -q "^Validateur: .+" "${fichier_preuve}" \
+  grep -Eq "^Validateur: .+" "${fichier_preuve}" \
     || arreter_sur_erreur "Nom validateur manquant dans ${fichier_preuve}"
-  rg -q "^- \\[x\\] Demarrage automatique via borne.desktop$" "${fichier_preuve}" \
+  grep -Eq "^- \\[x\\] Demarrage automatique via borne.desktop$" "${fichier_preuve}" \
     || arreter_sur_erreur "Checklist autostart non validee"
-  rg -q "^- \\[x\\] Navigation joystick J1 dans le menu$" "${fichier_preuve}" \
+  grep -Eq "^- \\[x\\] Navigation joystick J1 dans le menu$" "${fichier_preuve}" \
     || arreter_sur_erreur "Checklist joystick menu non validee"
-  rg -q "^- \\[x\\] Lancement et retour menu pour chaque jeu$" "${fichier_preuve}" \
+  grep -Eq "^- \\[x\\] Lancement et retour menu pour chaque jeu$" "${fichier_preuve}" \
     || arreter_sur_erreur "Checklist jeux non validee"
-  rg -q "^- \\[x\\] Son menu et son jeu$" "${fichier_preuve}" \
+  grep -Eq "^- \\[x\\] Son menu et son jeu$" "${fichier_preuve}" \
     || arreter_sur_erreur "Checklist audio non validee"
-  rg -q "^- \\[x\\] Ecriture et lecture highscore persistante$" "${fichier_preuve}" \
+  grep -Eq "^- \\[x\\] Ecriture et lecture highscore persistante$" "${fichier_preuve}" \
     || arreter_sur_erreur "Checklist highscore non validee"
-  rg -q "^- \\[x\\] Resolution ecran 4:3 correcte$" "${fichier_preuve}" \
+  grep -Eq "^- \\[x\\] Resolution ecran 4:3 correcte$" "${fichier_preuve}" \
     || arreter_sur_erreur "Checklist resolution non validee"
-  rg -q "^- \\[x\\] Bouton de sortie borne operationnel$" "${fichier_preuve}" \
+  grep -Eq "^- \\[x\\] Bouton de sortie borne operationnel$" "${fichier_preuve}" \
     || arreter_sur_erreur "Checklist sortie non validee"
 }
 

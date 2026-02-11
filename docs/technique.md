@@ -1,45 +1,54 @@
 # Documentation technique
 
-## Architecture
-- `borne_arcade/`: menu principal, scripts de lancement, jeux.
-- `borne_arcade/projet/<jeu>/`: code, `description.txt`, `bouton.txt`, `highscore`.
-- `MG2D/`: bibliotheque graphique (lecture seule).
-- `scripts/`: installation, deploiement, docs, lint, tests.
-- `.github/workflows/`: pipeline CI qualite.
-- `config/`: versions minimales et regles statiques.
-- `archives/`: anciennes versions centralisees.
-- `build/`: artefacts de compilation Java.
-- `.cache/`: cache technique (ex: classes MG2D fallback).
-- `logs/`: journaux pipeline post-pull.
+## Objectif
 
-## Principes
-- DRY: fonctions shell mutualisees dans `scripts/lib/outils_communs.sh`.
-- KISS: scripts explicites et idempotents.
-- Configuration centralisee: `borne_arcade/config/borne.env` (`JEU_REFERENCE_TEST`, resolution, clavier, etc.).
-- Versions minimales centralisees: `config/versions_minimales.env`.
-- Perimetre lint Python centralise: `config/pylint_repertoires.txt`.
-- Pas de nombres magiques dans le nouveau code.
-- Pipeline post-pull verrouille (fichier `.post_pull.lock`) pour eviter les executions concurrentes.
-- Journalisation technique centralisee dans `logs/` pour faciliter le diagnostic.
-- Verification CI versionnee via `.github/workflows/qualite.yml`.
-- Architecture cible documentee dans `ARCHITECTURE.md`.
+Documenter les principes techniques du projet: architecture, automatisation,
+qualite, configuration et contraintes MG2D.
 
-## Chaine qualite automatisee
+## Architecture technique
 
-1. Installation: `scripts/install/installer_borne.sh`
-2. Compilation globale: `borne_arcade/compilation.sh`
-3. Lint: `scripts/lint/lancer_lint.sh`
-4. Tests: `scripts/tests/lancer_suite.sh`
-5. Documentation: `scripts/docs/generer_documentation.sh`
-6. Deploiement post-pull: `scripts/deploiement/post_pull_update.sh`
+- `borne_arcade/`: menu principal, jeux, scripts de lancement.
+- `scripts/`: installation, deploiement, lint, tests, docs.
+- `config/`: versions minimales et regles qualite.
+- `build/`: classes Java compilees.
+- `.cache/`: cache technique (MG2D fallback).
+- `logs/`: traces d execution.
 
-## Isolation des artefacts
+## Principes d implementation
 
-- Les classes Java compilees sont stockees dans `build/classes/`.
-- Les classes MG2D fallback restent dans `.cache/mg2d_classes/`.
-- Les dossiers sources ne doivent plus contenir de `.class` actifs.
-- Le test `scripts/tests/test_architecture.sh` controle ces regles.
+- DRY: mutualisation dans `scripts/lib/outils_communs.sh`.
+- KISS: scripts explicites, idempotents, orientes exploitation.
+- Configuration centralisee dans `borne_arcade/config/borne.env`.
+- Installation systeme idempotente: verification paquet par paquet puis installation des dependances manquantes.
+- Privileges systeme obligatoires pour les etapes apt/layout systeme (root ou sudo valide), avec echec explicite si indisponibles.
+- CI/CD et tests automatisees via `.github/workflows/qualite.yml` et `scripts/tests/lancer_suite.sh`.
 
-## Integrite MG2D
-Le dossier `MG2D/` est un miroir de `https://github.com/synave/MG2D`.
-Aucun fichier sous `MG2D/` ne doit etre modifie par les scripts de maintenance.
+## Chaine d automatisation
+
+1. `bootstrap_borne.sh`
+2. `scripts/install/installer_borne.sh`
+3. `borne_arcade/compilation.sh`
+4. `scripts/lint/lancer_lint.sh`
+5. `scripts/tests/test_smoke.sh`
+6. `scripts/tests/lancer_suite.sh`
+7. `scripts/docs/generer_documentation.sh`
+8. `scripts/deploiement/post_pull_update.sh`
+
+## Contraintes MG2D
+
+Le dossier `MG2D/` est un miroir canonique de `https://github.com/synave/MG2D`.
+Aucune modification locale n est autorisee dans `MG2D/`.
+
+## Validation
+
+```bash
+./scripts/tests/test_integrite_mg2d.sh
+./scripts/tests/test_architecture.sh
+./scripts/tests/lancer_suite.sh
+```
+
+## Liens associes
+
+- Architecture: `architecture.md`
+- Installation: `installation.md`
+- Tests: `tests.md`

@@ -103,8 +103,10 @@ verifier_versions_lua_love() {
   local jeu_lua_present=0
   local version_lua=""
   local version_love=""
+  local source_lua_detectee=""
 
-  if find "${REPERTOIRE_BORNE}/projet" -type f -name '*.lua' | head -n 1 | grep -q .; then
+  source_lua_detectee="$(find "${REPERTOIRE_BORNE}/projet" -type f -name '*.lua' -print -quit)"
+  if [[ -n "${source_lua_detectee}" ]]; then
     jeu_lua_present=1
   fi
   [[ "${jeu_lua_present}" -eq 1 ]] || return 0

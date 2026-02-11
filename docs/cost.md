@@ -2,12 +2,8 @@
 
 ## Objectif
 
-Ce fichier repond a l exigence de la SAE:
-
-> Maintenir a jour le fichier `cost.md` avec une estimation des couts
-> (temps, materiel, licences, exploitation).
-
-Il sert de reference de pilotage pour la charge projet et le budget.
+Ce document maintient le suivi des couts du projet (temps, materiel, licences, exploitation)
+conformement aux attentes de `consignes.md`.
 
 ## Methode d estimation
 
@@ -66,14 +62,26 @@ Il sert de reference de pilotage pour la charge projet et le budget.
 - Condition: conserver des dependances compatibles open source/education
 
 ### Exploitation et risques
-- Risque principal: panne carte SD -> mitigation par stock de secours
-- Risque principal: regression apres pull -> mitigation par pipeline auto + tests
-- Risque principal: ecart docs/code -> mitigation par generation + tests documentation
+- Risque principal: panne carte SD -> mitigation par stock de secours.
+- Risque principal: regression apres pull -> mitigation par pipeline auto + tests.
+- Risque principal: ecart docs/code -> mitigation par generation + tests documentation.
+
+## Validation
+
+```bash
+./scripts/tests/test_couts.sh
+```
 
 ## Historique de mise a jour
 
 - 2026-02-09: initialisation du suivi des couts.
-- 2026-02-10: ajout du lot Neon Sumo (developpement, tests, documentation).
+- 2026-02-10: ajout du lot NeonSumo (developpement, tests, documentation).
 - 2026-02-10: durcissement complet conformite consignes.
 - 2026-02-10: stabilisation pipeline qualite et deploiement.
 - 2026-02-10: enrichissement complet du modele de cout (temps, materiel, licences, exploitation).
+
+## Liens associes
+
+- Index docs: `index.md`
+- Technique: `technique.md`
+- Tests: `tests.md`

@@ -8,6 +8,46 @@ source "${SCRIPT_DIR}/../lib/outils_communs.sh"
 COMMANDE_PYTHON_VENV=""
 
 #######################################
+# Verifie que les privileges systeme
+# necessaires sont disponibles.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+verifier_privileges_systeme() {
+  if [[ "${BORNE_MODE_TEST:-0}" == "1" ]]; then
+    return 0
+  fi
+
+  if [[ "$(id -u)" -eq 0 ]]; then
+    return 0
+  fi
+
+  command -v sudo >/dev/null 2>&1 \
+    || arreter_sur_erreur \
+      "sudo introuvable pour executer les etapes systeme obligatoires." \
+      "Installez sudo ou lancez ce script en root."
+
+  if sudo_non_interactif_disponible; then
+    return 0
+  fi
+
+  if [[ -t 0 ]]; then
+    journaliser "Privilege root requis: demande d authentification sudo"
+    sudo -v \
+      || arreter_sur_erreur \
+        "Impossible de valider sudo pour l installation systeme." \
+        "Utilisez un compte membre sudo, ou executez ce script en root."
+    return 0
+  fi
+
+  arreter_sur_erreur \
+    "Privileges systeme insuffisants pour l installation." \
+    "Relancez avec un compte root ou un compte sudo valide."
+}
+
+#######################################
 # Indique si sudo peut etre utilise en mode non interactif.
 # Arguments:
 #   aucun
@@ -16,6 +56,57 @@ COMMANDE_PYTHON_VENV=""
 #######################################
 sudo_non_interactif_disponible() {
   command -v sudo >/dev/null 2>&1 && sudo -n true >/dev/null 2>&1
+}
+
+#######################################
+# Indique si un paquet systeme est deja
+# installe via dpkg.
+# Arguments:
+#   $1: nom du paquet
+# Retour:
+#   0 si installe, 1 sinon
+#######################################
+paquet_systeme_installe() {
+  local nom_paquet="$1"
+  if ! command -v dpkg-query >/dev/null 2>&1; then
+    return 1
+  fi
+  dpkg-query -W -f='${Status}' "${nom_paquet}" 2>/dev/null \
+    | grep -q "install ok installed"
+}
+
+#######################################
+# Determine le prefixe d elevation a
+# utiliser pour apt-get.
+# Arguments:
+#   aucun
+# Retour:
+#   ecrit le prefixe sur stdout
+#######################################
+obtenir_prefixe_elevation_apt() {
+  if [[ "$(id -u)" -eq 0 ]]; then
+    printf '%s\n' ""
+    return 0
+  fi
+
+  if sudo_non_interactif_disponible; then
+    printf '%s\n' "sudo"
+    return 0
+  fi
+
+  if command -v sudo >/dev/null 2>&1 && [[ -t 0 ]]; then
+    journaliser "Privilege root requis: demande d authentification sudo"
+    sudo -v \
+      || arreter_sur_erreur \
+        "Impossible d obtenir les privileges sudo pour installer les dependances systeme ciblees." \
+        "Relancez avec un compte autorise sudo, ou executez ce script en root."
+    printf '%s\n' "sudo"
+    return 0
+  fi
+
+  arreter_sur_erreur \
+    "Privileges systeme insuffisants pour apt-get." \
+    "Relancez avec un compte root ou un compte sudo valide."
 }
 
 #######################################
@@ -57,21 +148,40 @@ installer_dependances_systeme() {
   fi
 
   local paquets
+  local paquets_manquants=()
+  local prefixe_elevation=""
+  local -a commande_apt=()
+  local paquet
   paquets=(git openjdk-17-jdk python3 python3-venv python3-pip checkstyle pylint shellcheck xdotool love lua5.4)
-  local prefixe_commande=()
-  if [[ "$(id -u)" -ne 0 ]]; then
-    if sudo_non_interactif_disponible; then
-      prefixe_commande=(sudo)
+
+  for paquet in "${paquets[@]}"; do
+    if paquet_systeme_installe "${paquet}"; then
+      journaliser "Dependance systeme deja presente: ${paquet}"
     else
-      journaliser "Privileges insuffisants pour apt-get: installation systeme ignoree"
-      return 0
+      journaliser "Dependance systeme manquante: ${paquet}"
+      paquets_manquants+=("${paquet}")
     fi
+  done
+
+  if [[ "${#paquets_manquants[@]}" -eq 0 ]]; then
+    journaliser "Toutes les dependances systeme ciblees sont deja installees"
+    return 0
   fi
 
+  prefixe_elevation="$(obtenir_prefixe_elevation_apt)"
+
+  if [[ -n "${prefixe_elevation}" ]]; then
+    commande_apt=("${prefixe_elevation}" apt-get)
+  else
+    commande_apt=(apt-get)
+  fi
+
+  journaliser "Installation des dependances systeme manquantes: ${paquets_manquants[*]}"
+
   journaliser "Mise a jour index apt"
-  "${prefixe_commande[@]}" apt-get update
-  journaliser "Installation dependances systeme"
-  "${prefixe_commande[@]}" apt-get install -y "${paquets[@]}"
+  "${commande_apt[@]}" update
+  journaliser "Installation dependances systeme manquantes"
+  "${commande_apt[@]}" install -y "${paquets_manquants[@]}"
 }
 
 #######################################
@@ -112,6 +222,7 @@ installer_dependances_python() {
 #######################################
 configurer_permissions_scripts() {
   journaliser "Configuration des permissions scripts"
+  chmod +x "${RACINE_PROJET}/bootstrap_borne.sh"
   chmod +x "${RACINE_PROJET}/scripts/deploiement/post_pull_update.sh"
   chmod +x "${RACINE_PROJET}/scripts/docs/generer_documentation.sh"
   chmod +x "${RACINE_PROJET}/scripts/lint/lancer_lint.sh"
@@ -167,14 +278,25 @@ installer_layout_clavier_borne() {
   if [[ "$(id -u)" -ne 0 ]]; then
     if sudo_non_interactif_disponible; then
       prefixe_commande=(sudo)
+    elif [[ -t 0 ]]; then
+      journaliser "Privilege root requis: demande d authentification sudo"
+      sudo -v \
+        || arreter_sur_erreur \
+          "Impossible de valider sudo pour installer le layout systeme." \
+          "Utilisez un compte membre sudo, ou executez ce script en root."
+      prefixe_commande=(sudo)
     else
-      journaliser "Privileges insuffisants pour copier le layout systeme"
-      return 0
+      arreter_sur_erreur \
+        "Privileges systeme insuffisants pour copier le layout clavier." \
+        "Relancez avec un compte root ou un compte sudo valide."
     fi
   fi
 
   if [[ -w "/usr/share/X11/xkb/symbols" || "${#prefixe_commande[@]}" -gt 0 || "$(id -u)" -eq 0 ]]; then
-    "${prefixe_commande[@]}" cp "${source_layout}" "${destination_systeme}" || true
+    "${prefixe_commande[@]}" cp "${source_layout}" "${destination_systeme}" \
+      || arreter_sur_erreur \
+        "Echec de copie du layout clavier dans ${destination_systeme}." \
+        "Verifiez les droits sudo/root et relancez scripts/install/installer_borne.sh."
   fi
 }
 
@@ -242,6 +364,7 @@ preparer_dossiers_organisation() {
 #######################################
 main() {
   charger_configuration_borne
+  verifier_privileges_systeme
   journaliser "Debut installation borne"
   installer_dependances_systeme
   installer_dependances_python

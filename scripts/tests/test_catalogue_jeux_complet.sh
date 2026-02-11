@@ -78,7 +78,7 @@ verifier_presence_sources_jeu() {
   local source_detectee
   nom_jeu="$(basename "${dossier_jeu}")"
 
-  source_detectee="$(find "${dossier_jeu}" -type f \( -name '*.java' -o -name '*.py' -o -name '*.lua' \) | head -n 1 || true)"
+  source_detectee="$(find "${dossier_jeu}" -type f \( -name '*.java' -o -name '*.py' -o -name '*.lua' \) -print -quit)"
   [[ -n "${source_detectee}" ]] \
     || ajouter_erreur "Aucune source detectee pour ${nom_jeu}"
 }

@@ -1,6 +1,13 @@
 # Compatibilite des dependances
 
-## Noyau borne
+## Objectif
+
+Centraliser les versions minimales et la politique de validation des dependances
+pour Raspberry Pi OS et la borne arcade.
+
+## Versions minimales supportees
+
+### Noyau borne
 - Java: OpenJDK 17 minimum.
 - Python: 3.10 minimum.
 - Lua: 5.3 minimum (5.4 recommande).
@@ -10,28 +17,38 @@
 - mkdocs: 1.5 minimum.
 - pygame: 2.5 minimum.
 
-## Bibliotheques
+### Bibliotheques
 - MG2D: miroir local strict du depot officiel `https://github.com/synave/MG2D`, non modifie localement.
 - JavaZoom JLayer: version embarquee dans `borne_arcade/javazoom`.
 - pygame: requis pour certains jeux Python.
 
-## Verification avant ajout de dependance
-1. Verifier documentation officielle.
-2. Verifier disponibilite Raspberry Pi OS.
-3. Verifier licence.
-4. Ajouter justification dans ce document si dependance niche.
+## Procedure avant ajout de dependance
 
-## Verification automatisee
-- Le fichier `config/versions_minimales.env` centralise les versions minimales supportees.
-- Le script `scripts/tests/test_versions_compatibilite.sh` valide automatiquement:
-  - Java, Python, pip, pytest, mkdocs,
-  - pygame,
-  - Lua/LÖVE si des jeux Lua sont presents et outils installes.
+1. Verifier la documentation officielle.
+2. Verifier la disponibilite sur Raspberry Pi OS.
+3. Verifier la licence.
+4. Documenter la decision ici si dependance niche/risquee.
 
-## Installation recommandee Raspberry Pi OS
+## Validation automatisee
+
+- Les versions minimales sont centralisees dans `config/versions_minimales.env`.
+- Le script `scripts/tests/test_versions_compatibilite.sh` valide Java, Python, pip, pytest, mkdocs, pygame,
+  et Lua/LÖVE si necessaire.
+
+## Commandes
 
 ```bash
-sudo apt update && sudo apt full-upgrade -y
-sudo apt install -y git openjdk-17-jdk python3 python3-venv python3-pip \
-  checkstyle pylint shellcheck xdotool love lua5.4
+./scripts/tests/test_versions_compatibilite.sh
 ```
+
+## Depannage
+
+- Si une version est trop ancienne: mettre a jour via `apt` ou `pip` selon l outil.
+- Si LÖVE ou Lua manque: installer `love` et `lua5.4`.
+- Si pygame manque dans la venv: relancer `./scripts/install/installer_borne.sh`.
+
+## Liens associes
+
+- Installation: `installation.md`
+- Technique: `technique.md`
+- Tests: `tests.md`

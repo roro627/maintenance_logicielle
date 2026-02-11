@@ -13,7 +13,7 @@ source "${SCRIPT_DIR}/../lib/outils_communs.sh"
 #   0
 #######################################
 verifier_absence_chemins_figes() {
-  if rg -n "/home/pi/git/borne_arcade|/home/pi/git/MG2D|/home/\$USER/git/MG2D" "${REPERTOIRE_BORNE}" -g '*.java' -g '*.sh' >/dev/null; then
+  if grep -RsnE --include='*.java' --include='*.sh' "/home/pi/git/borne_arcade|/home/pi/git/MG2D|/home/\\\$USER/git/MG2D" "${REPERTOIRE_BORNE}" >/dev/null; then
     arreter_sur_erreur "Chemin absolu fige detecte dans borne_arcade"
   fi
 }
@@ -26,7 +26,7 @@ verifier_absence_chemins_figes() {
 #   0
 #######################################
 verifier_absence_wrappers_depricies() {
-  if rg -n "new Integer\(|new Long\(" "${REPERTOIRE_BORNE}" -g '*.java' >/dev/null; then
+  if grep -RsnE --include='*.java' 'new Integer\(|new Long\(' "${REPERTOIRE_BORNE}" >/dev/null; then
     arreter_sur_erreur "Constructeur wrapper deprecie detecte"
   fi
 }
@@ -39,7 +39,7 @@ verifier_absence_wrappers_depricies() {
 #   0
 #######################################
 verifier_garde_musiques_fond() {
-  if ! rg -n "Files\.isDirectory\(cheminMusiques\)" "${REPERTOIRE_BORNE}/Graphique.java" >/dev/null; then
+  if ! grep -Fq "Files.isDirectory(cheminMusiques)" "${REPERTOIRE_BORNE}/Graphique.java"; then
     arreter_sur_erreur "Garde de repertoire sound/bg manquante dans Graphique.java"
   fi
 }

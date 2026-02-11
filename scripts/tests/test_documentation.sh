@@ -25,7 +25,7 @@ verifier_generation_documentation() {
   [[ -f "${RACINE_PROJET}/site/utilisateur/index.html" ]] || arreter_sur_erreur "Guide utilisateur non genere"
   [[ -f "${RACINE_PROJET}/site/validation_materielle/index.html" ]] || arreter_sur_erreur "Validation materielle non generee"
   [[ -f "${RACINE_PROJET}/site/compatibilite_dependances/index.html" ]] || arreter_sur_erreur "Guide compatibilite dependances non genere"
-  [[ -f "${RACINE_PROJET}/site/couts/index.html" ]] || arreter_sur_erreur "Guide couts non genere"
+  [[ -f "${RACINE_PROJET}/site/cost/index.html" ]] || arreter_sur_erreur "Guide couts non genere"
   [[ -f "${RACINE_PROJET}/site/rendu/index.html" ]] || arreter_sur_erreur "Guide rendu final non genere"
 }
 

@@ -1,66 +1,69 @@
 # Installation
 
-## Linux de developpement
+## Objectif
+
+Automatiser l installation initiale et les relances de maintenance avec un point d entree unique,
+idempotent et non interactif autant que possible.
+
+## Commandes
+
+### Installation automatisee recommandee
+
 ```bash
-sudo apt update
-sudo apt install -y git openjdk-17-jdk python3 python3-venv python3-pip checkstyle pylint shellcheck xdotool love lua5.4
-python3 -m venv .venv
-. .venv/bin/activate
-pip install --upgrade pip mkdocs pytest pylint pygame
-./scripts/install/installer_borne.sh
+chmod +x ./bootstrap_borne.sh
+./bootstrap_borne.sh
 ```
 
-## Raspberry Pi OS
+Le script `bootstrap_borne.sh` enchaine:
+- detection des dependances systeme ciblees et installation des paquets manquants,
+- preparation venv Python et dependances projet,
+- permissions scripts et autostart,
+- compilation, lint, tests smoke, generation documentation.
+
+Pour les etapes systeme, un compte **root** ou **sudo valide** est obligatoire.
+Si sudo n est pas utilisable, le bootstrap s arrete avec un message d action clair.
+
+### Relance idempotente
+
 ```bash
-sudo apt update && sudo apt full-upgrade -y
-sudo apt install -y git openjdk-17-jdk python3 python3-venv python3-pip checkstyle pylint shellcheck xdotool love lua5.4
-python3 -m venv .venv
-. .venv/bin/activate
-pip install --upgrade pip mkdocs pytest pygame
-./scripts/install/installer_borne.sh
+./bootstrap_borne.sh
 ```
 
-## Verification
+### Relance forcee de l etape installation
+
+```bash
+BOOTSTRAP_FORCER_INSTALLATION=1 ./bootstrap_borne.sh
+```
+
+### Alternative manuelle (si besoin)
+
+```bash
+./scripts/install/installer_borne.sh
+./borne_arcade/compilation.sh
+./scripts/lint/lancer_lint.sh
+./scripts/tests/test_smoke.sh
+./scripts/docs/generer_documentation.sh
+```
+
+## Validation
+
 ```bash
 ./scripts/tests/test_installation.sh
-./borne_arcade/clean.sh
-./borne_arcade/compilation.sh
+./scripts/tests/test_smoke.sh
 ./scripts/tests/lancer_suite.sh
 ```
 
-Le script d installation prepare automatiquement un environnement virtuel
-`./.venv` pour les dependances Python du projet.
+Le journal bootstrap est ecrit dans `logs/bootstrap_borne_YYYYMMDD_HHMMSS.log`.
 
-Le script `borne_arcade/compilation.sh` valide tous les jeux:
-- Java: compilation `javac`
-- Python: verification syntaxique
-- Lua: verification syntaxique si `luac` est disponible
+## Depannage
 
-Les classes Java sont generees dans `build/classes/` (menu, jeux, tests)
-et non dans les dossiers sources.
+- Si le bootstrap echoue sur les privileges: valider sudo (`sudo -v`) puis relancer.
+- Si un paquet systeme manque encore: relancer en root ou avec `sudo` valide.
+- Si la borne ne demarre pas automatiquement: verifier `~/.config/autostart/borne.desktop`.
+- Si le layout clavier ne s applique pas: verifier `~/.xkb/symbols/borne` puis relancer l installation.
 
-## Generation de la documentation
-```bash
-./scripts/docs/generer_documentation.sh
-./.venv/bin/python -m mkdocs build -f mkdocs.yml --strict
-```
+## Liens associes
 
-Les pages HTML sont generees dans `site/`.
-Le mode strict MkDocs bloque toute incoherence de navigation ou de liens.
-
-## Notes clavier borne
-Le script d installation copie automatiquement le layout clavier `borne`:
-- en local: `~/.xkb/symbols/borne`
-- et tente aussi une copie systeme si les droits le permettent.
-
-## Autostart borne
-Le script d installation copie automatiquement:
-- `borne_arcade/borne.desktop` vers `~/.config/autostart/borne.desktop`.
-
-## Verification rapide du site local
-```bash
-cd site
-python3 -m http.server 8765
-```
-
-Ouvrir ensuite `http://127.0.0.1:8765/` dans un navigateur.
+- Deploiement: `deploiement.md`
+- Tests: `tests.md`
+- Technique: `technique.md`

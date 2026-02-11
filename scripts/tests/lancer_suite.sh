@@ -19,6 +19,7 @@ main() {
   "${SCRIPT_DIR}/test_classpath_mg2d.sh"
   "${SCRIPT_DIR}/test_messages_erreur.sh"
   "${SCRIPT_DIR}/test_unitaires_java.sh"
+  "${SCRIPT_DIR}/test_smoke.sh"
   "${SCRIPT_DIR}/test_lint.sh"
   "${SCRIPT_DIR}/test_docstrings.sh"
   "${SCRIPT_DIR}/test_anti_regressions.sh"

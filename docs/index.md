@@ -1,29 +1,44 @@
 # Documentation Borne Arcade
 
-Cette documentation est la source de verite pour:
-- architecture technique,
-- installation sur Linux et Raspberry Pi OS,
-- exploitation utilisateur,
-- procedure d ajout de jeu,
-- deploiement automatique apres `git pull`,
-- strategie de tests et validation materielle,
-- compatibilite des dependances,
-- verification CI automatisee,
-- suivi des couts et rendu final.
+## Objectif
 
-## Contraintes non negociables
-- Aucune modification sous `MG2D/` (miroir de `https://github.com/synave/MG2D`).
-- Tous les scripts, commentaires et documentations modifies sont en francais.
-- Toute correction doit ajouter un test anti regression.
-- Les parametres ajustables sont centralises dans des fichiers de configuration.
-- La validation materielle doit etre tracee dans `docs/validation_materielle.md`.
+Ce dossier `docs/` est la source unique de documentation du projet.
+Il couvre installation, architecture, exploitation, tests, deploiement, compatibilite, couts et rendu.
+
+## Standard documentaire
+
+Toutes les pages documentaires suivent la meme trame:
+1. `Objectif`
+2. `Procedure` ou `Commandes`
+3. `Validation`
+4. `Depannage` (si applicable)
+5. `Liens associes`
+
+## Regles de maintenance
+
+- Les documents projet doivent rester dans `docs/`.
+- Les seuls fichiers racine a conserver pour la gouvernance sont `AGENTS.md`, `consignes.md` et `README.md`.
+- Ne pas dupliquer les consignes de `AGENTS.md` et `consignes.md` dans chaque page.
 
 ## Parcours recommande
 
-1. Lire `installation.md` pour preparer l environnement.
-2. Lire `architecture.md` pour comprendre l organisation des dossiers.
+1. Lire `installation.md` puis executer `./bootstrap_borne.sh`.
+2. Lire `architecture.md` pour la structure du depot.
 3. Executer `./scripts/tests/lancer_suite.sh` pour verifier l etat global.
-4. Lire `utilisateur.md` pour l exploitation de la borne.
-5. Lire `ajout_jeu.md` avant toute integration de nouveau jeu.
-6. Consulter `ARCHITECTURE.md` pour les regles de rangement detaillees.
-7. Consulter `rendu.md` pour le bilan final de conformite.
+4. Lire `utilisateur.md` et `ajout_jeu.md` selon le besoin.
+5. Lire `rendu.md` pour le bilan final.
+
+## Validation
+
+```bash
+./scripts/tests/test_documentation.sh
+./scripts/docs/generer_documentation.sh
+```
+
+## Liens associes
+
+- Technique: `technique.md`
+- Installation: `installation.md`
+- Deploiement: `deploiement.md`
+- Tests: `tests.md`
+- Couts: `cost.md`

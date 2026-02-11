@@ -70,11 +70,11 @@ verifier_absence_legacy_hors_archives() {
 #######################################
 verifier_compilation_orientee_build() {
   local script_compilation="${REPERTOIRE_BORNE}/compilation.sh"
-  rg -q "DOSSIER_BUILD_CLASSES_MENU" "${script_compilation}" \
+  grep -Fq "DOSSIER_BUILD_CLASSES_MENU" "${script_compilation}" \
     || ajouter_erreur_architecture "Compilation menu non orientee build dans ${script_compilation}"
-  rg -q "DOSSIER_BUILD_CLASSES_JEUX" "${script_compilation}" \
+  grep -Fq "DOSSIER_BUILD_CLASSES_JEUX" "${script_compilation}" \
     || ajouter_erreur_architecture "Compilation jeux non orientee build dans ${script_compilation}"
-  rg -q "javac -d" "${script_compilation}" \
+  grep -Fq "javac -d" "${script_compilation}" \
     || ajouter_erreur_architecture "Option -d absente des compilations Java dans ${script_compilation}"
 }
 
@@ -116,7 +116,7 @@ echouer_si_erreurs_architecture() {
   done
   arreter_sur_erreur \
     "${#ERREURS_ARCHITECTURE[@]} erreur(s) d architecture detectee(s)." \
-    "Consultez ARCHITECTURE.md, deplacez les legacy vers archives/ et gardez les artefacts dans build/.cache."
+    "Consultez docs/architecture.md, deplacez les legacy vers archives/ et gardez les artefacts dans build/.cache."
 }
 
 #######################################

@@ -26,6 +26,7 @@ You have access to external tools and should use them when it improves correctne
 9. **Centralize configuration**: behavior knobs must live in configuration files (`bouton.txt`, `description.txt`, etc.).
 10. **Anti-regression**: when fixing a bug, add or update a test that would have caught it.
 11. **Messages d erreur clairs**: all error messages shown to users/operators must be clear, understandable, and actionable (cause + concrete next step).
+12. **CI/CD vert en fin de run**: at the end of every user request/change, CI/CD must be green. Validate with `~/.local/bin/act -W .github/workflows/qualite.yml -j verification --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:act-latest` before considering the work complete.
 
 ## Stack specifics
 
@@ -57,10 +58,27 @@ You have access to external tools and should use them when it improves correctne
 
 - **Documentation completeness**: ALL existing documentation must be updated whenever code changes.
 - **Automated generation**: Documentation generation must be automated (technical, installation, user, game-addition guides).
+- **Documentation location**: all project documentation files must be stored in `docs/`. Only `README.md`, `AGENTS.md`, and `consignes.md` are allowed at repository root for orientation/governance.
 - **Backward compatibility**: Migrated code must remain compatible with arcade hardware (custom buttons, display resolution).
 - **Deployment automation**: After `git pull`, updates must install automatically without manual intervention.
 - **Version compatibility**: Pay extreme attention to library version compatibility during migration (Java, Python, system libraries).
 - **MG2D library integrity**: Do NOT modify any file under `MG2D/` (source, assets, docs, scripts). If a correction is needed, re-sync from `https://github.com/synave/MG2D` instead of editing locally. All customizations must be implemented in game code or wrapper classes.
+
+## Documentation update matrix
+
+Use this matrix whenever code changes to know exactly what to update:
+
+| Change topic | Mandatory documentation updates |
+| --- | --- |
+| Install/bootstrap/dependencies | `docs/installation.md`, `docs/compatibilite_dependances.md`, `docs/technique.md` |
+| Deployment/hook/CI-CD | `docs/deploiement.md`, `docs/tests.md`, `docs/technique.md` |
+| Test strategy/new tests/quality gates | `docs/tests.md`, `docs/technique.md`, `docs/rendu.md` |
+| Architecture/repository organization | `docs/architecture.md`, `docs/technique.md` |
+| New game or gameplay changes | `docs/ajout_jeu.md`, `docs/utilisateur.md`, `docs/tests.md`, `docs/rendu.md` |
+| Hardware behavior/autostart/input mapping | `docs/validation_materielle.md`, `docs/utilisateur.md`, `docs/installation.md` |
+| Cost changes (time/material/licenses) | `docs/cost.md`, `docs/rendu.md` |
+| MG2D policy/integrity tooling | `docs/technique.md`, `docs/tests.md` |
+| Global summary/milestone delivery | `docs/rendu.md`, `docs/index.md` |
 
 ## Quality gates
 
@@ -77,6 +95,7 @@ From `borne_arcade/`:
   - Individual game functionality
 - **Hardware validation**: Test on physical arcade kiosk before considering work complete.
 - **Documentation validation**: Verify a third party can reproduce installation from docs alone.
+- **CI/CD validation**: At the end of each run, execute `~/.local/bin/act -W .github/workflows/qualite.yml -j verification --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:act-latest` successfully and keep `.github/workflows/qualite.yml` green on GitHub.
 
 After each major implementation or change, run the full test suite and validate on physical hardware.
 

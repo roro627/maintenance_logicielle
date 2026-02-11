@@ -12,7 +12,7 @@ nav:
   - Utilisateur: utilisateur.md
   - Ajout de jeu: ajout_jeu.md
   - Compatibilite dependances: compatibilite_dependances.md
-  - Couts: couts.md
+  - Couts: cost.md
   - Rendu final: rendu.md
 theme:
   name: mkdocs

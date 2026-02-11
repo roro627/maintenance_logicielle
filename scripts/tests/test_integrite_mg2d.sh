@@ -35,9 +35,9 @@ verifier_regle_mg2d_agents() {
     return 0
   }
 
-  rg -q "https://github.com/synave/MG2D" "${fichier_agents}" \
+  grep -Fq "https://github.com/synave/MG2D" "${fichier_agents}" \
     || ajouter_erreur "Source canonique MG2D absente de AGENTS.md"
-  rg -Fq "Do NOT modify any file under \`MG2D/\`" "${fichier_agents}" \
+  grep -Fq "Do NOT modify any file under \`MG2D/\`" "${fichier_agents}" \
     || ajouter_erreur "Regle d integrite MG2D absente de AGENTS.md"
 }
 
@@ -51,7 +51,7 @@ verifier_regle_mg2d_agents() {
 #######################################
 verifier_absence_classes_mg2d() {
   local classes_detectees
-  classes_detectees="$(find "${RACINE_PROJET}/MG2D" -type f -name '*.class' | head -n 1 || true)"
+  classes_detectees="$(find "${RACINE_PROJET}/MG2D" -type f -name '*.class' -print -quit)"
   [[ -z "${classes_detectees}" ]] \
     || ajouter_erreur "Classe compilee detectee dans MG2D: ${classes_detectees}"
 }

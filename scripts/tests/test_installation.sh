@@ -15,10 +15,12 @@ source "${SCRIPT_DIR}/../lib/outils_communs.sh"
 verifier_fichiers_critiques() {
   local fichiers
   fichiers=(
+    "${RACINE_PROJET}/bootstrap_borne.sh"
     "${RACINE_PROJET}/scripts/install/installer_borne.sh"
     "${RACINE_PROJET}/scripts/deploiement/post_pull_update.sh"
     "${RACINE_PROJET}/scripts/docs/generer_documentation.sh"
     "${RACINE_PROJET}/scripts/lint/lancer_lint.sh"
+    "${RACINE_PROJET}/scripts/tests/test_smoke.sh"
     "${RACINE_PROJET}/.githooks/post-merge"
     "${RACINE_PROJET}/config/versions_minimales.env"
     "${REPERTOIRE_BORNE}/compilation.sh"
