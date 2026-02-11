@@ -37,7 +37,7 @@ verifier_regle_mg2d_agents() {
 
   rg -q "https://github.com/synave/MG2D" "${fichier_agents}" \
     || ajouter_erreur "Source canonique MG2D absente de AGENTS.md"
-  rg -q 'Do NOT modify any file under `MG2D/`' "${fichier_agents}" \
+  rg -Fq "Do NOT modify any file under \`MG2D/\`" "${fichier_agents}" \
     || ajouter_erreur "Regle d integrite MG2D absente de AGENTS.md"
 }
 
