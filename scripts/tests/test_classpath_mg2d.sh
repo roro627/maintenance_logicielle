@@ -43,9 +43,35 @@ verifier_classes_requises() {
   fi
 
   for classe in "${classes_requises[@]}"; do
-    [[ -f "${classpath_mg2d}/${classe}" ]] \
+    classpath_contient_fichier "${classpath_mg2d}" "${classe}" \
       || ajouter_erreur "Classe manquante dans le cache MG2D: ${classe}"
   done
+}
+
+#######################################
+# Verifie si un fichier relatif existe
+# dans au moins une entree du classpath.
+# Arguments:
+#   $1: classpath Java
+#   $2: chemin relatif du fichier
+# Retour:
+#   0 si trouve, 1 sinon
+#######################################
+classpath_contient_fichier() {
+  local classpath_java="$1"
+  local chemin_relatif="$2"
+  local entree
+  local entrees_classpath=()
+
+  IFS=':' read -r -a entrees_classpath <<< "${classpath_java}"
+  for entree in "${entrees_classpath[@]}"; do
+    [[ -n "${entree}" ]] || continue
+    if [[ -f "${entree}/${chemin_relatif}" ]]; then
+      return 0
+    fi
+  done
+
+  return 1
 }
 
 #######################################
@@ -89,6 +115,48 @@ JAVA
 }
 
 #######################################
+# Verifie le chargement des ressources
+# audio du decodeur MG2D.
+# Arguments:
+#   $1: classpath MG2D resolu
+# Retour:
+#   0
+#######################################
+verifier_ressources_audio_decoder() {
+  local classpath_mg2d="$1"
+  local repertoire_temporaire
+  local sortie
+
+  repertoire_temporaire="$(mktemp -d)"
+  cat > "${repertoire_temporaire}/VerificationRessourcesMG2D.java" <<'JAVA'
+import MG2D.audio.decoder.JavaLayerUtils;
+
+public final class VerificationRessourcesMG2D {
+  private VerificationRessourcesMG2D() {
+  }
+
+  public static void main(String[] arguments) {
+    boolean sfdDisponible = JavaLayerUtils.getResourceAsStream("sfd.ser") != null;
+    boolean l3Disponible = JavaLayerUtils.getResourceAsStream("l3reorder.ser") != null;
+    System.out.println(sfdDisponible + ":" + l3Disponible);
+  }
+}
+JAVA
+
+  if ! javac -cp "${classpath_mg2d}" "${repertoire_temporaire}/VerificationRessourcesMG2D.java"; then
+    ajouter_erreur "Compilation d une verification ressources MG2D impossible"
+    rm -rf "${repertoire_temporaire}"
+    return 0
+  fi
+
+  sortie="$(java -cp "${repertoire_temporaire}:${classpath_mg2d}" VerificationRessourcesMG2D 2>/dev/null || true)"
+  [[ "${sortie}" == "true:true" ]] \
+    || ajouter_erreur "Ressources audio MG2D indisponibles (sfd.ser ou l3reorder.ser)"
+
+  rm -rf "${repertoire_temporaire}"
+}
+
+#######################################
 # Termine le test en erreur si des
 # anomalies ont ete collecte.
 # Arguments:
@@ -123,6 +191,7 @@ main() {
 
   verifier_classes_requises "${classpath_mg2d}"
   verifier_import_dessin "${classpath_mg2d}"
+  verifier_ressources_audio_decoder "${classpath_mg2d}"
   echouer_si_erreurs_detectees
 
   journaliser "Test classpath MG2D: OK"

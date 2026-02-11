@@ -27,19 +27,22 @@ main() {
 
   if [[ "${mode_smoke_test}" == "1" ]]; then
     [[ -d "${SCRIPT_DIR}/projet/${nom_jeu}" ]] || {
-      echo "Dossier jeu introuvable: ${nom_jeu}" >&2
+      echo "ERREUR: Dossier jeu introuvable: ${nom_jeu}" >&2
+      echo "ACTION RECOMMANDEE: verifiez le nom du jeu et la presence du dossier borne_arcade/projet/${nom_jeu}." >&2
       return 1
     }
     if [[ -d "${SCRIPT_DIR}/projet/${nom_jeu}/${script_entree}" ]]; then
       [[ -f "${SCRIPT_DIR}/projet/${nom_jeu}/${script_entree}/__main__.py" ]] || {
-        echo "Point d entree Python introuvable pour ${nom_jeu}: ${script_entree}/__main__.py" >&2
+        echo "ERREUR: Point d entree Python introuvable pour ${nom_jeu}: ${script_entree}/__main__.py" >&2
+        echo "ACTION RECOMMANDEE: ajoutez __main__.py dans ${script_entree} ou corrigez le script d entree." >&2
         return 1
       }
       return 0
     fi
 
     [[ -f "${SCRIPT_DIR}/projet/${nom_jeu}/${script_entree}" ]] || {
-      echo "Point d entree Python introuvable pour ${nom_jeu}: ${script_entree}" >&2
+      echo "ERREUR: Point d entree Python introuvable pour ${nom_jeu}: ${script_entree}" >&2
+      echo "ACTION RECOMMANDEE: verifiez le chemin du script Python de lancement pour ${nom_jeu}." >&2
       return 1
     }
     return 0

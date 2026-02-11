@@ -23,7 +23,8 @@
     "acceleration": 900.0,
     "friction_base": 1.6,
     "friction_frein": 5.5,
-    "vitesse_max": 540.0
+    "vitesse_max": 540.0,
+    "coefficient_rebond_collision": 0.65
   },
   "cooldowns": {
     "dash": 1.2,
@@ -51,6 +52,33 @@
     "vitesse_retrecissement": 4.0,
     "multiplicateur_sudden_death": 3.5,
     "largeur_zone_danger": 30.0
+  },
+  "effets_arene": {
+    "vitesse_oscillation": 4.6,
+    "vitesse_rotation_lignes": 1.4,
+    "intensite_glow_base": 0.48,
+    "intensite_glow_impact": 0.8,
+    "opacite_lignes_base": 0.45,
+    "opacite_lignes_impact": 0.4,
+    "nombre_lignes_electriques": 18,
+    "longueur_lignes_min": 8.0,
+    "longueur_lignes_max": 24.0,
+    "amplitude_jitter_lignes": 6.0,
+    "decroissance_energie_impact": 1.2,
+    "gain_impact_dash": 0.1,
+    "gain_impact_bump": 0.18,
+    "gain_impact_ultime": 0.28
+  },
+  "style": {
+    "fenetre_combo": 2.4,
+    "bonus_combo_par_niveau": 4,
+    "points_impact": 16,
+    "points_esquive": 20,
+    "points_sauvetage": 24,
+    "distance_esquive": 70.0,
+    "cooldown_esquive": 1.0,
+    "marge_sauvetage": 20.0,
+    "duree_affichage_action": 1.1
   },
   "couleurs": {
     "fond": [10, 8, 24],

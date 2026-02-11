@@ -16,6 +16,37 @@ fi
 CHEMIN_MG2D="${CHEMIN_MG2D:-${RACINE_PROJET}/MG2D}"
 COMMANDE_PYTHON="${COMMANDE_PYTHON:-python3}"
 CLASSPATH_MG2D="${CHEMIN_MG2D}"
+DOSSIER_BUILD_RACINE="${DOSSIER_BUILD_RACINE:-${RACINE_PROJET}/build}"
+DOSSIER_BUILD_CLASSES_MENU="${DOSSIER_BUILD_CLASSES_MENU:-${DOSSIER_BUILD_RACINE}/classes/menu}"
+DOSSIER_BUILD_CLASSES_JEUX="${DOSSIER_BUILD_CLASSES_JEUX:-${DOSSIER_BUILD_RACINE}/classes/jeux}"
+
+#######################################
+# Retourne le dossier de classes Java
+# cible pour un jeu donne.
+# Arguments:
+#   $1: nom du jeu
+# Retour:
+#   ecrit le chemin du dossier classes
+#######################################
+obtenir_dossier_classes_jeu_compilation() {
+  local nom_jeu="$1"
+  if declare -F obtenir_dossier_classes_jeu >/dev/null 2>&1; then
+    obtenir_dossier_classes_jeu "${nom_jeu}"
+    return 0
+  fi
+  echo "${DOSSIER_BUILD_CLASSES_JEUX}/${nom_jeu}"
+}
+
+#######################################
+# Prepare les dossiers de build Java.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+preparer_dossiers_build_java() {
+  mkdir -p "${DOSSIER_BUILD_CLASSES_MENU}" "${DOSSIER_BUILD_CLASSES_JEUX}"
+}
 
 #######################################
 # Trouve le compilateur Lua disponible.
@@ -42,6 +73,21 @@ trouver_compilateur_lua() {
     return 0
   fi
   return 1
+}
+
+#######################################
+# Affiche un message clair quand aucun
+# compilateur Lua n est detecte.
+# Arguments:
+#   $1: nom du jeu
+# Retour:
+#   0
+#######################################
+afficher_message_lua_indisponible() {
+  local nom_jeu="$1"
+  echo "ATTENTION: Aucun compilateur Lua detecte (luac, luac5.4, luac5.3, luac5.2)."
+  echo "Verification Lua ignoree pour le jeu ${nom_jeu}."
+  echo "Action recommandee: installez Lua 5.4 (ex: sudo apt install -y lua5.4)."
 }
 
 #######################################
@@ -81,7 +127,9 @@ compiler_menu() {
   fi
 
   echo "Compilation du menu de la borne d arcade"
-  javac -cp ".:${CLASSPATH_MG2D}" "${fichiers_java[@]}"
+  rm -rf "${DOSSIER_BUILD_CLASSES_MENU}"
+  mkdir -p "${DOSSIER_BUILD_CLASSES_MENU}"
+  javac -d "${DOSSIER_BUILD_CLASSES_MENU}" -cp ".:${CLASSPATH_MG2D}" "${fichiers_java[@]}"
 }
 
 #######################################
@@ -97,6 +145,10 @@ compiler_jeux_java() {
   for dossier_jeu in "${SCRIPT_DIR}/projet"/*; do
     [[ -d "${dossier_jeu}" ]] || continue
 
+    local nom_jeu
+    nom_jeu="$(basename "${dossier_jeu}")"
+    local dossier_classes_jeu=""
+    dossier_classes_jeu="$(obtenir_dossier_classes_jeu_compilation "${nom_jeu}")"
     local fichiers_java=()
     local fichiers_python=()
     local fichiers_lua=()
@@ -114,13 +166,15 @@ compiler_jeux_java() {
 
     if [[ "${#fichiers_java[@]}" -gt 0 ]]; then
       a_valider=1
-      echo "Compilation Java du jeu $(basename "${dossier_jeu}")"
-      javac -cp ".:${SCRIPT_DIR}:../..:${CLASSPATH_MG2D}" "${fichiers_java[@]}"
+      echo "Compilation Java du jeu ${nom_jeu}"
+      rm -rf "${dossier_classes_jeu}"
+      mkdir -p "${dossier_classes_jeu}"
+      javac -d "${dossier_classes_jeu}" -cp ".:${SCRIPT_DIR}:../..:${CLASSPATH_MG2D}" "${fichiers_java[@]}"
     fi
 
     if [[ "${#fichiers_python[@]}" -gt 0 ]]; then
       a_valider=1
-      echo "Verification Python du jeu $(basename "${dossier_jeu}")"
+      echo "Verification Python du jeu ${nom_jeu}"
       "${COMMANDE_PYTHON}" - "${fichiers_python[@]}" <<'PYCODE'
 import pathlib
 import sys
@@ -145,20 +199,24 @@ PYCODE
 
     if [[ "${#fichiers_lua[@]}" -gt 0 ]]; then
       a_valider=1
-      echo "Verification Lua du jeu $(basename "${dossier_jeu}")"
+      echo "Verification Lua du jeu ${nom_jeu}"
       local compilateur_lua
       if compilateur_lua="$(trouver_compilateur_lua)"; then
         local fichier_lua
         for fichier_lua in "${fichiers_lua[@]}"; do
-          "${compilateur_lua}" -p "${fichier_lua}"
+          if ! "${compilateur_lua}" -p "${fichier_lua}"; then
+            echo "ERREUR: Echec de verification Lua dans ${fichier_lua} avec ${compilateur_lua}." >&2
+            echo "Corrigez la syntaxe du fichier puis relancez ./borne_arcade/compilation.sh." >&2
+            return 1
+          fi
         done
       else
-        echo "Compilateur Lua indisponible, verification Lua ignoree pour $(basename "${dossier_jeu}")"
+        afficher_message_lua_indisponible "${nom_jeu}"
       fi
     fi
 
     if [[ "${a_valider}" -eq 0 ]]; then
-      echo "Jeu $(basename "${dossier_jeu}") sans source Java/Python/Lua detectee: ignore"
+      echo "Jeu ${nom_jeu} sans source Java/Python/Lua detectee: ignore"
     fi
   done
 }
@@ -172,6 +230,7 @@ PYCODE
 #######################################
 main() {
   preparer_classpath_mg2d
+  preparer_dossiers_build_java
   compiler_menu
   compiler_jeux_java
 }

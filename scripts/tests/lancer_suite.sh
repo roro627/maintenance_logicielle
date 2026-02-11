@@ -17,9 +17,13 @@ main() {
   "${SCRIPT_DIR}/test_catalogue_jeux_complet.sh"
   "${SCRIPT_DIR}/test_integrite_mg2d.sh"
   "${SCRIPT_DIR}/test_classpath_mg2d.sh"
+  "${SCRIPT_DIR}/test_messages_erreur.sh"
   "${SCRIPT_DIR}/test_unitaires_java.sh"
   "${SCRIPT_DIR}/test_lint.sh"
+  "${SCRIPT_DIR}/test_docstrings.sh"
   "${SCRIPT_DIR}/test_anti_regressions.sh"
+  "${SCRIPT_DIR}/test_architecture.sh"
+  "${SCRIPT_DIR}/test_couts.sh"
   "${SCRIPT_DIR}/test_jeux.sh"
   "${SCRIPT_DIR}/test_documentation.sh"
 

@@ -4,6 +4,7 @@ site_dir: site
 nav:
   - Accueil: index.md
   - Technique: technique.md
+  - Architecture: architecture.md
   - Installation: installation.md
   - Deploiement: deploiement.md
   - Tests: tests.md
@@ -12,5 +13,7 @@ nav:
   - Ajout de jeu: ajout_jeu.md
   - Compatibilite dependances: compatibilite_dependances.md
   - Couts: couts.md
+  - Rendu final: rendu.md
 theme:
   name: mkdocs
+strict: true

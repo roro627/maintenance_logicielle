@@ -22,6 +22,10 @@ Depuis la racine du projet:
 ## Boucle de jeu
 - Ecran titre
 - Manche avec compte a rebours
+- Collision passive entre capsules (push au contact)
+- Hit feedback: flash ecran, freeze frame court, particules directionnelles sur dash/bump/ultime
+- Arene neon vivante: glow anime + lignes electriques reactives aux impacts
+- Systeme de style en direct: chaines d impacts, esquives proches, sauvetages du bord
 - BO3 (premier a 2)
 - Ecran resultat / revanche
 - Retour menu
@@ -29,10 +33,24 @@ Depuis la racine du projet:
 ## Configuration equilibrage
 Le fichier `config_jeu.json` contient tous les reglages:
 - physique (acceleration, friction, vitesse)
+- collision passive (`coefficient_rebond_collision`)
 - cooldowns
 - puissance des actions
 - retrecissement de l arene
 - durees de manche
+- style (`style.*`)
+- effets visuels arene (`effets_arene.*`)
+
+## HUD lisibilite combat
+- Icones B1/B3/B4 pres de chaque joueur:
+  - B1 = Dash
+  - B3 = Bump
+  - B4 = Bouclier
+- Chaque icone se remplit selon le cooldown restant.
+- Panneaux style J1/J2:
+  - score style cumule en direct
+  - combo courant
+  - dernier bonus recu (`CHAIN`, `ESQUIVE`, `SAVE`)
 
 ## Sons
 Les fichiers MP3 sont dans `assets/sons/`.

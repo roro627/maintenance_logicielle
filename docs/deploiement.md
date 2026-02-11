@@ -11,12 +11,26 @@ Apres `git pull`, la borne execute automatiquement:
 ## Mecanisme
 - Hook versionne: `.githooks/post-merge`
 - Pipeline local: `scripts/deploiement/post_pull_update.sh`
+- Verrou anti-concurrence: `.post_pull.lock`
+- Journaux pipeline: `logs/post_pull_update_YYYYMMDD_HHMMSS.log`
 
 ## Activation
 ```bash
 git config core.hooksPath .githooks
 chmod +x .githooks/post-merge scripts/deploiement/post_pull_update.sh
 ```
+
+## Execution manuelle du pipeline
+```bash
+./scripts/deploiement/post_pull_update.sh
+```
+
+Le pipeline applique automatiquement:
+- installation,
+- compilation,
+- lint,
+- suite de tests,
+- regeneration documentation.
 
 ## Test
 ```bash
@@ -27,3 +41,9 @@ Le pipeline verifie aussi la compatibilite de versions via
 `scripts/tests/test_versions_compatibilite.sh`.
 
 La documentation regeneree par le pipeline est publiee dans `site/`.
+
+## Diagnostic en cas d echec
+
+- Consulter le dernier journal dans `logs/post_pull_update_*.log`.
+- Verifier qu aucun verrou stale n est present (`.post_pull.lock`).
+- Relancer ensuite `./scripts/deploiement/post_pull_update.sh`.

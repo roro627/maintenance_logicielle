@@ -86,12 +86,12 @@ installer_dependances_python() {
     arreter_sur_erreur "${COMMANDE_PYTHON} introuvable"
   fi
 
+  preparer_venv_python_projet
+
   if [[ "${BORNE_MODE_TEST:-0}" == "1" ]]; then
-    journaliser "Mode test actif: installation pip ignoree"
+    journaliser "Mode test actif: creation venv conservee, installation pip ignoree"
     return 0
   fi
-
-  preparer_venv_python_projet
 
   journaliser "Installation outils python globaux"
   "${COMMANDE_PYTHON_VENV}" -m pip install --upgrade pip mkdocs pytest pylint
@@ -218,6 +218,22 @@ initialiser_fichiers_highscore() {
 }
 
 #######################################
+# Prepare les dossiers d organisation
+# et de sortie du projet.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+preparer_dossiers_organisation() {
+  mkdir -p "${RACINE_PROJET}/build"
+  mkdir -p "${RACINE_PROJET}/logs"
+  mkdir -p "${RACINE_PROJET}/archives"
+  mkdir -p "${RACINE_PROJET}/src"
+  mkdir -p "${RACINE_PROJET}/tests"
+}
+
+#######################################
 # Point d entree de l installation.
 # Arguments:
 #   aucun
@@ -234,6 +250,7 @@ main() {
   configurer_permissions_scripts
   configurer_hook_git
   initialiser_fichiers_highscore
+  preparer_dossiers_organisation
   journaliser "Installation terminee"
 }
 

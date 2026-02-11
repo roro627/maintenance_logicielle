@@ -14,7 +14,9 @@ source "${SCRIPT_DIR}/../lib/outils_communs.sh"
 #######################################
 compiler_tests_unitaires_java() {
   local classpath_mg2d
+  local dossier_classes_tests_java
   classpath_mg2d="$(obtenir_classpath_mg2d)"
+  dossier_classes_tests_java="${DOSSIER_BUILD_CLASSES_TESTS}/unitaires_java"
   (
     cd "${REPERTOIRE_BORNE}"
     local fichiers_a_compiler
@@ -28,7 +30,9 @@ compiler_tests_unitaires_java() {
       tests/unit/TestUnitaireAnalyseurConfigJeu.java
     )
 
-    javac -cp ".:${classpath_mg2d}" "${fichiers_a_compiler[@]}"
+    rm -rf "${dossier_classes_tests_java}"
+    mkdir -p "${dossier_classes_tests_java}"
+    javac -d "${dossier_classes_tests_java}" -cp ".:${classpath_mg2d}" "${fichiers_a_compiler[@]}"
   )
 }
 
@@ -41,6 +45,7 @@ compiler_tests_unitaires_java() {
 #######################################
 executer_tests_unitaires_java() {
   local classpath_mg2d
+  local dossier_classes_tests_java
   local classes
   classes=(
     TestUnitaireHighScore
@@ -48,7 +53,8 @@ executer_tests_unitaires_java() {
     TestUnitaireAnalyseurConfigJeu
   )
   classpath_mg2d="$(obtenir_classpath_mg2d)"
-  local classpath_java=".:${classpath_mg2d}:tests/unit"
+  dossier_classes_tests_java="${DOSSIER_BUILD_CLASSES_TESTS}/unitaires_java"
+  local classpath_java="${dossier_classes_tests_java}:${classpath_mg2d}"
 
   local classe
   for classe in "${classes[@]}"; do

@@ -3,11 +3,14 @@
 ## 1) Prerequis
 
 - Linux ou Raspberry Pi OS
-- `git`, `openjdk-17`, `python3`, `python3-pip`
+- `git`, `openjdk-17`, `python3`, `python3-venv`, `python3-pip`
+- `checkstyle`, `pylint`, `shellcheck`, `xdotool`, `love`, `lua5.4`
 
 ## 2) Installation (depuis la racine du projet)
 
 ```bash
+python3 -m venv .venv
+. .venv/bin/activate
 ./scripts/install/installer_borne.sh
 ```
 
@@ -24,6 +27,7 @@ Ce script cree automatiquement `./.venv` pour les dependances Python.
 - compile les jeux Java,
 - verifie la syntaxe des jeux Python,
 - verifie la syntaxe des jeux Lua (si `luac` est installe).
+- place les classes Java dans `build/classes/`.
 
 ## 4) Lancer la borne
 
@@ -39,6 +43,11 @@ git config core.hooksPath .githooks
 
 Le hook `post-merge` lancera automatiquement installation, compilation, tests et documentation.
 
+Pipeline manuel equivalent:
+```bash
+./scripts/deploiement/post_pull_update.sh
+```
+
 ## 6) Verification rapide
 
 ```bash
@@ -49,9 +58,16 @@ Le hook `post-merge` lancera automatiquement installation, compilation, tests et
 
 ```bash
 ./scripts/docs/generer_documentation.sh
+./.venv/bin/python -m mkdocs build -f mkdocs.yml --strict
 ```
 
 La documentation HTML est generee dans `site/`.
+
+Pour tester le site local:
+```bash
+cd site
+python3 -m http.server 8765
+```
 
 ## 7) Sur Raspberry Pi (autostart)
 
@@ -66,3 +82,10 @@ Au prochain redemarrage, la borne se lancera automatiquement.
 ./scripts/install/installer_borne.sh
 ```
 Le script installe automatiquement le layout `borne` en local (`~/.xkb/symbols/borne`).
+
+## Documentation complete
+
+La documentation detaillee est dans `docs/` et publiee dans le site MkDocs:
+- installation: `docs/installation.md`
+- deploiement: `docs/deploiement.md`
+- tests: `docs/tests.md`

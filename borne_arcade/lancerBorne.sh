@@ -13,12 +13,15 @@ else
   DELAI_EXTINCTION_SECONDES=30
   CLAVIER_BORNE=borne
   EXTINCTION_AUTO=0
+  DOSSIER_BUILD_RACINE="${RACINE_PROJET}/build"
 fi
 
 CHEMIN_MG2D="${CHEMIN_MG2D:-${RACINE_PROJET}/MG2D}"
 DELAI_EXTINCTION_SECONDES="${DELAI_EXTINCTION_SECONDES:-30}"
 CLAVIER_BORNE="${CLAVIER_BORNE:-borne}"
 EXTINCTION_AUTO="${EXTINCTION_AUTO:-0}"
+DOSSIER_BUILD_RACINE="${DOSSIER_BUILD_RACINE:-${RACINE_PROJET}/build}"
+DOSSIER_BUILD_CLASSES_MENU="${DOSSIER_BUILD_CLASSES_MENU:-${DOSSIER_BUILD_RACINE}/classes/menu}"
 CLASSPATH_MG2D=""
 
 #######################################
@@ -73,7 +76,12 @@ lancer_menu() {
   ./clean.sh
   ./compilation.sh
   preparer_classpath_mg2d_menu
-  java -cp ".:${CLASSPATH_MG2D}" Main
+  if [[ ! -f "${DOSSIER_BUILD_CLASSES_MENU}/Main.class" ]]; then
+    echo "ERREUR: Menu non compile (Main.class absent dans ${DOSSIER_BUILD_CLASSES_MENU})." >&2
+    echo "ACTION RECOMMANDEE: relancez ./borne_arcade/compilation.sh puis ./borne_arcade/lancerBorne.sh." >&2
+    return 1
+  fi
+  java -cp "${DOSSIER_BUILD_CLASSES_MENU}:${SCRIPT_DIR}:${CLASSPATH_MG2D}" Main
 }
 
 #######################################

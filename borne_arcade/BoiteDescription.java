@@ -10,7 +10,6 @@ import MG2D.Couleur;
 import MG2D.geometrie.Point;
 import MG2D.geometrie.Rectangle;
 import MG2D.geometrie.Texte;
-import java.io.IOException;
 
 
 public class BoiteDescription extends Boite{

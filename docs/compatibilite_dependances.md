@@ -1,9 +1,14 @@
 # Compatibilite des dependances
 
 ## Noyau borne
-- Java: OpenJDK 17 (LTS), stable sur Raspberry Pi OS.
-- Python: 3.x present par defaut sur Raspberry Pi OS.
-- LÖVE: paquet `love` pour jeux Lua.
+- Java: OpenJDK 17 minimum.
+- Python: 3.10 minimum.
+- Lua: 5.3 minimum (5.4 recommande).
+- LÖVE: 11.0 minimum.
+- pip: 24.0 minimum.
+- pytest: 8.0 minimum.
+- mkdocs: 1.5 minimum.
+- pygame: 2.5 minimum.
 
 ## Bibliotheques
 - MG2D: miroir local strict du depot officiel `https://github.com/synave/MG2D`, non modifie localement.
@@ -22,3 +27,11 @@
   - Java, Python, pip, pytest, mkdocs,
   - pygame,
   - Lua/LÖVE si des jeux Lua sont presents et outils installes.
+
+## Installation recommandee Raspberry Pi OS
+
+```bash
+sudo apt update && sudo apt full-upgrade -y
+sudo apt install -y git openjdk-17-jdk python3 python3-venv python3-pip \
+  checkstyle pylint shellcheck xdotool love lua5.4
+```

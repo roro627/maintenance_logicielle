@@ -25,6 +25,7 @@ You have access to external tools and should use them when it improves correctne
 8. **No magic numbers**: avoid scattering hard-coded constants; name and centralize them in configuration files or constants classes.
 9. **Centralize configuration**: behavior knobs must live in configuration files (`bouton.txt`, `description.txt`, etc.).
 10. **Anti-regression**: when fixing a bug, add or update a test that would have caught it.
+11. **Messages d erreur clairs**: all error messages shown to users/operators must be clear, understandable, and actionable (cause + concrete next step).
 
 ## Stack specifics
 

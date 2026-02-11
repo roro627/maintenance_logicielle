@@ -19,6 +19,9 @@ verifier_pipeline_post_pull() {
     EVITER_TEST_DEPLOIEMENT=1 "${RACINE_PROJET}/scripts/deploiement/post_pull_update.sh"
   fi
   [[ -f "${RACINE_PROJET}/.etat_derniere_maj" ]] || arreter_sur_erreur "Marqueur .etat_derniere_maj absent"
+  [[ ! -f "${RACINE_PROJET}/.post_pull.lock" ]] || arreter_sur_erreur "Verrou .post_pull.lock non libere apres pipeline"
+  find "${RACINE_PROJET}/logs" -maxdepth 1 -type f -name 'post_pull_update_*.log' | grep -q . \
+    || arreter_sur_erreur "Journal post-pull absent dans logs/"
 }
 
 #######################################

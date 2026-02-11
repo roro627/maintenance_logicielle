@@ -7,11 +7,12 @@
    - `description.txt`
    - `bouton.txt`
    - `highscore`
+   - `photo_small.png`
 3. Ajouter le code du jeu (Java/Python/Lua).
-4. Ajouter `photo_small.png` pour l apercu menu.
-5. Creer le lanceur racine `borne_arcade/<nom_jeu>.sh`.
-6. Rendre le script executable.
-7. Lancer les tests d ajout de jeu.
+4. Creer le lanceur racine `borne_arcade/<nom_jeu>.sh`.
+5. Rendre le script executable.
+6. Verifier compilation et smoke-test.
+7. Lancer la suite de tests d integration.
 
 ## Exemple Python complet: Neon Sumo (`NeonSumo`)
 
@@ -29,4 +30,13 @@ set -euo pipefail
 SH
 chmod +x borne_arcade/NeonSumo.sh
 ./scripts/tests/test_ajout_jeu.sh
+./scripts/tests/test_catalogue_jeux_complet.sh
+./scripts/tests/test_jeux.sh
+```
+
+## Controle final avant merge
+
+```bash
+./borne_arcade/compilation.sh
+./scripts/tests/lancer_suite.sh
 ```

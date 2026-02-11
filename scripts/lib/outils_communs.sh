@@ -52,6 +52,11 @@ charger_configuration_borne() {
 
   CHEMIN_MG2D="${CHEMIN_MG2D:-${RACINE_PROJET}/MG2D}"
   CHEMIN_JAR_MG2D="${CHEMIN_JAR_MG2D:-${CHEMIN_MG2D}/MG2D.jar}"
+  DOSSIER_ARCHIVES="${DOSSIER_ARCHIVES:-${RACINE_PROJET}/archives}"
+  DOSSIER_BUILD_RACINE="${DOSSIER_BUILD_RACINE:-${RACINE_PROJET}/build}"
+  DOSSIER_BUILD_CLASSES_MENU="${DOSSIER_BUILD_CLASSES_MENU:-${DOSSIER_BUILD_RACINE}/classes/menu}"
+  DOSSIER_BUILD_CLASSES_JEUX="${DOSSIER_BUILD_CLASSES_JEUX:-${DOSSIER_BUILD_RACINE}/classes/jeux}"
+  DOSSIER_BUILD_CLASSES_TESTS="${DOSSIER_BUILD_CLASSES_TESTS:-${DOSSIER_BUILD_RACINE}/classes/tests}"
   DOSSIER_CACHE_MG2D_CLASSES="${DOSSIER_CACHE_MG2D_CLASSES:-${RACINE_PROJET}/.cache/mg2d_classes}"
   COMMANDE_PYTHON="${COMMANDE_PYTHON:-python3}"
   UTILISER_VENV_PROJET="${UTILISER_VENV_PROJET:-1}"
@@ -77,7 +82,9 @@ charger_configuration_borne() {
   fi
 
   export RACINE_PROJET REPERTOIRE_BORNE FICHIER_CONFIG_BORNE FICHIER_VERSIONS_MINIMALES
-  export CHEMIN_MG2D CHEMIN_JAR_MG2D DOSSIER_CACHE_MG2D_CLASSES COMMANDE_PYTHON DELAI_EXTINCTION_SECONDES CLAVIER_BORNE JEU_REFERENCE_TEST
+  export CHEMIN_MG2D CHEMIN_JAR_MG2D DOSSIER_ARCHIVES DOSSIER_BUILD_RACINE
+  export DOSSIER_BUILD_CLASSES_MENU DOSSIER_BUILD_CLASSES_JEUX DOSSIER_BUILD_CLASSES_TESTS
+  export DOSSIER_CACHE_MG2D_CLASSES COMMANDE_PYTHON DELAI_EXTINCTION_SECONDES CLAVIER_BORNE JEU_REFERENCE_TEST
   export RESOLUTION_X RESOLUTION_Y
   export UTILISER_VENV_PROJET
   export JAVA_VERSION_MIN PYTHON_VERSION_MIN PIP_VERSION_MIN PYTEST_VERSION_MIN
@@ -86,15 +93,45 @@ charger_configuration_borne() {
 }
 
 #######################################
-# Termine le script avec un message d erreur.
+# Retourne le dossier de classes Java
+# compilees pour un jeu donne.
+# Arguments:
+#   $1: nom du jeu
+# Retour:
+#   ecrit le chemin du dossier classes
+#######################################
+obtenir_dossier_classes_jeu() {
+  local nom_jeu="$1"
+  echo "${DOSSIER_BUILD_CLASSES_JEUX}/${nom_jeu}"
+}
+
+#######################################
+# Affiche une erreur claire et actionnable.
 # Arguments:
 #   $1: message erreur
+#   $2: action recommandee (optionnel)
+# Retour:
+#   0
+#######################################
+afficher_erreur_claire() {
+  local message="$1"
+  local action="${2:-Corrigez la cause indiquee puis relancez la commande: ${0##*/}}"
+  journaliser "ERREUR: ${message}"
+  journaliser "ACTION RECOMMANDEE: ${action}"
+}
+
+#######################################
+# Termine le script avec une erreur claire.
+# Arguments:
+#   $1: message erreur
+#   $2: action recommandee (optionnel)
 # Retour:
 #   sort avec code 1
 #######################################
 arreter_sur_erreur() {
   local message="$1"
-  journaliser "ERREUR: ${message}"
+  local action="${2:-}"
+  afficher_erreur_claire "${message}" "${action}"
   exit 1
 }
 
@@ -142,21 +179,23 @@ preparer_classes_mg2d_cache() {
 #   0 si le jar est valide, 1 sinon
 #######################################
 jar_mg2d_valide() {
-  local classes_requises=(
+  local elements_requis=(
     "MG2D/Fenetre.class"
     "MG2D/Clavier.class"
     "MG2D/geometrie/Dessin.class"
     "MG2D/geometrie/Point.class"
+    "MG2D/audio/decoder/sfd.ser"
+    "MG2D/audio/decoder/l3reorder.ser"
   )
   local index_jar
-  local classe
+  local element
 
   [[ -f "${CHEMIN_JAR_MG2D}" ]] || return 1
   command -v jar >/dev/null 2>&1 || return 1
 
   index_jar="$(jar tf "${CHEMIN_JAR_MG2D}" 2>/dev/null)" || return 1
-  for classe in "${classes_requises[@]}"; do
-    printf '%s\n' "${index_jar}" | grep -Fxq "${classe}" || return 1
+  for element in "${elements_requis[@]}"; do
+    printf '%s\n' "${index_jar}" | grep -Fxq "${element}" || return 1
   done
 
   return 0
@@ -217,6 +256,8 @@ obtenir_classpath_mg2d() {
   fi
 
   preparer_classes_mg2d_cache
-  CLASSPATH_MG2D_RESOLU="${DOSSIER_CACHE_MG2D_CLASSES}"
+  # Le cache contient les .class MG2D, le dossier MG2D fournit les ressources
+  # binaires requises par le decodeur audio (ex: sfd.ser).
+  CLASSPATH_MG2D_RESOLU="${DOSSIER_CACHE_MG2D_CLASSES}:${CHEMIN_MG2D}"
   echo "${CLASSPATH_MG2D_RESOLU}"
 }

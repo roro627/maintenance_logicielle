@@ -1,10 +1,7 @@
 import java.io.IOException;
 
 import MG2D.geometrie.Texture;
-import MG2D.Couleur;
 import MG2D.geometrie.Point;
-import MG2D.geometrie.Triangle;
-import MG2D.Clavier;
 
 
 public class Pointeur {

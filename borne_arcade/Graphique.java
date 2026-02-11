@@ -2,8 +2,6 @@ import java.awt.Font;
 import java.io.IOException;
 import java.nio.file.*;
 import javax.swing.*;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
 import java.io.File;
 
 import MG2D.geometrie.*;
