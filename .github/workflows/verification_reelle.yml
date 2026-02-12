@@ -1,0 +1,74 @@
+name: Verification Reelle Debian 11
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 2 * * *"
+
+jobs:
+  verification_reelle_debian11:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    container:
+      image: debian:11-slim
+      options: --memory=2g --cpus=2
+    env:
+      URL_DEPOT_OFFICIEL: https://github.com/roro627/maintenance_logicielle.git
+      DOSSIER_TRAVAIL: /opt/maintenance_logicielle
+    steps:
+      - name: Installer outils de base Debian 11 minimal
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends ca-certificates git sudo bash
+
+      - name: Recuperer workspace local (support act)
+        uses: actions/checkout@v4
+
+      - name: Cloner le depot depuis GitHub (scenario reel)
+        run: |
+          chemin_workspace_act=""
+          for candidat in "${GITHUB_WORKSPACE:-}" "/github/workspace" "$(pwd)"; do
+            if [ -n "${candidat}" ] && [ -f "${candidat}/bootstrap_borne.sh" ]; then
+              chemin_workspace_act="${candidat}"
+              break
+            fi
+          done
+
+          rm -rf "${DOSSIER_TRAVAIL}"
+          git clone "${URL_DEPOT_OFFICIEL}" "${DOSSIER_TRAVAIL}"
+          cd "${DOSSIER_TRAVAIL}"
+
+          if git fetch --depth 1 origin "${GITHUB_SHA}"; then
+            git checkout "${GITHUB_SHA}"
+          else
+            echo "INFO: SHA ${GITHUB_SHA} indisponible sur le remote."
+            echo "INFO: Conservation de la branche par defaut du depot distant."
+          fi
+
+          if [ "${ACT:-}" = "true" ] && [ -n "${chemin_workspace_act}" ]; then
+            echo "INFO: Mode act detecte, overlay du workspace local non pousse: ${chemin_workspace_act}."
+            rm -rf "${DOSSIER_TRAVAIL}"
+            mkdir -p "${DOSSIER_TRAVAIL}"
+            cp -a "${chemin_workspace_act}/." "${DOSSIER_TRAVAIL}/"
+          elif [ "${ACT:-}" = "true" ]; then
+            echo "ATTENTION: Mode act detecte mais workspace local introuvable dans le conteneur."
+            echo "ACTION RECOMMANDEE: Verifiez le montage act et la variable GITHUB_WORKSPACE."
+          fi
+
+      - name: Verification execution root
+        run: |
+          if [ "$(id -u)" -ne 0 ]; then
+            echo "ERREUR: Le job doit s executer en root dans le conteneur Debian 11."
+            echo "ACTION RECOMMANDEE: Verifiez la configuration container du workflow."
+            exit 1
+          fi
+
+      - name: Bootstrap complet sans mode simulation
+        run: |
+          cd "${DOSSIER_TRAVAIL}"
+          ./bootstrap_borne.sh
+
+      - name: Suite qualite complete sans variables de test
+        run: |
+          cd "${DOSSIER_TRAVAIL}"
+          ./scripts/tests/lancer_suite.sh

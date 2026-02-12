@@ -25,6 +25,12 @@ TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 .
 ~/.local/bin/act -W .github/workflows/qualite.yml -j verification --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:act-latest
 ```
 
+### Validation CI/CD reelle Debian 11 (sans variables de test)
+
+```bash
+~/.local/bin/act -W .github/workflows/verification_reelle.yml -j verification_reelle_debian11 --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:act-latest
+```
+
 ## Couverture
 
 ### Unitaires
@@ -63,6 +69,7 @@ Scripts principaux:
 - `scripts/tests/test_architecture.sh`
 - `scripts/tests/test_couts.sh`
 - `scripts/tests/test_anti_regressions.sh`
+- `.github/workflows/verification_reelle.yml`
 
 ## Depannage
 

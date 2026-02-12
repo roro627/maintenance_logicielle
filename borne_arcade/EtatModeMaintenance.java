@@ -7,6 +7,20 @@ import java.nio.file.Paths;
  * Gere l etat de session du mode maintenance cache.
  */
 public final class EtatModeMaintenance {
+    /** Ordre de lecture des entrees supportees. */
+    private static final String[] ORDRE_ENTREES = {
+        "J1A",
+        "J1B",
+        "J1C",
+        "J1X",
+        "J1Y",
+        "J1Z",
+        "J1HAUT",
+        "J1BAS",
+        "J1GAUCHE",
+        "J1DROITE"
+    };
+
     /** Configuration lue depuis le fichier proprietes. */
     private final ConfigurationModeMaintenance configuration;
 
@@ -16,6 +30,18 @@ public final class EtatModeMaintenance {
     /** Etat de debloquage courant de la session. */
     private boolean debloque;
 
+    /** Etats precedents des touches pour detecter les fronts montants. */
+    private boolean precedentJ1A;
+    private boolean precedentJ1B;
+    private boolean precedentJ1C;
+    private boolean precedentJ1X;
+    private boolean precedentJ1Y;
+    private boolean precedentJ1Z;
+    private boolean precedentJ1Haut;
+    private boolean precedentJ1Bas;
+    private boolean precedentJ1Gauche;
+    private boolean precedentJ1Droite;
+
     /**
      * Construit l etat de session du mode maintenance.
      */
@@ -23,6 +49,7 @@ public final class EtatModeMaintenance {
         this.configuration = ConfigurationModeMaintenance.charger();
         this.indexSequence = 0;
         this.debloque = false;
+        reinitialiserMemoireTouches();
     }
 
     /**
@@ -114,7 +141,7 @@ public final class EtatModeMaintenance {
         if (!estActif() || !debloque) {
             return false;
         }
-        return boutonTape(clavier, configuration.getBoutonOuverture());
+        return boutonFrontMontant(clavier, configuration.getBoutonOuverture());
     }
 
     /**
@@ -142,6 +169,7 @@ public final class EtatModeMaintenance {
 
         debloque = false;
         indexSequence = 0;
+        reinitialiserMemoireTouches();
     }
 
     /**
@@ -151,66 +179,172 @@ public final class EtatModeMaintenance {
      * @return identifiant du bouton active, ou chaine vide.
      */
     private String lireEntreeSequence(ClavierBorneArcade clavier) {
-        if (clavier.getBoutonJ1ATape()) {
-            return "J1A";
-        }
-        if (clavier.getBoutonJ1BTape()) {
-            return "J1B";
-        }
-        if (clavier.getBoutonJ1CTape()) {
-            return "J1C";
-        }
-        if (clavier.getBoutonJ1XTape()) {
-            return "J1X";
-        }
-        if (clavier.getBoutonJ1YTape()) {
-            return "J1Y";
-        }
-        if (clavier.getBoutonJ1ZTape()) {
-            return "J1Z";
-        }
-        if (clavier.getJoyJ1HautTape()) {
-            return "J1HAUT";
-        }
-        if (clavier.getJoyJ1BasTape()) {
-            return "J1BAS";
-        }
-        if (clavier.getJoyJ1GaucheTape()) {
-            return "J1GAUCHE";
-        }
-        if (clavier.getJoyJ1DroiteTape()) {
-            return "J1DROITE";
+        for (String entree : ORDRE_ENTREES) {
+            if (boutonFrontMontant(clavier, entree)) {
+                return entree;
+            }
         }
         return "";
     }
 
     /**
-     * Verifie si un bouton symbolique est tape.
+     * Verifie si un bouton symbolique est actuellement enfonce.
      *
      * @param clavier etat des controles borne.
      * @param bouton identifiant du bouton a tester.
-     * @return true si le bouton est detecte.
+     * @return true si le bouton est enfonce.
      */
-    private boolean boutonTape(ClavierBorneArcade clavier, String bouton) {
+    private boolean boutonEnfonce(ClavierBorneArcade clavier, String bouton) {
         String boutonNormalise = bouton.toUpperCase();
         if ("J1A".equals(boutonNormalise)) {
-            return clavier.getBoutonJ1ATape();
+            return clavier.getBoutonJ1AEnfoncee();
         }
         if ("J1B".equals(boutonNormalise)) {
-            return clavier.getBoutonJ1BTape();
+            return clavier.getBoutonJ1BEnfoncee();
         }
         if ("J1C".equals(boutonNormalise)) {
-            return clavier.getBoutonJ1CTape();
+            return clavier.getBoutonJ1CEnfoncee();
         }
         if ("J1X".equals(boutonNormalise)) {
-            return clavier.getBoutonJ1XTape();
+            return clavier.getBoutonJ1XEnfoncee();
         }
         if ("J1Y".equals(boutonNormalise)) {
-            return clavier.getBoutonJ1YTape();
+            return clavier.getBoutonJ1YEnfoncee();
         }
         if ("J1Z".equals(boutonNormalise)) {
-            return clavier.getBoutonJ1ZTape();
+            return clavier.getBoutonJ1ZEnfoncee();
+        }
+        if ("J1HAUT".equals(boutonNormalise)) {
+            return clavier.getJoyJ1HautEnfoncee();
+        }
+        if ("J1BAS".equals(boutonNormalise)) {
+            return clavier.getJoyJ1BasEnfoncee();
+        }
+        if ("J1GAUCHE".equals(boutonNormalise)) {
+            return clavier.getJoyJ1GaucheEnfoncee();
+        }
+        if ("J1DROITE".equals(boutonNormalise)) {
+            return clavier.getJoyJ1DroiteEnfoncee();
         }
         return false;
+    }
+
+    /**
+     * Detecte un front montant sur un bouton symbolique.
+     *
+     * @param clavier etat des controles borne.
+     * @param bouton identifiant du bouton a tester.
+     * @return true si le bouton vient juste d etre presse.
+     */
+    private boolean boutonFrontMontant(ClavierBorneArcade clavier, String bouton) {
+        String boutonNormalise = bouton.toUpperCase();
+        boolean etatActuel = boutonEnfonce(clavier, boutonNormalise);
+        boolean etatPrecedent = lireEtatPrecedent(boutonNormalise);
+        ecrireEtatPrecedent(boutonNormalise, etatActuel);
+        return etatActuel && !etatPrecedent;
+    }
+
+    /**
+     * Lit l etat precedent memorise pour une touche symbolique.
+     *
+     * @param bouton identifiant de la touche.
+     * @return true si la touche etait enfoncee au cycle precedent.
+     */
+    private boolean lireEtatPrecedent(String bouton) {
+        if ("J1A".equals(bouton)) {
+            return precedentJ1A;
+        }
+        if ("J1B".equals(bouton)) {
+            return precedentJ1B;
+        }
+        if ("J1C".equals(bouton)) {
+            return precedentJ1C;
+        }
+        if ("J1X".equals(bouton)) {
+            return precedentJ1X;
+        }
+        if ("J1Y".equals(bouton)) {
+            return precedentJ1Y;
+        }
+        if ("J1Z".equals(bouton)) {
+            return precedentJ1Z;
+        }
+        if ("J1HAUT".equals(bouton)) {
+            return precedentJ1Haut;
+        }
+        if ("J1BAS".equals(bouton)) {
+            return precedentJ1Bas;
+        }
+        if ("J1GAUCHE".equals(bouton)) {
+            return precedentJ1Gauche;
+        }
+        if ("J1DROITE".equals(bouton)) {
+            return precedentJ1Droite;
+        }
+        return false;
+    }
+
+    /**
+     * Memorise l etat courant d une touche symbolique.
+     *
+     * @param bouton identifiant de la touche.
+     * @param etat etat courant de la touche.
+     */
+    private void ecrireEtatPrecedent(String bouton, boolean etat) {
+        if ("J1A".equals(bouton)) {
+            precedentJ1A = etat;
+            return;
+        }
+        if ("J1B".equals(bouton)) {
+            precedentJ1B = etat;
+            return;
+        }
+        if ("J1C".equals(bouton)) {
+            precedentJ1C = etat;
+            return;
+        }
+        if ("J1X".equals(bouton)) {
+            precedentJ1X = etat;
+            return;
+        }
+        if ("J1Y".equals(bouton)) {
+            precedentJ1Y = etat;
+            return;
+        }
+        if ("J1Z".equals(bouton)) {
+            precedentJ1Z = etat;
+            return;
+        }
+        if ("J1HAUT".equals(bouton)) {
+            precedentJ1Haut = etat;
+            return;
+        }
+        if ("J1BAS".equals(bouton)) {
+            precedentJ1Bas = etat;
+            return;
+        }
+        if ("J1GAUCHE".equals(bouton)) {
+            precedentJ1Gauche = etat;
+            return;
+        }
+        if ("J1DROITE".equals(bouton)) {
+            precedentJ1Droite = etat;
+        }
+    }
+
+    /**
+     * Reinitialise les etats precedents des touches surveillees.
+     */
+    private void reinitialiserMemoireTouches() {
+        precedentJ1A = false;
+        precedentJ1B = false;
+        precedentJ1C = false;
+        precedentJ1X = false;
+        precedentJ1Y = false;
+        precedentJ1Z = false;
+        precedentJ1Haut = false;
+        precedentJ1Bas = false;
+        precedentJ1Gauche = false;
+        precedentJ1Droite = false;
     }
 }

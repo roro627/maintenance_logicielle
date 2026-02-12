@@ -27,7 +27,17 @@ jobs:
       - name: Installer dependances systeme minimales
         run: |
           sudo apt-get update
-          sudo apt-get install -y shellcheck xdotool lua5.4
+          if ! sudo apt-get install -y shellcheck xdotool lua5.4 love; then
+            echo "ATTENTION: Echec post-installation love, contournement automatique."
+            chemin_man_love="$(sudo sed -n 's/.*\(\/usr\/share\/man\/man6\/love-[0-9.]*\.gz\).*/\1/p' /var/lib/dpkg/info/love.postinst | head -n 1)"
+            if [ -z "${chemin_man_love}" ]; then
+              chemin_man_love="/usr/share/man/man6/love.6.gz"
+            fi
+            sudo mkdir -p "$(dirname "${chemin_man_love}")"
+            sudo touch "${chemin_man_love}"
+            sudo apt-get -f install -y
+          fi
+          dpkg-query -W -f='${Status}' love | grep -q "install ok installed"
 
       - name: Preparer environnement Python projet
         run: |

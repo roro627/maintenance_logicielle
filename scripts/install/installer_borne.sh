@@ -130,6 +130,48 @@ preparer_venv_python_projet() {
 }
 
 #######################################
+# Applique un contournement de
+# post-installation du paquet love.
+# Arguments:
+#   $1...: commande apt complete
+# Retour:
+#   0 si contournement applique, 1 sinon
+#######################################
+appliquer_contournement_postinstall_love() {
+  local -a commande_apt=("$@")
+  local fichier_postinst_love="/var/lib/dpkg/info/love.postinst"
+  local fichier_manquant_love=""
+
+  if dpkg-query -W -f='${Status}' love 2>/dev/null | grep -q "install ok installed"; then
+    return 0
+  fi
+
+  if ! dpkg -s love >/dev/null 2>&1; then
+    return 1
+  fi
+
+  if [[ -f "${fichier_postinst_love}" ]]; then
+    fichier_manquant_love="$(sed -n 's/.*\(\/usr\/share\/man\/man6\/love-[0-9.]*\.gz\).*/\1/p' "${fichier_postinst_love}" | head -n 1)"
+  fi
+
+  if [[ -z "${fichier_manquant_love}" ]]; then
+    fichier_manquant_love="/usr/share/man/man6/love.6.gz"
+  fi
+
+  journaliser "Contournement love: creation de ${fichier_manquant_love}"
+  mkdir -p "$(dirname "${fichier_manquant_love}")"
+  if [[ ! -f "${fichier_manquant_love}" ]]; then
+    : > "${fichier_manquant_love}"
+  fi
+
+  if "${commande_apt[@]}" -f install -y; then
+    return 0
+  fi
+
+  return 1
+}
+
+#######################################
 # Installe les dependances apt necessaires.
 # Arguments:
 #   aucun
@@ -147,23 +189,23 @@ installer_dependances_systeme() {
     return 0
   fi
 
-  local paquets
-  local paquets_manquants=()
+  local paquets_obligatoires
+  local paquets_obligatoires_manquants=()
   local prefixe_elevation=""
   local -a commande_apt=()
   local paquet
-  paquets=(git openjdk-17-jdk python3 python3-venv python3-pip checkstyle pylint shellcheck xdotool love lua5.4 libsndfile1)
+  paquets_obligatoires=(git curl openjdk-17-jdk python3 python3-venv python3-pip checkstyle pylint shellcheck xdotool lua5.4 libsndfile1 love)
 
-  for paquet in "${paquets[@]}"; do
+  for paquet in "${paquets_obligatoires[@]}"; do
     if paquet_systeme_installe "${paquet}"; then
       journaliser "Dependance systeme deja presente: ${paquet}"
     else
       journaliser "Dependance systeme manquante: ${paquet}"
-      paquets_manquants+=("${paquet}")
+      paquets_obligatoires_manquants+=("${paquet}")
     fi
   done
 
-  if [[ "${#paquets_manquants[@]}" -eq 0 ]]; then
+  if [[ "${#paquets_obligatoires_manquants[@]}" -eq 0 ]]; then
     journaliser "Toutes les dependances systeme ciblees sont deja installees"
     return 0
   fi
@@ -176,12 +218,28 @@ installer_dependances_systeme() {
     commande_apt=(apt-get)
   fi
 
-  journaliser "Installation des dependances systeme manquantes: ${paquets_manquants[*]}"
-
   journaliser "Mise a jour index apt"
   "${commande_apt[@]}" update
-  journaliser "Installation dependances systeme manquantes"
-  "${commande_apt[@]}" install -y "${paquets_manquants[@]}"
+
+  journaliser "Installation dependances systeme obligatoires: ${paquets_obligatoires_manquants[*]}"
+  if ! "${commande_apt[@]}" install -y "${paquets_obligatoires_manquants[@]}"; then
+    if printf '%s\n' "${paquets_obligatoires_manquants[@]}" | grep -qx "love"; then
+      journaliser "Echec installation love detecte: tentative de contournement automatique."
+      appliquer_contournement_postinstall_love "${commande_apt[@]}" \
+        || arreter_sur_erreur \
+          "Echec installation obligatoire de love, meme apres contournement automatique." \
+          "Verifiez la connectivite apt, puis relancez scripts/install/installer_borne.sh."
+    else
+      arreter_sur_erreur \
+        "Echec installation des dependances systeme obligatoires." \
+        "Verifiez la connectivite apt et les droits root, puis relancez scripts/install/installer_borne.sh."
+    fi
+  fi
+
+  paquet_systeme_installe love \
+    || arreter_sur_erreur \
+      "Le paquet love reste indisponible alors qu il est obligatoire." \
+      "Corrigez l etat apt/dpkg, puis relancez scripts/install/installer_borne.sh."
 }
 
 #######################################

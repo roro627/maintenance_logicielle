@@ -22,11 +22,13 @@ qualite, configuration et contraintes MG2D.
 - Configuration centralisee dans `borne_arcade/config/borne.env`.
 - Mode maintenance cache configure via `borne_arcade/config/maintenance_mode.properties`.
 - Installation systeme idempotente: verification paquet par paquet puis installation des dependances manquantes.
+- Dependance LÖVE obligatoire: installation stricte dans le bootstrap, avec contournement automatique Debian 11 si le paquet `love` casse sa post-installation.
 - Privileges systeme obligatoires au bootstrap (`sudo`/root), avec echec explicite et action recommandee si indisponibles.
 - Protection permissions build: message clair si `build/` n est pas accessible en ecriture.
 - Menu optimise: suppression des chargements repetes police/son en boucle.
 - PianoTile robuste: fallback sans `librosa` si la dependance n est pas disponible.
 - CI/CD et tests automatisees via `.github/workflows/qualite.yml` et `scripts/tests/lancer_suite.sh`.
+- Pipeline reel ajoute: `.github/workflows/verification_reelle.yml` (Debian 11 minimal, 2 Go RAM, sans variables de simulation).
 
 ## Chaine d automatisation
 
@@ -37,8 +39,9 @@ qualite, configuration et contraintes MG2D.
 5. `scripts/tests/test_smoke.sh`
 6. `scripts/tests/lancer_suite.sh`
 7. validation CI locale `act` (job `verification`)
-8. `scripts/docs/generer_documentation.sh`
-9. `scripts/deploiement/post_pull_update.sh`
+8. validation CI reelle Debian 11 `act` (job `verification_reelle_debian11`)
+9. `scripts/docs/generer_documentation.sh`
+10. `scripts/deploiement/post_pull_update.sh`
 
 ## Contraintes MG2D
 

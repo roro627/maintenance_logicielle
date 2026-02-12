@@ -66,6 +66,10 @@ verifier_integration_mode_maintenance() {
     || arreter_sur_erreur "Mode maintenance non reference dans Graphique.java"
   grep -Fq "!etatModeMaintenance.estDebloque()" "${REPERTOIRE_BORNE}/Graphique.java" \
     || arreter_sur_erreur "Verrouillage d acces du mode maintenance absent dans Graphique.java"
+
+  if grep -Eq "getJoyJ1(Haut|Bas|Gauche|Droite)Tape" "${REPERTOIRE_BORNE}/EtatModeMaintenance.java"; then
+    arreter_sur_erreur "EtatModeMaintenance utilise des lectures joystick Tape qui consomment les entrees du menu"
+  fi
 }
 
 #######################################

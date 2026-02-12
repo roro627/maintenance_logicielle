@@ -33,6 +33,21 @@ Mecanismes utilises:
 ~/.local/bin/act -W .github/workflows/qualite.yml -j verification --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:act-latest
 ```
 
+### Validation CI/CD reelle (Debian 11, 2 Go RAM)
+
+Pipeline dedie: `.github/workflows/verification_reelle.yml`
+
+- environnement conteneur Debian 11 minimal,
+- limite memoire `2g`,
+- clonage du depot depuis GitHub (`https://github.com/roro627/maintenance_logicielle`),
+- execution complete sans variables de simulation.
+
+Execution locale equivalente via `act`:
+
+```bash
+~/.local/bin/act -W .github/workflows/verification_reelle.yml -j verification_reelle_debian11 --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:act-latest
+```
+
 ## Validation
 
 ```bash

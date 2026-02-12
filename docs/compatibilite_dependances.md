@@ -9,7 +9,7 @@ pour Raspberry Pi OS et la borne arcade.
 
 ### Noyau borne
 - Java: OpenJDK 17 minimum.
-- Python: 3.10 minimum.
+- Python: 3.9 minimum.
 - Lua: 5.3 minimum (5.4 recommande).
 - LÖVE: 11.0 minimum.
 - pip: 24.0 minimum.
@@ -17,6 +17,8 @@ pour Raspberry Pi OS et la borne arcade.
 - mkdocs: 1.5 minimum.
 - pygame: 2.5 minimum.
 - librosa: 0.10 minimum (PianoTile), avec fallback runtime si absent.
+- LÖVE est obligatoire et valide automatiquement dans les tests de compatibilite.
+- Le minimum Python est aligne sur Debian 11 (base de la verification CI reelle).
 
 ### Bibliotheques
 - MG2D: miroir local strict du depot officiel `https://github.com/synave/MG2D`, non modifie localement.
@@ -24,6 +26,7 @@ pour Raspberry Pi OS et la borne arcade.
 - pygame: requis pour certains jeux Python.
 - librosa: requis prefere pour l analyse rythme PianoTile (`borne_arcade/projet/PianoTile/requirements.txt`).
 - libsndfile1: dependance systeme audio pour l ecosysteme librosa.
+- curl: dependance systeme requise pour telecharger automatiquement les binaires lint quand necessaire.
 
 ## Procedure avant ajout de dependance
 
@@ -36,7 +39,7 @@ pour Raspberry Pi OS et la borne arcade.
 
 - Les versions minimales sont centralisees dans `config/versions_minimales.env`.
 - Le script `scripts/tests/test_versions_compatibilite.sh` valide Java, Python, pip, pytest, mkdocs, pygame,
-  et Lua/LÖVE si necessaire.
+  puis Lua et LÖVE (obligatoires des qu un jeu Lua est present).
 - L installation auto verifie et installe les paquets systeme manquants (dont `libsndfile1`) via `scripts/install/installer_borne.sh`.
 
 ## Commandes
@@ -51,6 +54,7 @@ pour Raspberry Pi OS et la borne arcade.
 - Si LÖVE ou Lua manque: installer `love` et `lua5.4`.
 - Si pygame manque dans la venv: relancer `./scripts/install/installer_borne.sh`.
 - Si librosa manque: relancer `./scripts/install/installer_borne.sh` ou installer via `./.venv/bin/pip install -r borne_arcade/projet/PianoTile/requirements.txt`.
+- Si `love` echoue sur Debian 11 minimal: le bootstrap applique un contournement automatique puis relance `apt -f install`.
 
 ## Liens associes
 

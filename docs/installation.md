@@ -17,6 +17,7 @@ sudo ./bootstrap_borne.sh
 Le script `bootstrap_borne.sh` enchaine:
 
 - installation systeme ciblee (paquet par paquet si manquant),
+- installation de l outillage de qualite (dont `curl` pour les telechargements lint),
 - creation/maintenance de la venv Python,
 - installation des dependances par jeu (`requirements.txt`),
 - permissions scripts, autostart, layout clavier,
@@ -70,6 +71,7 @@ sudo chown -R "$USER:$USER" ./build
 
 - Emplacement recommande du depot: dossier utilisateur (ex: `~/git/maintenance_logicielle`),
   pas un dossier systeme ou verrouille.
+- Si `love` echoue sur Debian 11 minimal: le script applique automatiquement un contournement, puis corrige l etat `dpkg`.
 - Si la borne ne demarre pas automatiquement: verifier `~/.config/autostart/borne.desktop`.
 - Si le layout clavier ne s applique pas: verifier `~/.xkb/symbols/borne`.
 

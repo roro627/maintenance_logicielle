@@ -123,8 +123,9 @@ verifier_versions_lua_love() {
   verifier_version_minimale "Lua" "${version_lua}" "${LUA_VERSION_MIN}"
 
   if ! command -v love >/dev/null 2>&1; then
-    journaliser "LÖVE introuvable: verification version LÖVE ignoree"
-    return 0
+    arreter_sur_erreur \
+      "LÖVE introuvable alors qu un jeu Lua est present." \
+      "Installez love puis relancez scripts/tests/test_versions_compatibilite.sh."
   fi
   version_love="$(love --version 2>&1 | sed -E 's/.* ([0-9]+(\.[0-9]+)+).*/\1/')"
   verifier_version_minimale "LÖVE" "${version_love}" "${LOVE_VERSION_MIN}"
