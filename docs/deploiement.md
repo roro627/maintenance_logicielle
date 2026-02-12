@@ -37,6 +37,7 @@ INSTALLATION_SYSTEME_OPTIONNEL=1 ./scripts/install/installer_borne.sh
 Resultat:
 - si les dependances systeme sont deja presentes, le deploiement continue sans root,
 - si des dependances manquent, echec clair avec action recommandee (`sudo ./bootstrap_borne.sh`).
+- les permissions partagees restent reappliquees (`logs/`, `build/`, `.cache/`, `.venv/`) pour eviter les blocages apres une installation root.
 
 ### Validation CI/CD locale (obligatoire en fin de run)
 

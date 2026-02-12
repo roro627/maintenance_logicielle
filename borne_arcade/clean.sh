@@ -14,6 +14,8 @@ DOSSIER_BUILD_RACINE="${DOSSIER_BUILD_RACINE:-${RACINE_PROJET}/build}"
 #   0
 #######################################
 verifier_acces_ecriture_build_clean() {
+  local sous_dossier_non_ecrivable=""
+
   if [[ -f "${RACINE_PROJET}/scripts/lib/outils_communs.sh" ]]; then
     # shellcheck source=/dev/null
     source "${RACINE_PROJET}/scripts/lib/outils_communs.sh"
@@ -26,6 +28,15 @@ verifier_acces_ecriture_build_clean() {
     echo "ERREUR: Dossier build non accessible en ecriture: ${DOSSIER_BUILD_RACINE}" >&2
     echo "ACTION RECOMMANDEE: sudo chown -R \"${USER}:${USER}\" \"${DOSSIER_BUILD_RACINE}\" puis relancez ./borne_arcade/clean.sh." >&2
     return 1
+  fi
+
+  if [[ -d "${DOSSIER_BUILD_RACINE}" ]]; then
+    sous_dossier_non_ecrivable="$(find "${DOSSIER_BUILD_RACINE}" -type d ! -w -print -quit 2>/dev/null || true)"
+    if [[ -n "${sous_dossier_non_ecrivable}" ]]; then
+      echo "ERREUR: Sous-dossier build non accessible en ecriture: ${sous_dossier_non_ecrivable}" >&2
+      echo "ACTION RECOMMANDEE: sudo chown -R \"${USER}:${USER}\" \"${DOSSIER_BUILD_RACINE}\" puis relancez ./borne_arcade/clean.sh." >&2
+      return 1
+    fi
   fi
 }
 

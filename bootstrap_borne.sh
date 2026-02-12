@@ -11,6 +11,8 @@ DOSSIER_ETAT_BOOTSTRAP=""
 FICHIER_ETAT_INSTALLATION_BOOTSTRAP=""
 ETAPE_BOOTSTRAP_COURANTE="initialisation"
 VERROU_BOOTSTRAP_ACTIF=0
+UTILISATEUR_APPELANT_BOOTSTRAP=""
+GROUPE_APPELANT_BOOTSTRAP=""
 
 #######################################
 # Verifie que le bootstrap est execute
@@ -32,6 +34,45 @@ verifier_execution_root_obligatoire() {
   arreter_sur_erreur \
     "Le bootstrap doit etre lance avec sudo (root) pour garantir une installation complete." \
     "Relancez avec: sudo ./bootstrap_borne.sh"
+}
+
+#######################################
+# Initialise l identite de l utilisateur
+# ayant lance sudo pour les etapes
+# non-systeme (build/lint/tests/docs).
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+initialiser_identite_appelant_bootstrap() {
+  if [[ "$(id -u)" -eq 0 ]] && [[ -n "${SUDO_USER:-}" ]] && [[ "${SUDO_USER}" != "root" ]]; then
+    if id "${SUDO_USER}" >/dev/null 2>&1; then
+      UTILISATEUR_APPELANT_BOOTSTRAP="${SUDO_USER}"
+      GROUPE_APPELANT_BOOTSTRAP="$(id -gn "${SUDO_USER}")"
+      return 0
+    fi
+  fi
+
+  UTILISATEUR_APPELANT_BOOTSTRAP="$(id -un)"
+  GROUPE_APPELANT_BOOTSTRAP="$(id -gn)"
+}
+
+#######################################
+# Execute une commande avec l utilisateur
+# appelant quand le bootstrap tourne en
+# root via sudo.
+# Arguments:
+#   $1...: commande a executer
+# Retour:
+#   0
+#######################################
+executer_comme_utilisateur_appelant() {
+  if [[ "$(id -u)" -eq 0 ]] && [[ "${UTILISATEUR_APPELANT_BOOTSTRAP}" != "root" ]]; then
+    sudo -u "${UTILISATEUR_APPELANT_BOOTSTRAP}" -H "$@"
+    return 0
+  fi
+  "$@"
 }
 
 #######################################
@@ -285,7 +326,7 @@ executer_installation_initiale() {
 #   0
 #######################################
 executer_compilation_globale() {
-  "${REPERTOIRE_BORNE}/compilation.sh"
+  executer_comme_utilisateur_appelant "${REPERTOIRE_BORNE}/compilation.sh"
 }
 
 #######################################
@@ -296,7 +337,7 @@ executer_compilation_globale() {
 #   0
 #######################################
 executer_lint_global() {
-  "${RACINE_PROJET}/scripts/lint/lancer_lint.sh"
+  executer_comme_utilisateur_appelant "${RACINE_PROJET}/scripts/lint/lancer_lint.sh"
 }
 
 #######################################
@@ -307,7 +348,7 @@ executer_lint_global() {
 #   0
 #######################################
 executer_tests_smoke() {
-  "${RACINE_PROJET}/scripts/tests/test_smoke.sh"
+  executer_comme_utilisateur_appelant "${RACINE_PROJET}/scripts/tests/test_smoke.sh"
 }
 
 #######################################
@@ -318,7 +359,43 @@ executer_tests_smoke() {
 #   0
 #######################################
 executer_generation_documentation() {
-  "${RACINE_PROJET}/scripts/docs/generer_documentation.sh"
+  executer_comme_utilisateur_appelant "${RACINE_PROJET}/scripts/docs/generer_documentation.sh"
+}
+
+#######################################
+# Normalise ownership/permissions apres
+# bootstrap pour eviter les artefacts
+# root non utilisables en session normale.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+normaliser_permissions_post_bootstrap() {
+  local chemins_cibles=(
+    "${RACINE_PROJET}/build"
+    "${RACINE_PROJET}/logs"
+    "${RACINE_PROJET}/.cache"
+    "${RACINE_PROJET}/.venv"
+    "${RACINE_PROJET}/site"
+  )
+  local chemin
+
+  journaliser "Bootstrap: normalisation permissions finales"
+  for chemin in "${chemins_cibles[@]}"; do
+    [[ -e "${chemin}" ]] || continue
+
+    if ! chmod -R a+rwX "${chemin}" 2>/dev/null; then
+      journaliser "ATTENTION: impossible d appliquer chmod a+rwX sur ${chemin}."
+    fi
+
+    if [[ "$(id -u)" -eq 0 ]] && [[ "${UTILISATEUR_APPELANT_BOOTSTRAP}" != "root" ]]; then
+      if ! chown -R "${UTILISATEUR_APPELANT_BOOTSTRAP}:${GROUPE_APPELANT_BOOTSTRAP}" "${chemin}" 2>/dev/null; then
+        journaliser "ATTENTION: impossible d appliquer chown ${UTILISATEUR_APPELANT_BOOTSTRAP}:${GROUPE_APPELANT_BOOTSTRAP} sur ${chemin}."
+      fi
+    fi
+  done
+  journaliser "Bootstrap: normalisation permissions finales: OK"
 }
 
 #######################################
@@ -344,6 +421,7 @@ afficher_resume_bootstrap() {
 main() {
   charger_configuration_borne
   verifier_execution_root_obligatoire
+  initialiser_identite_appelant_bootstrap
   preparer_etat_bootstrap
   activer_journalisation_bootstrap
   trap 'gerer_echec_bootstrap "$?"' ERR
@@ -356,6 +434,7 @@ main() {
   executer_etape_bootstrap "lint global" executer_lint_global
   executer_etape_bootstrap "tests smoke" executer_tests_smoke
   executer_etape_bootstrap "generation documentation" executer_generation_documentation
+  normaliser_permissions_post_bootstrap
   trap - ERR
   afficher_resume_bootstrap
 }

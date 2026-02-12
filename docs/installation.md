@@ -21,7 +21,9 @@ Le script `bootstrap_borne.sh` enchaine:
 - creation/maintenance de la venv Python,
 - installation des dependances par jeu (`requirements.txt`),
 - permissions scripts, autostart, layout clavier,
-- droits partages multi-utilisateurs sur `logs/`, `build/`, `.cache/` et fichiers d exploitation,
+- droits partages multi-utilisateurs sur `logs/`, `build/`, `.cache/`, `.venv/` et fichiers d exploitation,
+- execution des etapes non-systeme (compilation/lint/tests/docs) sous l utilisateur appelant quand le bootstrap est lance via `sudo`,
+- normalisation finale ownership/permissions (`build/`, `logs/`, `.cache/`, `.venv/`, `site/`) pour eviter les artefacts root bloquants,
 - compilation, lint, tests smoke, documentation.
 
 Le bootstrap est **obligatoirement lance en sudo/root** (hors mode test).
@@ -79,7 +81,7 @@ Le journal bootstrap est ecrit dans `logs/bootstrap_borne_YYYYMMDD_HHMMSS.log`.
 - Erreur droits build (`Permission non accordee`): corriger les droits puis relancer.
 
 ```bash
-sudo chown -R "$USER:$USER" ./build
+sudo chown -R "$USER:$USER" ./build ./.venv ./logs ./.cache ./site
 ./borne_arcade/clean.sh
 ./borne_arcade/compilation.sh
 ```

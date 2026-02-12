@@ -110,6 +110,21 @@ verifier_messages_permission_build() {
 }
 
 #######################################
+# Verifie que le bootstrap evite les
+# artefacts root bloquants apres sudo.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+verifier_bootstrap_permissions_apres_sudo() {
+  grep -Fq "executer_comme_utilisateur_appelant" "${RACINE_PROJET}/bootstrap_borne.sh" \
+    || arreter_sur_erreur "Execution non-systeme sous utilisateur appelant absente dans bootstrap_borne.sh"
+  grep -Fq "normaliser_permissions_post_bootstrap" "${RACINE_PROJET}/bootstrap_borne.sh" \
+    || arreter_sur_erreur "Normalisation permissions finales absente dans bootstrap_borne.sh"
+}
+
+#######################################
 # Point d entree du test anti regressions.
 # Arguments:
 #   aucun
@@ -124,6 +139,7 @@ main() {
   verifier_integration_mode_maintenance
   verifier_fallback_pianotile_librosa
   verifier_messages_permission_build
+  verifier_bootstrap_permissions_apres_sudo
   journaliser "Test anti regressions: OK"
 }
 

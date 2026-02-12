@@ -41,6 +41,7 @@ pour Raspberry Pi OS et la borne arcade.
 - Le script `scripts/tests/test_versions_compatibilite.sh` valide Java, Python, pip, pytest, mkdocs, pygame,
   puis Lua et LÖVE (obligatoires des qu un jeu Lua est present).
 - L installation auto verifie et installe les paquets systeme manquants (dont `libsndfile1`) via `scripts/install/installer_borne.sh`.
+- Le bootstrap `sudo` conserve la compatibilite d exploitation en executant compilation/lint/tests/docs sous l utilisateur appelant, puis en normalisant ownership/permissions de `build/`, `.venv/`, `logs/` et `.cache/`.
 
 ## Commandes
 

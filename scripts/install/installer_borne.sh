@@ -307,6 +307,7 @@ appliquer_chmod_si_possible() {
   local cible
   for cible in "$@"; do
     [[ -e "${cible}" ]] || continue
+    [[ -L "${cible}" ]] && continue
     if ! chmod "${mode}" "${cible}" 2>/dev/null; then
       journaliser "ATTENTION: impossible d appliquer chmod ${mode} sur ${cible}."
     fi
@@ -351,14 +352,31 @@ configurer_permissions_partagees() {
     "${RACINE_PROJET}/logs" \
     "${RACINE_PROJET}/build" \
     "${RACINE_PROJET}/.cache" \
+    "${RACINE_PROJET}/.venv" \
+    "${RACINE_PROJET}/site" \
     "${REPERTOIRE_BORNE}" \
     "${REPERTOIRE_BORNE}/projet"
 
   local chemin
+  local cibles_partagees=(
+    "${RACINE_PROJET}/logs"
+    "${RACINE_PROJET}/build"
+    "${RACINE_PROJET}/.cache"
+    "${RACINE_PROJET}/.venv"
+    "${RACINE_PROJET}/site"
+    "${REPERTOIRE_BORNE}/projet"
+  )
+
+  for chemin in "${cibles_partagees[@]}"; do
+    [[ -e "${chemin}" ]] || continue
+    appliquer_chmod_si_possible a+rwX "${chemin}"
+  done
+
   while IFS= read -r chemin; do
     appliquer_chmod_si_possible a+rwX "${chemin}"
   done < <(find "${RACINE_PROJET}/logs" "${RACINE_PROJET}/build" "${RACINE_PROJET}/.cache" \
-    "${REPERTOIRE_BORNE}/projet" -mindepth 1 -print 2>/dev/null | sort)
+    "${RACINE_PROJET}/.venv" "${RACINE_PROJET}/site" "${REPERTOIRE_BORNE}/projet" \
+    -mindepth 1 -print 2>/dev/null | sort)
 
   while IFS= read -r chemin; do
     appliquer_chmod_si_possible a+rw "${chemin}"

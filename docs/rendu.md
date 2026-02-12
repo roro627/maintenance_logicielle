@@ -15,6 +15,7 @@ Documenter le bilan final des travaux avec une verification point par point de `
 7. Gouvernance MG2D durcie: source canonique imposee et integrite testee sans modification locale.
 8. Maintenance mode modernisee: execution asynchrone des commandes, logs temps reel et interface pygame plus lisible.
 9. Deploiement post-pull durci: permissions partagees, logs robustes et installation systeme optionnelle en non-root.
+10. Bootstrap sudo durci: etapes non-systeme sous utilisateur appelant + normalisation ownership/permissions finales pour eviter les blocages `Permission non accordee` au lancement borne.
 
 ## Conformite `consignes.md` (point par point)
 

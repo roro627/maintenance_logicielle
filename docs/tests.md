@@ -49,10 +49,11 @@ TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 .
 - compilation Java + verifications syntaxiques Python/Lua,
 - ajout de jeu,
 - deploiement post-pull,
-- deploiement post-pull + verification permissions partagees (`logs/`, `build/`, `.cache/`, scripts critiques),
+- deploiement post-pull + verification permissions partagees (`logs/`, `build/`, `.cache/`, `.venv/`, scripts critiques),
 - generation documentation,
 - architecture et couts,
 - mode maintenance cache (presence, verrouillage, integration menu),
+- bootstrap robuste apres `sudo` (absence de regression sur normalisation permissions et execution non-systeme sous utilisateur appelant),
 - robustesse PianoTile en absence de `librosa`,
 - validation materielle (checklist).
 

@@ -37,6 +37,7 @@ verifier_permissions_partagees() {
     "${RACINE_PROJET}/logs"
     "${RACINE_PROJET}/build"
     "${RACINE_PROJET}/.cache"
+    "${RACINE_PROJET}/.venv"
     "${REPERTOIRE_BORNE}/projet"
   )
   local dossier
@@ -47,6 +48,13 @@ verifier_permissions_partagees() {
         "Dossier non accessible en ecriture: ${dossier}" \
         "Relancez sudo ./bootstrap_borne.sh pour reappliquer les droits partages."
   done
+
+  local sous_dossier_build_non_ecrivable=""
+  sous_dossier_build_non_ecrivable="$(find "${RACINE_PROJET}/build" -type d ! -w -print -quit 2>/dev/null || true)"
+  [[ -z "${sous_dossier_build_non_ecrivable}" ]] \
+    || arreter_sur_erreur \
+      "Sous-dossier build non accessible en ecriture: ${sous_dossier_build_non_ecrivable}" \
+      "Relancez sudo ./bootstrap_borne.sh pour corriger ownership/permissions puis relancez le test."
 
   local scripts_critiques=(
     "${RACINE_PROJET}/bootstrap_borne.sh"

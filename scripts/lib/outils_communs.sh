@@ -147,12 +147,20 @@ arreter_sur_erreur() {
 verifier_acces_ecriture_build() {
   local dossier_build="${DOSSIER_BUILD_RACINE:-${RACINE_PROJET}/build}"
   local dossier_parent_build=""
+  local sous_dossier_non_ecrivable=""
 
   if [[ -d "${dossier_build}" ]]; then
     [[ -w "${dossier_build}" ]] \
       || arreter_sur_erreur \
         "Dossier build non accessible en ecriture: ${dossier_build}" \
         "Recuperez les droits avec: sudo chown -R \"${USER}:${USER}\" \"${dossier_build}\" puis relancez la commande."
+
+    sous_dossier_non_ecrivable="$(find "${dossier_build}" -type d ! -w -print -quit 2>/dev/null || true)"
+    if [[ -n "${sous_dossier_non_ecrivable}" ]]; then
+      arreter_sur_erreur \
+        "Sous-dossier build non accessible en ecriture: ${sous_dossier_non_ecrivable}" \
+        "Recuperez les droits avec: sudo chown -R \"${USER}:${USER}\" \"${dossier_build}\" puis relancez la commande."
+    fi
     return 0
   fi
 
