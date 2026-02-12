@@ -329,6 +329,24 @@ class TestOperationsMaintenance(unittest.TestCase):
                 self.assertIn("Retour commit precedent termine", message)
                 self.assertEqual(mock_exec.call_count, 3)
 
+    def test_lister_paquets_reset_ignore_python3_meme_si_mal_configure(self) -> None:
+        """Controle que python3 ne peut jamais etre cible par le reset prerequis.
+
+        Args:
+            Aucun.
+
+        Returns:
+            Aucun.
+        """
+
+        with (
+            patch.object(operations, "PAQUETS_RESET_NON_SYSTEME_BORNE", ["python3", "checkstyle"]),
+            patch.object(operations, "paquet_systeme_installe", return_value=True),
+        ):
+            paquets = operations.lister_paquets_reset_non_systeme_installes()
+            self.assertEqual(paquets, ["checkstyle"])
+            self.assertNotIn("python3", paquets)
+
     def test_operation_reset_pre_requis_enchaine_commandes_et_nettoyage(self) -> None:
         """Controle l orchestration complete du reset prerequis.
 
@@ -346,6 +364,11 @@ class TestOperationsMaintenance(unittest.TestCase):
 
             with (
                 patch.object(operations, "obtenir_prefixe_privileges_systeme", return_value=["sudo", "-n"]),
+                patch.object(
+                    operations,
+                    "lister_paquets_reset_non_systeme_installes",
+                    return_value=["checkstyle", "pylint"],
+                ),
                 patch.object(operations, "executer_commande", return_value=(True, "ok")) as mock_exec,
                 patch.object(
                     operations,
@@ -361,9 +384,50 @@ class TestOperationsMaintenance(unittest.TestCase):
                 )
 
                 self.assertTrue(succes)
-                self.assertIn("Reset prerequis termine", message)
-                self.assertEqual(mock_exec.call_count, 3)
+                self.assertIn("mode sur", message)
+                self.assertEqual(mock_exec.call_count, 2)
+                commandes = [appel.args[0] for appel in mock_exec.call_args_list]
+                self.assertTrue(any("remove" in commande for commande in commandes))
+                self.assertFalse(any("autoremove" in commande for commande in commandes))
                 mock_nettoyage.assert_called_once_with(racine_temporaire, lignes_capturees.append)
+
+    def test_operation_reset_pre_requis_sans_paquet_purgeable_execute_clean_uniquement(self) -> None:
+        """Controle le reset sur quand aucun paquet non-systeme n est installe.
+
+        Args:
+            Aucun.
+
+        Returns:
+            Aucun.
+        """
+
+        configuration = operations.charger_configuration(Path("config_introuvable.json"))
+        lignes_capturees: list[str] = []
+        with tempfile.TemporaryDirectory() as dossier_temporaire:
+            racine_temporaire = Path(dossier_temporaire)
+
+            with (
+                patch.object(operations, "obtenir_prefixe_privileges_systeme", return_value=["sudo", "-n"]),
+                patch.object(operations, "lister_paquets_reset_non_systeme_installes", return_value=[]),
+                patch.object(operations, "executer_commande", return_value=(True, "ok")) as mock_exec,
+                patch.object(
+                    operations,
+                    "nettoyer_artefacts_reset",
+                    return_value=(True, "Nettoyage local termine."),
+                ),
+            ):
+                succes, message, _ = operations.operation_reset_pre_requis(
+                    configuration,
+                    racine_temporaire,
+                    racine_temporaire / "journal.log",
+                    lignes_capturees.append,
+                )
+
+                self.assertTrue(succes)
+                self.assertIn("mode sur", message)
+                self.assertEqual(mock_exec.call_count, 1)
+                premiere_commande = mock_exec.call_args_list[0].args[0]
+                self.assertIn("clean", premiere_commande)
 
 
 if __name__ == "__main__":

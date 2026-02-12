@@ -28,7 +28,7 @@ qualite, configuration et contraintes MG2D.
 - Journal maintenance resilient: selection automatique d un dossier logs ecrivable (`logs/`, puis `~/.cache/maintenance_logicielle/logs/`, puis `/tmp/maintenance_logicielle/logs/`) et retour d erreur actionnable en cas d exception inattendue.
 - Diagnostic maintenance durci: verification explicite des pre-requis borne et gestion robuste des sorties vides/commandes absentes.
 - Operations git maintenance durcies: `git pull` et `retour commit precedent` verifient d abord la presence de git, puis retournent une erreur actionnable.
-- Reset prerequis integre au mode maintenance: purge apt ciblee + nettoyage des artefacts locaux (`.venv`, `build`, `site`, etat bootstrap) pour retester une installation complete.
+- Reset prerequis integre au mode maintenance en mode sur: purge apt limitee aux paquets non-systeme de la borne, paquets systeme critiques proteges (dont `python3`, `python3-venv`, `python3-pip`), suppression de `autoremove --purge`, puis nettoyage des artefacts locaux (`.venv`, `build`, `site`, etat bootstrap).
 - Installation systeme idempotente: verification paquet par paquet puis installation des dependances manquantes.
 - Permissions partagees appliquees par l installateur pour eviter les blocages multi-utilisateurs (`logs/`, `build/`, `.cache/`, `.venv/`, scripts et fichiers de jeu).
 - Dependance LÖVE obligatoire: installation stricte dans le bootstrap, avec contournement automatique Debian 11 si le paquet `love` casse sa post-installation.

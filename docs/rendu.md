@@ -16,7 +16,7 @@ Documenter le bilan final des travaux avec une verification point par point de `
 8. Maintenance mode modernisee: execution asynchrone des commandes, logs temps reel et interface pygame plus lisible.
 9. Deploiement post-pull durci: permissions partagees, logs robustes et installation systeme optionnelle en non-root.
 10. Bootstrap sudo durci: etapes non-systeme sous utilisateur appelant + normalisation ownership/permissions finales pour eviter les blocages `Permission non accordee` au lancement borne.
-11. Maintenance/gameplay enrichis: journal maintenance scrollable vertical+horizontal (recent en bas) + reset prerequis + diagnostic prerequis robuste + rollback git au commit precedent (depot propre), et mode attract NeonSumo rendu continu apres collision.
+11. Maintenance/gameplay enrichis: journal maintenance scrollable vertical+horizontal (recent en bas) + reset prerequis en mode sur (sans autoremove global, avec protection explicite de `python3`/`python3-venv`/`python3-pip`) + diagnostic prerequis robuste + rollback git au commit precedent (depot propre), et mode attract NeonSumo rendu continu apres collision.
 
 ## Conformite `consignes.md` (point par point)
 
@@ -73,7 +73,7 @@ Documenter le bilan final des travaux avec une verification point par point de `
 ### 5. Maintenance exploitable en borne
 
 - Ce qui a ete fait:
-  - nouveau module `borne_arcade/projet/MaintenanceMode/` (pygame) avec operations: diagnostic, git pull, pipeline post-pull, mise a jour OS, reset prerequis.
+  - nouveau module `borne_arcade/projet/MaintenanceMode/` (pygame) avec operations: diagnostic, git pull, pipeline post-pull, mise a jour OS, reset prerequis en mode sur.
   - execution des operations en arriere-plan pour eviter le blocage de l interface.
   - selection automatique d un dossier logs ecrivable (`logs/`, `~/.cache/...`, `/tmp/...`) avant chaque operation.
   - capture globale des exceptions d operation avec message actionnable et retour d etat propre a l interface.

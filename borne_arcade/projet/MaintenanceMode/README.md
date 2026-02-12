@@ -7,7 +7,7 @@ Jeu utilitaire cache pour l exploitation de la borne:
 - git pull,
 - pipeline post-pull,
 - mise a jour OS.
-- reset prerequis (purge apt + nettoyage local pour retest a zero).
+- reset prerequis (mode sur: purge apt limitee aux paquets non-systeme + nettoyage local pour retest a zero).
 - retour commit precedent (rollback git controle vers `HEAD~1` si depot propre).
 - journal temps reel des commandes.
 - execution asynchrone pour garder l interface fluide.

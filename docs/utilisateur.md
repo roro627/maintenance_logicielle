@@ -21,7 +21,7 @@ commandes principales et depannage rapide.
 - Le journal est affiche de facon coherente: les lignes recentes restent en bas de la zone.
 - Le diagnostic signale explicitement les pre-requis manquants (avec action recommandee) au lieu de planter.
 - Pendant une operation, la sortie est bloquee pour eviter les etats partiels.
-- Option reset disponible: `Reset prerequis` (purge apt prerequis borne + nettoyage local) pour rejouer une installation depuis zero.
+- Option reset disponible: `Reset prerequis` (mode sur: purge des prerequis non-systeme seulement, sans autoremove global, + nettoyage local). Les paquets Python systeme (`python3`, `python3-venv`, `python3-pip`) sont explicitement proteges pour eviter toute casse de la VM/systeme.
 - Option rollback disponible: `Retour commit precedent` (retour `HEAD~1`) uniquement si le depot est propre.
 - Les operations git (`Git pull`, rollback) affichent maintenant un message explicite si `git` est absent.
 - Reverrouillage manuel: dans `MaintenanceMode`, bouton `J1C` (touche `H`).

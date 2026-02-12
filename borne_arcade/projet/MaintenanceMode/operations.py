@@ -35,6 +35,23 @@ PAQUETS_SYSTEME_BORNE = [
     "libsndfile1",
     "love",
 ]
+PAQUETS_RESET_NON_SYSTEME_BORNE = [
+    "checkstyle",
+    "pylint",
+    "shellcheck",
+    "xdotool",
+    "lua5.4",
+    "love",
+]
+PAQUETS_RESET_SYSTEME_PROTEGES_BORNE = [
+    "git",
+    "curl",
+    "openjdk-17-jdk",
+    "python3",
+    "python3-venv",
+    "python3-pip",
+    "libsndfile1",
+]
 COMMANDES_PRE_REQUIS_BORNE = {
     "git": ["git"],
     "curl": ["curl"],
@@ -248,7 +265,7 @@ def lister_operations() -> List[Dict[str, str]]:
         {
             "id": "reset_pre_requis",
             "titre": "Reset prerequis",
-            "description": "Purge apt des prerequis borne + nettoyage local pour retest a zero.",
+            "description": "Mode sur: purge des prerequis non-systeme + nettoyage local pour retest a zero.",
         },
     ]
 
@@ -886,13 +903,33 @@ def nettoyer_artefacts_reset(racine_projet: Path, journaliser: ConsommateurJourn
     return True, "Nettoyage local termine."
 
 
+def lister_paquets_reset_non_systeme_installes() -> List[str]:
+    """Liste les paquets non-systeme effectivement installes et purgables en mode sur.
+
+    Args:
+        Aucun.
+
+    Returns:
+        Liste ordonnee des paquets installes ciblables par le reset sur.
+    """
+
+    paquets_proteges = set(PAQUETS_RESET_SYSTEME_PROTEGES_BORNE)
+    paquets_installes: List[str] = []
+    for paquet in PAQUETS_RESET_NON_SYSTEME_BORNE:
+        if paquet in paquets_proteges:
+            continue
+        if paquet_systeme_installe(paquet):
+            paquets_installes.append(paquet)
+    return paquets_installes
+
+
 def operation_reset_pre_requis(
     configuration: Dict[str, object],
     racine_projet: Path,
     chemin_journal: Path,
     journaliser: ConsommateurJournal,
 ) -> Tuple[bool, str, Path]:
-    """Purge les prerequis systeme puis nettoie les artefacts locaux.
+    """Purge en mode sur les prerequis non-systeme puis nettoie les artefacts locaux.
 
     Args:
         configuration: Configuration chargee.
@@ -915,11 +952,24 @@ def operation_reset_pre_requis(
         journaliser(f"ERREUR: {message}")
         return False, message, chemin_journal
 
-    commandes = [
-        prefixe_sudo + ["apt-get", "remove", "--purge", "-y"] + PAQUETS_SYSTEME_BORNE,
-        prefixe_sudo + ["apt-get", "autoremove", "--purge", "-y"],
-        prefixe_sudo + ["apt-get", "clean"],
-    ]
+    paquets_non_systeme_installes = lister_paquets_reset_non_systeme_installes()
+    if paquets_non_systeme_installes:
+        journaliser(
+            "Mode sur: purge uniquement des prerequis non-systeme installes: "
+            + ", ".join(paquets_non_systeme_installes)
+        )
+    else:
+        journaliser("Mode sur: aucun prerequis non-systeme installe a purger.")
+
+    journaliser(
+        "Paquets systeme proteges (non purges): "
+        + ", ".join(PAQUETS_RESET_SYSTEME_PROTEGES_BORNE)
+    )
+
+    commandes = []
+    if paquets_non_systeme_installes:
+        commandes.append(prefixe_sudo + ["apt-get", "remove", "--purge", "-y"] + paquets_non_systeme_installes)
+    commandes.append(prefixe_sudo + ["apt-get", "clean"])
 
     for commande in commandes:
         journaliser(f"$ {' '.join(commande)}")
@@ -939,7 +989,11 @@ def operation_reset_pre_requis(
         return False, message_nettoyage, chemin_journal
 
     journaliser(message_nettoyage)
-    return True, "Reset prerequis termine. Relancez bootstrap_borne.sh pour reinstaller.", chemin_journal
+    return (
+        True,
+        "Reset prerequis termine en mode sur. Relancez bootstrap_borne.sh pour reinstaller.",
+        chemin_journal,
+    )
 
 
 def obtenir_prefixe_privileges_systeme() -> List[str] | None:

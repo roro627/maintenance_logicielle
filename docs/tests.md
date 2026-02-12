@@ -42,7 +42,9 @@ TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 .
 - mode maintenance Python (`borne_arcade/projet/MaintenanceMode/tests/test_operations.py`):
   streaming logs temps reel, timeout actionnable, journalisation des erreurs,
   fallback de dossier logs, operation `reset_pre_requis`, operation `git_retour_precedent`,
-  robustesse diagnostic en absence de pre-requis, gestion de l absence de `git` et capture des exceptions inattendues.
+  robustesse diagnostic en absence de pre-requis, gestion de l absence de `git`,
+  verification du reset prerequis en mode sur (sans `autoremove --purge`), protection explicite de `python3`,
+  et capture des exceptions inattendues.
 - logique d interface maintenance (`borne_arcade/projet/MaintenanceMode/tests/test_interface.py`):
   defilement vertical/horizontal du journal, auto-scroll, bornage de l historique et extraction de segment horizontal.
 - PianoTile (`borne_arcade/projet/PianoTile/tests/test_piano.py`):
