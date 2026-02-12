@@ -16,6 +16,8 @@ commandes principales et depannage rapide.
 - Le mode est verrouille au lancement de la borne.
 - Deblocage: sequence secrete configuree dans `borne_arcade/config/maintenance_mode.properties`.
 - Ouverture apres debloquage: bouton configure (par defaut `J1B`).
+- Une operation maintenance lancee (`F`) tourne en arriere-plan avec journal temps reel visible dans l ecran.
+- Pendant une operation, la sortie est bloquee pour eviter les etats partiels.
 - Reverrouillage manuel: dans `MaintenanceMode`, bouton `J1C` (touche `H`).
 - Au redemarrage, le mode maintenance redevient verrouille automatiquement.
 - Si le jeu maintenance est selectionne sans debloquage, son lancement est refuse.

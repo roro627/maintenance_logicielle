@@ -37,7 +37,9 @@ TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 .
 - HighScore (lecture/ecriture),
 - mapping clavier borne,
 - parsing configuration,
-- logique NeonSumo (collisions, sortie arene, cooldowns, ultime).
+- logique NeonSumo (collisions, sortie arene, cooldowns, ultime),
+- mode maintenance Python (`borne_arcade/projet/MaintenanceMode/tests/test_operations.py`):
+  streaming logs temps reel, timeout actionnable, journalisation des erreurs.
 
 ### Integration et systeme
 - catalogue jeux,

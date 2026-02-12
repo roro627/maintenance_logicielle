@@ -7,6 +7,8 @@ Jeu utilitaire cache pour l exploitation de la borne:
 - git pull,
 - pipeline post-pull,
 - mise a jour OS.
+- journal temps reel des commandes.
+- execution asynchrone pour garder l interface fluide.
 
 ## Deblocage
 

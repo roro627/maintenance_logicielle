@@ -85,6 +85,21 @@ tester_unitaire_neon_sumo() {
 }
 
 #######################################
+# Execute les tests unitaires Python du
+# mode maintenance.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+tester_unitaire_maintenance_mode() {
+  (
+    cd "${RACINE_PROJET}"
+    "${COMMANDE_PYTHON}" -m unittest borne_arcade/projet/MaintenanceMode/tests/test_operations.py
+  )
+}
+
+#######################################
 # Point d entree test jeux.
 # Arguments:
 #   aucun
@@ -96,6 +111,7 @@ main() {
   compiler_borne
   verifier_lanceurs
   tester_unitaire_neon_sumo
+  tester_unitaire_maintenance_mode
   tester_lancement_tous_les_jeux
   journaliser "Test jeux: OK"
 }

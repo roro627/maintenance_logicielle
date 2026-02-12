@@ -4,6 +4,83 @@
     "hauteur": 720,
     "fps": 30
   },
+  "interface": {
+    "marge_horizontale": 36,
+    "marge_verticale": 28,
+    "hauteur_entete": 112,
+    "hauteur_pied": 72,
+    "espacement_colonnes": 20,
+    "largeur_colonne_operations": 540,
+    "rayon_bordure": 16,
+    "hauteur_ligne_operation": 48,
+    "hauteur_ligne_journal": 24,
+    "nombre_lignes_journal": 18,
+    "taille_police_titre": 44,
+    "taille_police_texte": 24,
+    "taille_police_journal": 20,
+    "intervalle_animation_ms": 300
+  },
+  "theme": {
+    "fond_haut": [
+      7,
+      14,
+      30
+    ],
+    "fond_bas": [
+      2,
+      6,
+      16
+    ],
+    "panneau": [
+      16,
+      24,
+      44
+    ],
+    "panneau_bord": [
+      56,
+      94,
+      140
+    ],
+    "texte_principal": [
+      233,
+      239,
+      255
+    ],
+    "texte_secondaire": [
+      174,
+      190,
+      226
+    ],
+    "accent": [
+      0,
+      208,
+      154
+    ],
+    "erreur": [
+      241,
+      98,
+      98
+    ],
+    "succes": [
+      106,
+      210,
+      134
+    ],
+    "info": [
+      88,
+      184,
+      255
+    ],
+    "selection": [
+      24,
+      48,
+      86
+    ]
+  },
+  "journal": {
+    "taille_max_lignes_interface": 240,
+    "intervalle_lecture_processus_ms": 100
+  },
   "temps_max_secondes": {
     "diagnostic": 20,
     "git_pull": 240,

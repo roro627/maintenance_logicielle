@@ -3,3 +3,4 @@
 
 scripts
 borne_arcade/projet/NeonSumo
+borne_arcade/projet/MaintenanceMode

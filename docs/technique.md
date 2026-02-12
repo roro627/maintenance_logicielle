@@ -21,6 +21,8 @@ qualite, configuration et contraintes MG2D.
 - KISS: scripts explicites, idempotents, orientes exploitation.
 - Configuration centralisee dans `borne_arcade/config/borne.env`.
 - Mode maintenance cache configure via `borne_arcade/config/maintenance_mode.properties`.
+- Mode maintenance pygame parametre via `borne_arcade/projet/MaintenanceMode/config_maintenance.json` (fenetre, theme, journal, timeouts).
+- Operations maintenance executees en arriere-plan (thread dedie) avec journal temps reel non bloquant pour eviter le freeze UI.
 - Installation systeme idempotente: verification paquet par paquet puis installation des dependances manquantes.
 - Dependance LÖVE obligatoire: installation stricte dans le bootstrap, avec contournement automatique Debian 11 si le paquet `love` casse sa post-installation.
 - Privileges systeme obligatoires au bootstrap (`sudo`/root), avec echec explicite et action recommandee si indisponibles.

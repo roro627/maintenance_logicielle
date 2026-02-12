@@ -26,7 +26,10 @@ You have access to external tools and should use them when it improves correctne
 9. **Centralize configuration**: behavior knobs must live in configuration files (`bouton.txt`, `description.txt`, etc.).
 10. **Anti-regression**: when fixing a bug, add or update a test that would have caught it.
 11. **Messages d erreur clairs**: all error messages shown to users/operators must be clear, understandable, and actionable (cause + concrete next step).
-12. **CI/CD vert en fin de run**: at the end of every user request/change, CI/CD must be green. Validate with `~/.local/bin/act -W .github/workflows/qualite.yml -j verification --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:act-latest` before considering the work complete.
+12. **CI/CD vert en fin de run**: at the end of every user request/change, CI/CD must be green. Validate with:
+   - `~/.local/bin/act -W .github/workflows/qualite.yml -j verification --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:act-latest`
+   - `~/.local/bin/act -W .github/workflows/verification_reelle.yml -j verification_reelle_debian11 --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:act-latest`
+   before considering the work complete.
 
 ## Stack specifics
 
@@ -95,7 +98,10 @@ From `borne_arcade/`:
   - Individual game functionality
 - **Hardware validation**: Test on physical arcade kiosk before considering work complete.
 - **Documentation validation**: Verify a third party can reproduce installation from docs alone.
-- **CI/CD validation**: At the end of each run, execute `~/.local/bin/act -W .github/workflows/qualite.yml -j verification --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:act-latest` successfully and keep `.github/workflows/qualite.yml` green on GitHub.
+- **CI/CD validation**: At the end of each run, execute successfully:
+  - `~/.local/bin/act -W .github/workflows/qualite.yml -j verification --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:act-latest`
+  - `~/.local/bin/act -W .github/workflows/verification_reelle.yml -j verification_reelle_debian11 --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:act-latest`
+  and keep `.github/workflows/qualite.yml` and `.github/workflows/verification_reelle.yml` green on GitHub.
 
 After each major implementation or change, run the full test suite and validate on physical hardware.
 

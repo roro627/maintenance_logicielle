@@ -13,6 +13,7 @@ Documenter le bilan final des travaux avec une verification point par point de `
 5. Mode maintenance cache integre: deblocage par sequence secrete, operations d exploitation, reverrouillage manuel.
 6. Robustesse runtime accrue: garde permissions build et fallback PianoTile sans `librosa`.
 7. Gouvernance MG2D durcie: source canonique imposee et integrite testee sans modification locale.
+8. Maintenance mode modernisee: execution asynchrone des commandes, logs temps reel et interface pygame plus lisible.
 
 ## Conformite `consignes.md` (point par point)
 
@@ -67,8 +68,11 @@ Documenter le bilan final des travaux avec une verification point par point de `
 
 - Ce qui a ete fait:
   - nouveau module `borne_arcade/projet/MaintenanceMode/` (pygame) avec operations: diagnostic, git pull, pipeline post-pull, mise a jour OS.
+  - execution des operations en arriere-plan pour eviter le blocage de l interface.
+  - journal temps reel en direct dans l UI et dans `logs/maintenance_mode_*.log`.
   - deblocage par sequence secrete + bouton d ouverture configurable.
   - reverrouillage manuel par bouton dans le mode maintenance et reverrouillage automatique au redemarrage.
+  - tests unitaires dedies au mode maintenance (`test_operations.py`) integres a `scripts/tests/test_jeux.sh`.
 - Pourquoi c est conforme:
   - repond au besoin d operations terrain sans toucher au code MG2D.
 - A quoi ca sert:
