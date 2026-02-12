@@ -56,6 +56,7 @@ pour Raspberry Pi OS et la borne arcade.
 - Si pygame manque dans la venv: relancer `./scripts/install/installer_borne.sh`.
 - Si librosa manque: relancer `./scripts/install/installer_borne.sh` ou installer via `./.venv/bin/pip install -r borne_arcade/projet/PianoTile/requirements.txt`.
 - Si `love` echoue sur Debian 11 minimal: le bootstrap applique un contournement automatique puis relance `apt -f install`.
+- Pour repartir de zero: lancer `Reset prerequis` depuis `MaintenanceMode`, puis `sudo ./bootstrap_borne.sh` pour reinstaller.
 
 ## Liens associes
 

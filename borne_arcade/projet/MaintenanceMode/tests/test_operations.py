@@ -159,6 +159,81 @@ class TestOperationsMaintenance(unittest.TestCase):
                 self.assertTrue(chemin_journal.exists())
                 self.assertTrue(any("ERREUR: Operation interrompue" in ligne for ligne in lignes_capturees))
 
+    def test_lister_operations_contient_reset_pre_requis(self) -> None:
+        """Controle la presence de l operation reset dans le catalogue.
+
+        Args:
+            Aucun.
+
+        Returns:
+            Aucun.
+        """
+
+        operations_disponibles = operations.lister_operations()
+        identifiants = [operation["id"] for operation in operations_disponibles]
+        self.assertIn("reset_pre_requis", identifiants)
+
+    def test_operation_reset_pre_requis_refuse_sans_sudo(self) -> None:
+        """Controle le message actionnable sans privileges sudo non interactifs.
+
+        Args:
+            Aucun.
+
+        Returns:
+            Aucun.
+        """
+
+        configuration = operations.charger_configuration(Path("config_introuvable.json"))
+        lignes_capturees: list[str] = []
+        with tempfile.TemporaryDirectory() as dossier_temporaire:
+            racine_temporaire = Path(dossier_temporaire)
+            with patch.object(operations, "obtenir_prefixe_privileges_systeme", return_value=None):
+                succes, message, _ = operations.operation_reset_pre_requis(
+                    configuration,
+                    racine_temporaire,
+                    racine_temporaire / "journal.log",
+                    lignes_capturees.append,
+                )
+                self.assertFalse(succes)
+                self.assertIn("sudo non disponible", message)
+                self.assertTrue(any("Action recommandee" in ligne for ligne in lignes_capturees))
+
+    def test_operation_reset_pre_requis_enchaine_commandes_et_nettoyage(self) -> None:
+        """Controle l orchestration complete du reset prerequis.
+
+        Args:
+            Aucun.
+
+        Returns:
+            Aucun.
+        """
+
+        configuration = operations.charger_configuration(Path("config_introuvable.json"))
+        lignes_capturees: list[str] = []
+        with tempfile.TemporaryDirectory() as dossier_temporaire:
+            racine_temporaire = Path(dossier_temporaire)
+
+            with (
+                patch.object(operations, "obtenir_prefixe_privileges_systeme", return_value=["sudo", "-n"]),
+                patch.object(operations, "executer_commande", return_value=(True, "ok")) as mock_exec,
+                patch.object(
+                    operations,
+                    "nettoyer_artefacts_reset",
+                    return_value=(True, "Nettoyage local termine."),
+                ) as mock_nettoyage,
+            ):
+                succes, message, _ = operations.operation_reset_pre_requis(
+                    configuration,
+                    racine_temporaire,
+                    racine_temporaire / "journal.log",
+                    lignes_capturees.append,
+                )
+
+                self.assertTrue(succes)
+                self.assertIn("Reset prerequis termine", message)
+                self.assertEqual(mock_exec.call_count, 3)
+                mock_nettoyage.assert_called_once_with(racine_temporaire, lignes_capturees.append)
+
 
 if __name__ == "__main__":
     unittest.main()

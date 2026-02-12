@@ -17,6 +17,16 @@
   "ux": {
     "delai_attract": 30.0
   },
+  "menu_titre": {
+    "vitesse_animation": 1.8,
+    "amplitude_oscillation": 22.0,
+    "nombre_lignes_grille": 16,
+    "epaisseur_lignes_grille": 2,
+    "opacite_voile": 126,
+    "taille_police_titre": 102,
+    "taille_police_sous_titre": 34,
+    "taille_police_info": 24
+  },
   "physique": {
     "rayon_capsule": 28.0,
     "distance_depart": 220.0,

@@ -7,8 +7,10 @@ Jeu utilitaire cache pour l exploitation de la borne:
 - git pull,
 - pipeline post-pull,
 - mise a jour OS.
+- reset prerequis (purge apt + nettoyage local pour retest a zero).
 - journal temps reel des commandes.
 - execution asynchrone pour garder l interface fluide.
+- journal scrollable (PgUp/PgDn) avec auto-scroll activable (`A`) et retour bas (`Fin`).
 
 ## Deblocage
 

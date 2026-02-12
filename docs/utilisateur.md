@@ -17,7 +17,9 @@ commandes principales et depannage rapide.
 - Deblocage: sequence secrete configuree dans `borne_arcade/config/maintenance_mode.properties`.
 - Ouverture apres debloquage: bouton configure (par defaut `J1B`).
 - Une operation maintenance lancee (`F`) tourne en arriere-plan avec journal temps reel visible dans l ecran.
+- Le journal maintenance est scrollable: `PgUp`/`PgDn` (historique/recent), `A` pour activer/desactiver l auto-scroll, `Fin` pour revenir en bas.
 - Pendant une operation, la sortie est bloquee pour eviter les etats partiels.
+- Option reset disponible: `Reset prerequis` (purge apt prerequis borne + nettoyage local) pour rejouer une installation depuis zero.
 - Reverrouillage manuel: dans `MaintenanceMode`, bouton `J1C` (touche `H`).
 - Au redemarrage, le mode maintenance redevient verrouille automatiquement.
 - Si le jeu maintenance est selectionne sans debloquage, son lancement est refuse.
@@ -29,6 +31,7 @@ Chaque jeu decrit ses commandes dans `borne_arcade/projet/<jeu>/bouton.txt`.
 - But: ejecter l adversaire hors de l arene.
 - Match: BO3.
 - B1 Dash, B2 Frein, B3 Bump, B4 Bouclier, B5 Taunt, B6 Ultime.
+- Menu titre ameliore: theme neon anime, panneau controles lisible et rappel clair de l attract mode.
 
 ### PianoTile (resume)
 - Le jeu tente d utiliser `librosa` pour analyser le rythme.

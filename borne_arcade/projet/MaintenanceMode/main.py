@@ -17,6 +17,16 @@ from operations import (
     lister_operations,
 )
 
+PAS_SCROLL_JOURNAL_PAR_DEFAUT = 6
+MARGE_JOURNAL_HAUT = 50
+MARGE_JOURNAL_GAUCHE = 14
+MARGE_JOURNAL_DROITE = 28
+MARGE_JOURNAL_TITRE_DROITE = 16
+LARGEUR_BARRE_DEFILEMENT_JOURNAL = 8
+MARGE_BARRE_DEFILEMENT_JOURNAL_DROITE = 10
+MARGE_BARRE_DEFILEMENT_JOURNAL_HAUT = 2
+SEUIL_MIN_POUCE_BARRE_DEFILEMENT = 16
+
 
 TAILLES_PAR_DEFAUT = {
     "marge_horizontale": 36,
@@ -60,7 +70,89 @@ class EtatInterface:
     operation_en_cours: bool = False
     titre_operation_en_cours: str = ""
     journal_visible: List[str] = field(default_factory=list)
+    auto_scroll_journal: bool = True
+    decalage_lignes_journal: int = 0
     thread_operation: threading.Thread | None = None
+
+
+def calculer_decalage_max_journal(nombre_lignes_total: int, nombre_lignes_visibles: int) -> int:
+    """Calcule le decalage maximal exploitable pour le journal.
+
+    Args:
+        nombre_lignes_total: Nombre total de lignes disponibles.
+        nombre_lignes_visibles: Nombre de lignes affichables en meme temps.
+
+    Returns:
+        Valeur maximale de decalage vers l historique.
+    """
+
+    return max(0, nombre_lignes_total - max(1, nombre_lignes_visibles))
+
+
+def borner_decalage_journal(
+    etat: EtatInterface,
+    nombre_lignes_total: int,
+    nombre_lignes_visibles: int,
+) -> None:
+    """Borne le decalage journal selon le contenu courant.
+
+    Args:
+        etat: Etat mutable de l interface.
+        nombre_lignes_total: Nombre total de lignes journal.
+        nombre_lignes_visibles: Nombre de lignes visibles.
+
+    Returns:
+        Aucun.
+    """
+
+    if etat.auto_scroll_journal:
+        etat.decalage_lignes_journal = 0
+        return
+
+    decalage_max = calculer_decalage_max_journal(nombre_lignes_total, nombre_lignes_visibles)
+    etat.decalage_lignes_journal = max(0, min(etat.decalage_lignes_journal, decalage_max))
+    if etat.decalage_lignes_journal == 0:
+        etat.auto_scroll_journal = True
+
+
+def activer_auto_scroll_journal(etat: EtatInterface) -> None:
+    """Active l auto-scroll et revient en bas du journal.
+
+    Args:
+        etat: Etat mutable de l interface.
+
+    Returns:
+        Aucun.
+    """
+
+    etat.auto_scroll_journal = True
+    etat.decalage_lignes_journal = 0
+
+
+def ajuster_decalage_journal(
+    etat: EtatInterface,
+    variation: int,
+    nombre_lignes_total: int,
+    nombre_lignes_visibles: int,
+) -> None:
+    """Ajuste le decalage du journal en mode manuel.
+
+    Args:
+        etat: Etat mutable de l interface.
+        variation: Nombre de lignes a decaler (+ historique, - recent).
+        nombre_lignes_total: Nombre total de lignes journal.
+        nombre_lignes_visibles: Nombre de lignes visibles.
+
+    Returns:
+        Aucun.
+    """
+
+    if variation == 0:
+        return
+
+    etat.auto_scroll_journal = False
+    etat.decalage_lignes_journal += variation
+    borner_decalage_journal(etat, nombre_lignes_total, nombre_lignes_visibles)
 
 
 def charger_parametres() -> Dict[str, object]:
@@ -435,14 +527,46 @@ def dessiner_zone_journal(
     fenetre.blit(titre, (rectangle.x + 16, rectangle.y + 12))
 
     nombre_lignes = max(1, tailles["nombre_lignes_journal"])
-    lignes = etat.journal_visible[-nombre_lignes:]
-    base_y = rectangle.y + 50
+    nombre_lignes_total = len(etat.journal_visible)
+    borner_decalage_journal(etat, nombre_lignes_total, nombre_lignes)
+    decalage = 0 if etat.auto_scroll_journal else etat.decalage_lignes_journal
+
+    index_fin = nombre_lignes_total - decalage
+    index_debut = max(0, index_fin - nombre_lignes)
+    lignes = etat.journal_visible[index_debut:index_fin]
+    base_y = rectangle.y + MARGE_JOURNAL_HAUT
+
+    etat_defilement = "AUTO" if etat.auto_scroll_journal else f"MANUEL (-{decalage})"
+    rendu_defilement = polices["journal"].render(etat_defilement, True, theme["texte_secondaire"])
+    fenetre.blit(
+        rendu_defilement,
+        (rectangle.right - rendu_defilement.get_width() - MARGE_JOURNAL_TITRE_DROITE, rectangle.y + 16),
+    )
 
     for index, ligne in enumerate(lignes):
-        largeur_disponible = rectangle.width - 28
+        largeur_disponible = rectangle.width - MARGE_JOURNAL_DROITE - MARGE_JOURNAL_GAUCHE
         ligne_affichable = tronquer_texte(polices["journal"], ligne, largeur_disponible)
         rendu = polices["journal"].render(ligne_affichable, True, theme["texte_principal"])
-        fenetre.blit(rendu, (rectangle.x + 14, base_y + index * tailles["hauteur_ligne_journal"]))
+        fenetre.blit(rendu, (rectangle.x + MARGE_JOURNAL_GAUCHE, base_y + index * tailles["hauteur_ligne_journal"]))
+
+    if nombre_lignes_total > nombre_lignes:
+        piste_hauteur = max(
+            1,
+            nombre_lignes * tailles["hauteur_ligne_journal"] - 2 * MARGE_BARRE_DEFILEMENT_JOURNAL_HAUT,
+        )
+        piste_x = rectangle.right - MARGE_BARRE_DEFILEMENT_JOURNAL_DROITE - LARGEUR_BARRE_DEFILEMENT_JOURNAL
+        piste_y = base_y + MARGE_BARRE_DEFILEMENT_JOURNAL_HAUT
+        piste_rect = pygame.Rect(piste_x, piste_y, LARGEUR_BARRE_DEFILEMENT_JOURNAL, piste_hauteur)
+        pygame.draw.rect(fenetre, theme["selection"], piste_rect, border_radius=LARGEUR_BARRE_DEFILEMENT_JOURNAL)
+
+        decalage_max = calculer_decalage_max_journal(nombre_lignes_total, nombre_lignes)
+        ratio_visible = min(1.0, nombre_lignes / max(1, nombre_lignes_total))
+        hauteur_pouce = max(SEUIL_MIN_POUCE_BARRE_DEFILEMENT, int(piste_hauteur * ratio_visible))
+        amplitude = max(1, piste_hauteur - hauteur_pouce)
+        position_ratio = 0.0 if decalage_max == 0 else decalage / decalage_max
+        position_y = piste_y + int(position_ratio * amplitude)
+        pouce_rect = pygame.Rect(piste_x, position_y, LARGEUR_BARRE_DEFILEMENT_JOURNAL, hauteur_pouce)
+        pygame.draw.rect(fenetre, theme["accent"], pouce_rect, border_radius=LARGEUR_BARRE_DEFILEMENT_JOURNAL)
 
 
 def dessiner_pied(
@@ -468,7 +592,11 @@ def dessiner_pied(
     """
 
     dessiner_panneau(fenetre, rectangle, theme["panneau"], theme["panneau_bord"], tailles["rayon_bordure"])
-    controles = "Haut/Bas: selection | F: executer | H: reverrouiller+quitter | Echap: quitter"
+    controles = (
+        "Haut/Bas: selection | F: executer | PgUp/PgDn: scroll logs | "
+        "A: auto-scroll | Fin: bas | H: reverrouiller+quitter | Echap: quitter"
+    )
+    controles = tronquer_texte(polices["journal"], controles, rectangle.width - 28)
     rendu_controles = polices["journal"].render(controles, True, theme["texte_secondaire"])
     fenetre.blit(rendu_controles, (rectangle.x + 14, rectangle.y + 10))
 
@@ -551,13 +679,19 @@ def dessiner_interface(
     dessiner_pied(fenetre, rectangle_pied, polices, theme, tailles, etat)
 
 
-def ajouter_ligne_journal(etat: EtatInterface, ligne: str, limite_lignes: int) -> None:
+def ajouter_ligne_journal(
+    etat: EtatInterface,
+    ligne: str,
+    limite_lignes: int,
+    nombre_lignes_visibles: int,
+) -> None:
     """Ajoute une ligne au journal affiche en conservant une taille maximale.
 
     Args:
         etat: Etat courant de l interface.
         ligne: Ligne de journal a ajouter.
         limite_lignes: Nombre maximal de lignes conservees.
+        nombre_lignes_visibles: Nombre de lignes visibles dans la fenetre.
 
     Returns:
         Aucun.
@@ -567,6 +701,7 @@ def ajouter_ligne_journal(etat: EtatInterface, ligne: str, limite_lignes: int) -
     excedent = len(etat.journal_visible) - limite_lignes
     if excedent > 0:
         del etat.journal_visible[:excedent]
+    borner_decalage_journal(etat, len(etat.journal_visible), nombre_lignes_visibles)
 
 
 def executer_operation_en_arriere_plan(
@@ -610,6 +745,7 @@ def lancer_operation_asynchrone(
     file_journal: queue.Queue[str],
     file_resultat: queue.Queue[tuple[bool, str, Path]],
     limite_lignes: int,
+    nombre_lignes_visibles: int,
 ) -> None:
     """Demarre l operation selectionnee en execution non bloquante.
 
@@ -620,6 +756,7 @@ def lancer_operation_asynchrone(
         file_journal: File des logs temps reel.
         file_resultat: File de resultat.
         limite_lignes: Taille max du journal visible.
+        nombre_lignes_visibles: Nombre de lignes visibles dans le journal.
 
     Returns:
         Aucun.
@@ -635,7 +772,13 @@ def lancer_operation_asynchrone(
     etat.titre_operation_en_cours = operation["titre"]
     etat.succes_operation = True
     etat.message_statut = f"Operation lancee: {operation['titre']}"
-    ajouter_ligne_journal(etat, f"[INFO] Demarrage operation: {operation['titre']}", limite_lignes)
+    activer_auto_scroll_journal(etat)
+    ajouter_ligne_journal(
+        etat,
+        f"[INFO] Demarrage operation: {operation['titre']}",
+        limite_lignes,
+        nombre_lignes_visibles,
+    )
 
     thread_operation = threading.Thread(
         target=executer_operation_en_arriere_plan,
@@ -651,6 +794,7 @@ def traiter_flux_asynchrones(
     file_journal: queue.Queue[str],
     file_resultat: queue.Queue[tuple[bool, str, Path]],
     limite_lignes: int,
+    nombre_lignes_visibles: int,
 ) -> None:
     """Vide les files de logs/resultats vers l interface.
 
@@ -659,13 +803,14 @@ def traiter_flux_asynchrones(
         file_journal: File de logs.
         file_resultat: File de resultats finaux.
         limite_lignes: Taille max du journal visible.
+        nombre_lignes_visibles: Nombre de lignes visibles dans le journal.
 
     Returns:
         Aucun.
     """
 
     while not file_journal.empty():
-        ajouter_ligne_journal(etat, file_journal.get_nowait(), limite_lignes)
+        ajouter_ligne_journal(etat, file_journal.get_nowait(), limite_lignes, nombre_lignes_visibles)
 
     while not file_resultat.empty():
         succes, message, chemin_journal = file_resultat.get_nowait()
@@ -683,6 +828,8 @@ def gerer_evenement_touche(
     file_journal: queue.Queue[str],
     file_resultat: queue.Queue[tuple[bool, str, Path]],
     limite_lignes: int,
+    nombre_lignes_visibles: int,
+    pas_scroll_journal: int,
 ) -> bool:
     """Traite les touches clavier du mode maintenance.
 
@@ -694,6 +841,8 @@ def gerer_evenement_touche(
         file_journal: File des logs.
         file_resultat: File des resultats.
         limite_lignes: Taille max du journal visible.
+        nombre_lignes_visibles: Nombre de lignes visibles dans le journal.
+        pas_scroll_journal: Pas de defilement manuel du journal.
 
     Returns:
         True si la boucle doit quitter, False sinon.
@@ -719,7 +868,51 @@ def gerer_evenement_touche(
             file_journal,
             file_resultat,
             limite_lignes,
+            nombre_lignes_visibles,
         )
+        return False
+
+    if evenement.key == pygame.K_PAGEUP:
+        ajuster_decalage_journal(
+            etat,
+            pas_scroll_journal,
+            len(etat.journal_visible),
+            nombre_lignes_visibles,
+        )
+        etat.succes_operation = True
+        etat.message_statut = "Defilement journal vers l historique."
+        return False
+
+    if evenement.key == pygame.K_PAGEDOWN:
+        ajuster_decalage_journal(
+            etat,
+            -pas_scroll_journal,
+            len(etat.journal_visible),
+            nombre_lignes_visibles,
+        )
+        etat.succes_operation = True
+        etat.message_statut = "Defilement journal vers les lignes recentes."
+        return False
+
+    if evenement.key == pygame.K_a:
+        if etat.auto_scroll_journal:
+            etat.auto_scroll_journal = False
+            etat.decalage_lignes_journal = 1
+            borner_decalage_journal(etat, len(etat.journal_visible), nombre_lignes_visibles)
+            if etat.auto_scroll_journal:
+                etat.message_statut = "Auto-scroll conserve: historique insuffisant pour un defilement manuel."
+            else:
+                etat.message_statut = "Auto-scroll desactive (mode manuel)."
+        else:
+            activer_auto_scroll_journal(etat)
+            etat.message_statut = "Auto-scroll active."
+        etat.succes_operation = True
+        return False
+
+    if evenement.key == pygame.K_END:
+        activer_auto_scroll_journal(etat)
+        etat.succes_operation = True
+        etat.message_statut = "Retour en bas du journal."
         return False
 
     if evenement.key == pygame.K_h:
@@ -776,10 +969,15 @@ def boucle_principale(configuration: Dict[str, object]) -> int:
     if not isinstance(section_journal, dict):
         section_journal = {}
     limite_lignes = max(40, extraire_entier(section_journal, "taille_max_lignes_interface", 240))
+    pas_scroll_journal = max(1, extraire_entier(section_journal, "pas_scroll_journal", PAS_SCROLL_JOURNAL_PAR_DEFAUT))
+    nombre_lignes_visibles = max(1, tailles["nombre_lignes_journal"])
 
     operations = lister_operations()
     etat = EtatInterface()
-    etat.journal_visible = ["Pret: F pour executer une operation, H pour reverrouiller."]
+    etat.journal_visible = [
+        "Pret: F pour executer une operation, H pour reverrouiller.",
+        "Journal: PgUp/PgDn pour defiler, A pour auto-scroll, Fin pour revenir en bas.",
+    ]
 
     file_journal: queue.Queue[str] = queue.Queue()
     file_resultat: queue.Queue[tuple[bool, str, Path]] = queue.Queue()
@@ -804,12 +1002,14 @@ def boucle_principale(configuration: Dict[str, object]) -> int:
                     file_journal,
                     file_resultat,
                     limite_lignes,
+                    nombre_lignes_visibles,
+                    pas_scroll_journal,
                 )
                 if quitter:
                     en_cours = False
                     break
 
-        traiter_flux_asynchrones(etat, file_journal, file_resultat, limite_lignes)
+        traiter_flux_asynchrones(etat, file_journal, file_resultat, limite_lignes, nombre_lignes_visibles)
         dessiner_interface(fenetre, fond, polices, theme, tailles, operations, etat)
         pygame.display.flip()
         clock.tick(fps)

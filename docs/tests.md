@@ -38,9 +38,12 @@ TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 .
 - mapping clavier borne,
 - parsing configuration,
 - logique NeonSumo (collisions, sortie arene, cooldowns, ultime),
+- configuration menu NeonSumo (`borne_arcade/projet/NeonSumo/tests/test_main_menu.py`),
 - mode maintenance Python (`borne_arcade/projet/MaintenanceMode/tests/test_operations.py`):
   streaming logs temps reel, timeout actionnable, journalisation des erreurs,
-  fallback de dossier logs et capture des exceptions inattendues.
+  fallback de dossier logs, operation `reset_pre_requis` et capture des exceptions inattendues.
+- logique d interface maintenance (`borne_arcade/projet/MaintenanceMode/tests/test_interface.py`):
+  defilement manuel du journal, auto-scroll et bornage de l historique.
 - PianoTile (`borne_arcade/projet/PianoTile/tests/test_piano.py`):
   echec audio non bloquant et chronometrage de secours sans mixer actif.
 
@@ -53,6 +56,7 @@ TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 .
 - generation documentation,
 - architecture et couts,
 - mode maintenance cache (presence, verrouillage, integration menu),
+- mode maintenance cache (presence, verrouillage, integration menu, operation reset prerequis),
 - bootstrap robuste apres `sudo` (absence de regression sur normalisation permissions et execution non-systeme sous utilisateur appelant),
 - robustesse PianoTile en absence de `librosa`,
 - validation materielle (checklist).

@@ -100,6 +100,20 @@ MARGE_HAUTE_PANNEAU_STYLE = 82
 MARGE_LATERALE_PANNEAU_STYLE = 28
 EPAISSEUR_BORD_PANNEAU_STYLE = 2
 ESPACEMENT_LIGNES_ELECTRIQUES = 2.0
+MARGE_BORD_MENU_TITRE = 36
+MARGE_CADRE_MENU_TITRE = 34
+MARGE_CONTENU_MENU_TITRE = 24
+OPACITE_SURFACE_MENU_TITRE_MAX = 255
+OPACITE_SURFACE_MENU_TITRE_MIN = 0
+COULEUR_MENU_TITRE_BORD = (30, 220, 255)
+COULEUR_MENU_TITRE_BORD_SECONDAIRE = (255, 95, 220)
+COULEUR_MENU_TITRE_CARTE = (8, 18, 40)
+COULEUR_MENU_TITRE_TEXTE = (238, 250, 255)
+COULEUR_MENU_TITRE_TEXTE_SECONDAIRE = (170, 208, 240)
+COULEUR_MENU_TITRE_TEXTE_ACCENT = (255, 236, 116)
+DECALAGE_CARTE_CONTROLES = 26
+HAUTEUR_CARTE_CONTROLES = 164
+LARGEUR_BORD_PANNEAU_CONTROLES = 2
 pygame = None
 
 
@@ -222,6 +236,31 @@ class EtatAreneNeon:
 
     phase_animation: float = 0.0
     energie_impact: float = 0.0
+
+
+@dataclass
+class ParametresMenuTitre:
+    """Regroupe les parametres visuels du menu titre.
+
+    Attributes:
+        vitesse_animation: Vitesse des oscillations visuelles.
+        amplitude_oscillation: Amplitude des animations sinusoidales.
+        nombre_lignes_grille: Nombre de lignes de decor anime.
+        epaisseur_lignes_grille: Epaisseur des lignes de decor.
+        opacite_voile: Opacite du voile de fond.
+        taille_police_titre: Taille du titre principal.
+        taille_police_sous_titre: Taille du sous-titre.
+        taille_police_info: Taille des textes secondaires.
+    """
+
+    vitesse_animation: float
+    amplitude_oscillation: float
+    nombre_lignes_grille: int
+    epaisseur_lignes_grille: int
+    opacite_voile: int
+    taille_police_titre: int
+    taille_police_sous_titre: int
+    taille_police_info: int
 
 
 def mode_test_actif() -> bool:
@@ -353,6 +392,29 @@ def construire_parametres_arene_neon(configuration: Dict[str, object]) -> Parame
         gain_impact_dash=float(effets.get("gain_impact_dash", 0.1)),
         gain_impact_bump=float(effets.get("gain_impact_bump", 0.18)),
         gain_impact_ultime=float(effets.get("gain_impact_ultime", 0.28)),
+    )
+
+
+def construire_parametres_menu_titre(configuration: Dict[str, object]) -> ParametresMenuTitre:
+    """Construit les parametres du menu titre neon.
+
+    Args:
+        configuration: Dictionnaire de configuration globale.
+
+    Returns:
+        ParametresMenuTitre initialises.
+    """
+
+    menu = configuration.get("menu_titre", {})
+    return ParametresMenuTitre(
+        vitesse_animation=float(menu.get("vitesse_animation", 1.8)),
+        amplitude_oscillation=float(menu.get("amplitude_oscillation", 22.0)),
+        nombre_lignes_grille=int(menu.get("nombre_lignes_grille", 16)),
+        epaisseur_lignes_grille=int(menu.get("epaisseur_lignes_grille", 2)),
+        opacite_voile=int(menu.get("opacite_voile", 126)),
+        taille_police_titre=int(menu.get("taille_police_titre", 102)),
+        taille_police_sous_titre=int(menu.get("taille_police_sous_titre", 34)),
+        taille_police_info=int(menu.get("taille_police_info", 24)),
     )
 
 
@@ -745,6 +807,245 @@ def dessiner_texte(
     else:
         rectangle.topleft = (int(position[0]), int(position[1]))
     surface.blit(rendu, rectangle)
+
+
+def borner_opacite(opacite: float) -> int:
+    """Borne une opacite alpha dans l intervalle valide.
+
+    Args:
+        opacite: Valeur alpha candidate.
+
+    Returns:
+        Valeur alpha entiere bornee entre 0 et 255.
+    """
+
+    return max(OPACITE_SURFACE_MENU_TITRE_MIN, min(OPACITE_SURFACE_MENU_TITRE_MAX, int(opacite)))
+
+
+def dessiner_texte_neon(
+    surface: pygame.Surface,
+    police: pygame.font.Font,
+    texte: str,
+    couleur_texte: Tuple[int, int, int],
+    couleur_glow: Tuple[int, int, int],
+    position: Tuple[float, float],
+    rayon_glow: int,
+) -> None:
+    """Dessine un texte avec halo neon multi-couches.
+
+    Args:
+        surface: Surface cible.
+        police: Police de rendu.
+        texte: Texte a dessiner.
+        couleur_texte: Couleur du texte principal.
+        couleur_glow: Couleur du halo.
+        position: Position centre du texte.
+        rayon_glow: Rayon du halo en pixels.
+
+    Returns:
+        None.
+    """
+
+    rendu_texte = police.render(texte, True, couleur_texte)
+    rectangle_texte = rendu_texte.get_rect(center=(int(position[0]), int(position[1])))
+    calque_glow = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+
+    for couche in range(rayon_glow, 0, -1):
+        opacite = borner_opacite(210 / max(1, couche))
+        couleur_couche = (couleur_glow[0], couleur_glow[1], couleur_glow[2], opacite)
+        rendu_glow = police.render(texte, True, couleur_couche)
+        for decalage_x, decalage_y in (
+            (-couche, 0),
+            (couche, 0),
+            (0, -couche),
+            (0, couche),
+            (-couche, -couche),
+            (-couche, couche),
+            (couche, -couche),
+            (couche, couche),
+        ):
+            rectangle_glow = rendu_glow.get_rect(
+                center=(int(position[0] + decalage_x), int(position[1] + decalage_y))
+            )
+            calque_glow.blit(rendu_glow, rectangle_glow)
+
+    surface.blit(calque_glow, (0, 0))
+    surface.blit(rendu_texte, rectangle_texte)
+
+
+def dessiner_menu_titre_neon(
+    surface: pygame.Surface,
+    largeur: int,
+    hauteur: int,
+    phase_animation: float,
+    parametres_menu_titre: ParametresMenuTitre,
+    police_titre: pygame.font.Font,
+    police_sous_titre: pygame.font.Font,
+    police_info: pygame.font.Font,
+) -> None:
+    """Dessine le menu titre dans un style neon anime.
+
+    Args:
+        surface: Surface cible.
+        largeur: Largeur fenetre.
+        hauteur: Hauteur fenetre.
+        phase_animation: Temps anime courant.
+        parametres_menu_titre: Parametres graphiques du menu.
+        police_titre: Police du titre principal.
+        police_sous_titre: Police du sous-titre.
+        police_info: Police des informations.
+
+    Returns:
+        None.
+    """
+
+    calque_voile = pygame.Surface((largeur, hauteur), pygame.SRCALPHA)
+    calque_voile.fill((4, 12, 34, borner_opacite(parametres_menu_titre.opacite_voile)))
+    surface.blit(calque_voile, (0, 0))
+
+    centre_x = largeur / 2.0
+    centre_y = hauteur / 2.0
+    vitesse = parametres_menu_titre.vitesse_animation
+    amplitude = parametres_menu_titre.amplitude_oscillation
+
+    nombre_lignes = max(4, parametres_menu_titre.nombre_lignes_grille)
+    calque_grille = pygame.Surface((largeur, hauteur), pygame.SRCALPHA)
+    for index_ligne in range(nombre_lignes):
+        ratio = index_ligne / max(1, nombre_lignes - 1)
+        ordonnee = int(hauteur * 0.22 + ratio * hauteur * 0.56)
+        oscillation = sin(phase_animation * vitesse + ratio * 4.2) * amplitude
+        couleur_ligne = (
+            40 + int(70 * ratio),
+            130 + int(80 * (1.0 - ratio)),
+            255,
+            borner_opacite(56 + 90 * (1.0 - ratio)),
+        )
+        pygame.draw.line(
+            calque_grille,
+            couleur_ligne,
+            (int(MARGE_BORD_MENU_TITRE + oscillation), ordonnee),
+            (int(largeur - MARGE_BORD_MENU_TITRE - oscillation), ordonnee),
+            width=max(1, parametres_menu_titre.epaisseur_lignes_grille),
+        )
+    surface.blit(calque_grille, (0, 0))
+
+    largeur_cadre = largeur - 2 * MARGE_CADRE_MENU_TITRE
+    hauteur_cadre = hauteur - 2 * MARGE_CADRE_MENU_TITRE
+    rectangle_cadre = pygame.Rect(MARGE_CADRE_MENU_TITRE, MARGE_CADRE_MENU_TITRE, largeur_cadre, hauteur_cadre)
+    rayon_cadre = 26
+    pygame.draw.rect(surface, COULEUR_MENU_TITRE_CARTE, rectangle_cadre, border_radius=rayon_cadre)
+
+    epaisseur_bord = 3
+    pulsation = 0.55 + 0.45 * sin(phase_animation * vitesse * 2.4)
+    opacite_bord_primaire = borner_opacite(110 + pulsation * 120)
+    opacite_bord_secondaire = borner_opacite(90 + (1.0 - pulsation) * 80)
+    couleur_bord_primaire = (
+        COULEUR_MENU_TITRE_BORD[0],
+        COULEUR_MENU_TITRE_BORD[1],
+        COULEUR_MENU_TITRE_BORD[2],
+        opacite_bord_primaire,
+    )
+    couleur_bord_secondaire = (
+        COULEUR_MENU_TITRE_BORD_SECONDAIRE[0],
+        COULEUR_MENU_TITRE_BORD_SECONDAIRE[1],
+        COULEUR_MENU_TITRE_BORD_SECONDAIRE[2],
+        opacite_bord_secondaire,
+    )
+    calque_bord = pygame.Surface((largeur, hauteur), pygame.SRCALPHA)
+    pygame.draw.rect(calque_bord, couleur_bord_secondaire, rectangle_cadre, width=1, border_radius=rayon_cadre)
+    pygame.draw.rect(calque_bord, couleur_bord_primaire, rectangle_cadre, width=epaisseur_bord, border_radius=rayon_cadre)
+    surface.blit(calque_bord, (0, 0))
+
+    for index_anneau in range(3):
+        rayon = int(
+            96
+            + index_anneau * 38
+            + sin(phase_animation * vitesse * 1.6 + index_anneau * 1.7) * (amplitude * 0.35)
+        )
+        opacite_anneau = borner_opacite(70 - index_anneau * 12 + pulsation * 44)
+        calque_anneau = pygame.Surface((largeur, hauteur), pygame.SRCALPHA)
+        pygame.draw.circle(
+            calque_anneau,
+            (
+                COULEUR_MENU_TITRE_BORD[0],
+                COULEUR_MENU_TITRE_BORD[1],
+                COULEUR_MENU_TITRE_BORD[2],
+                opacite_anneau,
+            ),
+            (int(centre_x), int(centre_y - 84)),
+            rayon,
+            width=2,
+        )
+        surface.blit(calque_anneau, (0, 0))
+
+    dessiner_texte_neon(
+        surface,
+        police_titre,
+        "NEON SUMO",
+        COULEUR_MENU_TITRE_TEXTE,
+        COULEUR_MENU_TITRE_BORD,
+        (centre_x, hauteur * 0.32),
+        rayon_glow=4,
+    )
+    dessiner_texte_neon(
+        surface,
+        police_sous_titre,
+        "1v1 ARCADE - PUSH OR FALL",
+        COULEUR_MENU_TITRE_TEXTE_SECONDAIRE,
+        COULEUR_MENU_TITRE_BORD_SECONDAIRE,
+        (centre_x, hauteur * 0.41),
+        rayon_glow=2,
+    )
+
+    largeur_carte = largeur - 2 * (MARGE_CADRE_MENU_TITRE + MARGE_CONTENU_MENU_TITRE)
+    rectangle_carte = pygame.Rect(
+        MARGE_CADRE_MENU_TITRE + MARGE_CONTENU_MENU_TITRE,
+        int(hauteur * 0.56),
+        largeur_carte,
+        HAUTEUR_CARTE_CONTROLES,
+    )
+    calque_carte = pygame.Surface((largeur, hauteur), pygame.SRCALPHA)
+    pygame.draw.rect(
+        calque_carte,
+        (12, 28, 56, 184),
+        rectangle_carte,
+        border_radius=18,
+    )
+    pygame.draw.rect(
+        calque_carte,
+        (
+            COULEUR_MENU_TITRE_BORD[0],
+            COULEUR_MENU_TITRE_BORD[1],
+            COULEUR_MENU_TITRE_BORD[2],
+            borner_opacite(160 + pulsation * 54),
+        ),
+        rectangle_carte,
+        width=LARGEUR_BORD_PANNEAU_CONTROLES,
+        border_radius=18,
+    )
+    surface.blit(calque_carte, (0, 0))
+
+    dessiner_texte(
+        surface,
+        police_info,
+        "B1: Start match   |   B6: Retour menu",
+        COULEUR_MENU_TITRE_TEXTE,
+        (centre_x, rectangle_carte.y + DECALAGE_CARTE_CONTROLES),
+    )
+    dessiner_texte(
+        surface,
+        police_info,
+        "B1 Dash   B2 Frein   B3 Bump   B4 Bouclier   B6 Ultime",
+        COULEUR_MENU_TITRE_TEXTE_SECONDAIRE,
+        (centre_x, rectangle_carte.y + DECALAGE_CARTE_CONTROLES + 42),
+    )
+    dessiner_texte(
+        surface,
+        police_info,
+        "Mode attract automatique en 30s",
+        COULEUR_MENU_TITRE_TEXTE_ACCENT,
+        (centre_x, rectangle_carte.y + DECALAGE_CARTE_CONTROLES + 84),
+    )
 
 
 def dessiner_arene(
@@ -1421,6 +1722,7 @@ def boucle_jeu() -> int:
     parametres = construire_parametres_combat(configuration)
     parametres_style = construire_parametres_style(configuration)
     parametres_arene_neon = construire_parametres_arene_neon(configuration)
+    parametres_menu_titre = construire_parametres_menu_titre(configuration)
 
     pygame.init()
     pygame.display.set_caption("Neon Sumo")
@@ -1436,6 +1738,17 @@ def boucle_jeu() -> int:
 
     police = pygame.font.SysFont("DejaVu Sans", 32)
     petite_police = pygame.font.SysFont("DejaVu Sans", 20)
+    police_titre_menu = pygame.font.SysFont(
+        "DejaVu Sans",
+        max(24, parametres_menu_titre.taille_police_titre),
+        bold=True,
+    )
+    police_sous_titre_menu = pygame.font.SysFont(
+        "DejaVu Sans",
+        max(18, parametres_menu_titre.taille_police_sous_titre),
+        bold=True,
+    )
+    police_info_menu = pygame.font.SysFont("DejaVu Sans", max(16, parametres_menu_titre.taille_police_info))
 
     j1_controles, j2_controles = gerer_entree_borne()
 
@@ -1545,20 +1858,15 @@ def boucle_jeu() -> int:
         appui_ultime_global = (j1_controles.ultime in touches_juste_appuyees) or (j2_controles.ultime in touches_juste_appuyees)
 
         if etat == "titre":
-            dessiner_texte(ecran, police, "NEON SUMO", couleur_titre, (centre_x, hauteur * 0.33))
-            dessiner_texte(
+            dessiner_menu_titre_neon(
                 ecran,
-                petite_police,
-                "B1: Start | B6: Retour menu",
-                couleur_texte_information,
-                (centre_x, hauteur * 0.43),
-            )
-            dessiner_texte(
-                ecran,
-                petite_police,
-                "Mode attract auto en 30s",
-                couleur_texte_secondaire,
-                (centre_x, hauteur * 0.48),
+                largeur,
+                hauteur,
+                temps_animation_hud,
+                parametres_menu_titre,
+                police_titre_menu,
+                police_sous_titre_menu,
+                police_info_menu,
             )
 
             if appui_dash_global:

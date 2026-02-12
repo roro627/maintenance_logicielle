@@ -79,13 +79,15 @@
   },
   "journal": {
     "taille_max_lignes_interface": 240,
-    "intervalle_lecture_processus_ms": 100
+    "intervalle_lecture_processus_ms": 100,
+    "pas_scroll_journal": 6
   },
   "temps_max_secondes": {
     "diagnostic": 20,
     "git_pull": 240,
     "pipeline_post_pull": 600,
-    "mise_a_jour_os": 1800
+    "mise_a_jour_os": 1800,
+    "reset_pre_requis": 1800
   },
   "fichier_verrouillage": ".verrouillage_mode_maintenance"
 }

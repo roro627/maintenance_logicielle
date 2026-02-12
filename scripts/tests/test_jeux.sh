@@ -80,7 +80,7 @@ tester_lancement_tous_les_jeux() {
 tester_unitaire_neon_sumo() {
   (
     cd "${RACINE_PROJET}"
-    "${COMMANDE_PYTHON}" -m unittest borne_arcade/projet/NeonSumo/tests/test_logique.py
+    "${COMMANDE_PYTHON}" -m unittest discover -s borne_arcade/projet/NeonSumo/tests -p "test_*.py"
   )
 }
 

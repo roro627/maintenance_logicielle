@@ -16,6 +16,7 @@ Documenter le bilan final des travaux avec une verification point par point de `
 8. Maintenance mode modernisee: execution asynchrone des commandes, logs temps reel et interface pygame plus lisible.
 9. Deploiement post-pull durci: permissions partagees, logs robustes et installation systeme optionnelle en non-root.
 10. Bootstrap sudo durci: etapes non-systeme sous utilisateur appelant + normalisation ownership/permissions finales pour eviter les blocages `Permission non accordee` au lancement borne.
+11. Maintenance/gameplay enrichis: journal maintenance scrollable + reset prerequis, et menu titre NeonSumo refondu en style neon anime.
 
 ## Conformite `consignes.md` (point par point)
 
@@ -62,6 +63,8 @@ Documenter le bilan final des travaux avec une verification point par point de `
   - ajout de `borne_arcade/projet/NeonSumo/`.
   - ajout du lanceur `borne_arcade/NeonSumo.sh`.
   - tests unitaires du coeur gameplay: `borne_arcade/projet/NeonSumo/tests/test_logique.py`.
+  - ajout de tests unitaires de configuration menu: `borne_arcade/projet/NeonSumo/tests/test_main_menu.py`.
+  - refonte du menu titre NeonSumo (rendu neon anime, panneau controles plus lisible).
 - Pourquoi c est conforme:
   - un nouveau jeu est bien integre dans le catalogue borne.
 - A quoi ca sert:
@@ -70,14 +73,14 @@ Documenter le bilan final des travaux avec une verification point par point de `
 ### 5. Maintenance exploitable en borne
 
 - Ce qui a ete fait:
-  - nouveau module `borne_arcade/projet/MaintenanceMode/` (pygame) avec operations: diagnostic, git pull, pipeline post-pull, mise a jour OS.
+  - nouveau module `borne_arcade/projet/MaintenanceMode/` (pygame) avec operations: diagnostic, git pull, pipeline post-pull, mise a jour OS, reset prerequis.
   - execution des operations en arriere-plan pour eviter le blocage de l interface.
   - selection automatique d un dossier logs ecrivable (`logs/`, `~/.cache/...`, `/tmp/...`) avant chaque operation.
   - capture globale des exceptions d operation avec message actionnable et retour d etat propre a l interface.
-  - journal temps reel en direct dans l UI et dans `logs/maintenance_mode_*.log`.
+  - journal temps reel en direct dans l UI et dans `logs/maintenance_mode_*.log`, avec defilement manuel + auto-scroll.
   - deblocage par sequence secrete + bouton d ouverture configurable.
   - reverrouillage manuel par bouton dans le mode maintenance et reverrouillage automatique au redemarrage.
-  - tests unitaires dedies au mode maintenance (`test_operations.py`) integres a `scripts/tests/test_jeux.sh`.
+  - tests unitaires dedies au mode maintenance (`test_operations.py`, `test_interface.py`) integres a `scripts/tests/test_jeux.sh`.
 - Pourquoi c est conforme:
   - repond au besoin d operations terrain sans toucher au code MG2D.
 - A quoi ca sert:
