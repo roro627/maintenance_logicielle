@@ -1709,6 +1709,34 @@ def reinitialiser_manche(
     return joueur_1, joueur_2, duree_manche, compte_a_rebours, rayon_depart
 
 
+def mode_competitif_actif(etat: str) -> bool:
+    """Indique si le jeu est dans un etat competitif humain.
+
+    Args:
+        etat: Etat global du jeu.
+
+    Returns:
+        True si l etat correspond a une manche competitive.
+    """
+
+    return etat == "manche"
+
+
+def doit_reinitialiser_attract(etat: str, elimine_j1: bool, elimine_j2: bool) -> bool:
+    """Indique si une elimination doit relancer une manche IA en mode attract.
+
+    Args:
+        etat: Etat global du jeu.
+        elimine_j1: True si J1 est elimine.
+        elimine_j2: True si J2 est elimine.
+
+    Returns:
+        True si le mode attract doit etre relance.
+    """
+
+    return etat == "attract" and (elimine_j1 or elimine_j2)
+
+
 def boucle_jeu() -> int:
     """Execute la boucle principale de Neon Sumo.
 
@@ -1926,7 +1954,7 @@ def boucle_jeu() -> int:
                     etat = "manche"
 
             if etat == "attract":
-                countdown -= delta_simulation
+                countdown = max(0.0, countdown - delta_simulation)
                 dessiner_texte(
                     ecran,
                     petite_police,
@@ -1953,11 +1981,9 @@ def boucle_jeu() -> int:
                     reinitialiser_etat_arene_neon(etat_arene_neon)
                     etat = "compte_a_rebours"
                     continue
-                if countdown <= 0.0:
-                    etat = "manche"
 
             if etat in {"manche", "attract"}:
-                en_manche = etat == "manche"
+                en_manche = mode_competitif_actif(etat)
                 if en_manche:
                     if simulation_gelee:
                         axe_j1 = (0.0, 0.0)
@@ -2265,29 +2291,45 @@ def boucle_jeu() -> int:
                 if elimine_j1 or elimine_j2:
                     jouer_son(sons["elimination"])
                     declencher_reaction_arene_neon(etat_arene_neon, parametres_arene_neon.gain_impact_ultime)
-                    if elimine_j1 and not elimine_j2:
-                        score_j2 += 1
-                        vainqueur_manche = "J2"
-                    elif elimine_j2 and not elimine_j1:
-                        score_j1 += 1
-                        vainqueur_manche = "J1"
-                    else:
-                        vainqueur_manche = "Egalite"
+                    if en_manche:
+                        if elimine_j1 and not elimine_j2:
+                            score_j2 += 1
+                            vainqueur_manche = "J2"
+                        elif elimine_j2 and not elimine_j1:
+                            score_j1 += 1
+                            vainqueur_manche = "J1"
+                        else:
+                            vainqueur_manche = "Egalite"
 
-                    if score_j1 >= victoires_pour_gagner:
-                        vainqueur_match = "J1"
-                        incrementer_highscore(vainqueur_match)
-                        etat = "fin_match"
-                        countdown = duree_ecran_fin
-                    elif score_j2 >= victoires_pour_gagner:
-                        vainqueur_match = "J2"
-                        incrementer_highscore(vainqueur_match)
-                        etat = "fin_match"
-                        countdown = duree_ecran_fin
-                    else:
-                        etat = "resultat_manche"
-                        countdown = duree_ecran_resultat
-                    dernier_vainqueur_manche = vainqueur_manche
+                        if score_j1 >= victoires_pour_gagner:
+                            vainqueur_match = "J1"
+                            incrementer_highscore(vainqueur_match)
+                            etat = "fin_match"
+                            countdown = duree_ecran_fin
+                        elif score_j2 >= victoires_pour_gagner:
+                            vainqueur_match = "J2"
+                            incrementer_highscore(vainqueur_match)
+                            etat = "fin_match"
+                            countdown = duree_ecran_fin
+                        else:
+                            etat = "resultat_manche"
+                            countdown = duree_ecran_resultat
+                        dernier_vainqueur_manche = vainqueur_manche
+                    elif doit_reinitialiser_attract(etat, elimine_j1, elimine_j2):
+                        joueur_1, joueur_2, temps_restant, countdown, rayon_arene = reinitialiser_manche(
+                            configuration,
+                            largeur,
+                            hauteur,
+                            duree_manche,
+                            compte_a_rebours_initial,
+                            rayon_depart,
+                        )
+                        reinitialiser_style_pour_manche(style_j1)
+                        reinitialiser_style_pour_manche(style_j2)
+                        countdown = countdown_attract_initial
+                        vider_feedback_combat(feedback_combat, particules_impact)
+                        reinitialiser_etat_arene_neon(etat_arene_neon)
+                        etat = "attract"
 
         elif etat == "resultat_manche":
             countdown -= delta_simulation

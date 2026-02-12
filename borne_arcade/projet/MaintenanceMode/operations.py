@@ -35,6 +35,21 @@ PAQUETS_SYSTEME_BORNE = [
     "libsndfile1",
     "love",
 ]
+COMMANDES_PRE_REQUIS_BORNE = {
+    "git": ["git"],
+    "curl": ["curl"],
+    "openjdk-17-jdk": ["java"],
+    "python3": ["python3"],
+    "python3-venv": ["python3"],
+    "python3-pip": ["pip3", "pip"],
+    "checkstyle": ["checkstyle"],
+    "pylint": ["pylint"],
+    "shellcheck": ["shellcheck"],
+    "xdotool": ["xdotool"],
+    "lua5.4": ["lua5.4", "lua"],
+    "libsndfile1": [],
+    "love": ["love"],
+}
 REPERTOIRES_RESET_RELATIFS = [
     Path(".venv"),
     Path("build"),
@@ -81,10 +96,12 @@ CONFIGURATION_PAR_DEFAUT = {
         "taille_max_lignes_interface": 240,
         "intervalle_lecture_processus_ms": 100,
         "pas_scroll_journal": 6,
+        "pas_scroll_horizontal_journal": 8,
     },
     "temps_max_secondes": {
         "diagnostic": 20,
         "git_pull": 240,
+        "git_retour_precedent": 240,
         "pipeline_post_pull": 600,
         "mise_a_jour_os": 1800,
         "reset_pre_requis": 1800,
@@ -214,6 +231,11 @@ def lister_operations() -> List[Dict[str, str]]:
             "description": "Met a jour le depot local en fast-forward.",
         },
         {
+            "id": "git_retour_precedent",
+            "titre": "Retour commit precedent",
+            "description": "Revient au commit precedent (reset --hard HEAD~1) si depot propre.",
+        },
+        {
             "id": "pipeline_post_pull",
             "titre": "Pipeline post-pull",
             "description": "Compilation, lint, tests et documentation.",
@@ -273,6 +295,82 @@ def preparer_ligne_journal(message: str) -> str:
 
     horodatage = datetime.datetime.now().strftime("%H:%M:%S")
     return f"[{horodatage}] {message}"
+
+
+def extraire_premiere_ligne_sortie(sortie: str) -> str:
+    """Retourne une premiere ligne exploitable meme si la sortie est vide.
+
+    Args:
+        sortie: Texte brut de sortie commande.
+
+    Returns:
+        Premiere ligne, ou message de repli si vide.
+    """
+
+    lignes = sortie.splitlines()
+    if not lignes:
+        return "(sortie indisponible)"
+    return lignes[0]
+
+
+def paquet_systeme_installe(nom_paquet: str) -> bool:
+    """Indique si un paquet systeme est installe via dpkg-query.
+
+    Args:
+        nom_paquet: Nom du paquet apt.
+
+    Returns:
+        True si le paquet est installe, sinon False.
+    """
+
+    if shutil.which("dpkg-query") is None:
+        return False
+
+    resultat = subprocess.run(
+        ["dpkg-query", "-W", "-f=${Status}", nom_paquet],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        check=False,
+    )
+    return resultat.returncode == 0 and "install ok installed" in resultat.stdout
+
+
+def diagnostiquer_pre_requis_borne(journaliser: ConsommateurJournal) -> bool:
+    """Diagnostique la presence des pre-requis systeme cibles de la borne.
+
+    Args:
+        journaliser: Fonction de journalisation.
+
+    Returns:
+        True si tous les pre-requis sont detectes, sinon False.
+    """
+
+    journaliser("=== Verification prerequis borne ===")
+    succes_global = True
+
+    for paquet in PAQUETS_SYSTEME_BORNE:
+        commandes_cibles = COMMANDES_PRE_REQUIS_BORNE.get(paquet, [])
+        if paquet_systeme_installe(paquet):
+            journaliser(f"OK prerequis paquet: {paquet}")
+            continue
+
+        if commandes_cibles and any(shutil.which(commande) is not None for commande in commandes_cibles):
+            commande_presente = next(
+                commande for commande in commandes_cibles if shutil.which(commande) is not None
+            )
+            journaliser(
+                f"OK prerequis outil: {commande_presente} (paquet apt attendu: {paquet})"
+            )
+            continue
+
+        succes_global = False
+        journaliser(
+            "ATTENTION: prerequis manquant: "
+            f"{paquet}. Action recommandee: lancez sudo ./bootstrap_borne.sh pour installer automatiquement."
+        )
+
+    return succes_global
 
 
 def creer_journaliseur(
@@ -339,6 +437,13 @@ def executer_operation(
             succes, message, _ = operation_diagnostic(configuration, racine_projet, chemin_journal, journaliser)
         elif operation_id == "git_pull":
             succes, message, _ = operation_git_pull(configuration, racine_projet, chemin_journal, journaliser)
+        elif operation_id == "git_retour_precedent":
+            succes, message, _ = operation_git_retour_precedent(
+                configuration,
+                racine_projet,
+                chemin_journal,
+                journaliser,
+            )
         elif operation_id == "pipeline_post_pull":
             succes, message, _ = operation_pipeline_post_pull(
                 configuration,
@@ -462,11 +567,18 @@ def operation_diagnostic(
         ["df", "-h", str(racine_projet)],
     ]
 
-    succes_global = True
+    succes_global = diagnostiquer_pre_requis_borne(journaliser)
     intervalle_lecture = extraire_intervalle_lecture(configuration)
     journaliser("=== Diagnostic maintenance ===")
 
     for commande in commandes:
+        if shutil.which(commande[0]) is None:
+            succes_global = False
+            journaliser(
+                "ATTENTION: commande diagnostique indisponible: "
+                f"{commande[0]}. Action recommandee: relancez sudo ./bootstrap_borne.sh."
+            )
+            continue
         journaliser(f"$ {' '.join(commande)}")
         succes, sortie = executer_commande(
             commande,
@@ -477,11 +589,31 @@ def operation_diagnostic(
         )
         if not succes:
             succes_global = False
-            journaliser(f"ERREUR: {sortie.splitlines()[0]}")
+            journaliser(f"ERREUR: {extraire_premiere_ligne_sortie(sortie)}")
 
     if succes_global:
         return True, "Diagnostic termine avec succes.", chemin_journal
     return False, "Diagnostic termine avec erreurs (voir journal).", chemin_journal
+
+
+def verifier_git_disponible(journaliser: ConsommateurJournal) -> bool:
+    """Verifie la disponibilite de git avant operation.
+
+    Args:
+        journaliser: Fonction de trace et diffusion en direct.
+
+    Returns:
+        True si git est disponible, sinon False.
+    """
+
+    if shutil.which("git") is not None:
+        return True
+
+    journaliser(
+        "ERREUR: git est introuvable sur ce systeme. "
+        "Action recommandee: relancez sudo ./bootstrap_borne.sh pour installer les pre-requis."
+    )
+    return False
 
 
 def operation_git_pull(
@@ -502,6 +634,13 @@ def operation_git_pull(
         Resultat (succes, message, chemin journal).
     """
 
+    if not verifier_git_disponible(journaliser):
+        return (
+            False,
+            "Git pull impossible: git introuvable. Relancez sudo ./bootstrap_borne.sh.",
+            chemin_journal,
+        )
+
     timeout_secondes = extraire_timeout(configuration, "git_pull")
     intervalle_lecture = extraire_intervalle_lecture(configuration)
     commande = ["git", "-C", str(racine_projet), "pull", "--ff-only"]
@@ -518,8 +657,100 @@ def operation_git_pull(
     if succes:
         return True, "Git pull termine.", chemin_journal
 
-    journaliser(f"ERREUR: {sortie.splitlines()[0]}")
+    journaliser(f"ERREUR: {extraire_premiere_ligne_sortie(sortie)}")
     return False, "Echec git pull. Verifiez les conflits et la connexion.", chemin_journal
+
+
+def operation_git_retour_precedent(
+    configuration: Dict[str, object],
+    racine_projet: Path,
+    chemin_journal: Path,
+    journaliser: ConsommateurJournal,
+) -> Tuple[bool, str, Path]:
+    """Revient au commit precedent si le depot est propre.
+
+    Args:
+        configuration: Configuration chargee.
+        racine_projet: Racine du depot.
+        chemin_journal: Journal cible.
+        journaliser: Fonction de trace et diffusion en direct.
+
+    Returns:
+        Resultat (succes, message, chemin journal).
+    """
+
+    if not verifier_git_disponible(journaliser):
+        return (
+            False,
+            "Retour commit precedent impossible: git introuvable. Relancez sudo ./bootstrap_borne.sh.",
+            chemin_journal,
+        )
+
+    timeout_secondes = extraire_timeout(configuration, "git_retour_precedent")
+    intervalle_lecture = extraire_intervalle_lecture(configuration)
+
+    controles = [
+        ["git", "-C", str(racine_projet), "rev-parse", "--is-inside-work-tree"],
+        ["git", "-C", str(racine_projet), "rev-parse", "--verify", "HEAD~1"],
+    ]
+    for commande in controles:
+        journaliser(f"$ {' '.join(commande)}")
+        succes, sortie = executer_commande(
+            commande,
+            racine_projet,
+            timeout_secondes=timeout_secondes,
+            consommateur_sortie=journaliser,
+            intervalle_lecture_secondes=intervalle_lecture,
+        )
+        if not succes:
+            journaliser(f"ERREUR: {extraire_premiere_ligne_sortie(sortie)}")
+            return (
+                False,
+                "Retour commit precedent impossible: depot git invalide ou historique insuffisant.",
+                chemin_journal,
+            )
+
+    commande_statut = ["git", "-C", str(racine_projet), "status", "--porcelain"]
+    journaliser(f"$ {' '.join(commande_statut)}")
+    resultat_statut = subprocess.run(
+        commande_statut,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        check=False,
+    )
+    sortie_statut = (resultat_statut.stdout or "").strip()
+    if resultat_statut.returncode != 0:
+        journaliser(f"ERREUR: {extraire_premiere_ligne_sortie(resultat_statut.stdout or '')}")
+        return (
+            False,
+            "Retour commit precedent impossible: echec lecture statut git.",
+            chemin_journal,
+        )
+
+    if sortie_statut:
+        journaliser("ERREUR: Depot non propre detecte par git status --porcelain.")
+        return (
+            False,
+            "Retour commit precedent refuse: modifications locales detectees. "
+            "Action recommandee: commit/stash des changements puis relancez.",
+            chemin_journal,
+        )
+
+    commande_reset = ["git", "-C", str(racine_projet), "reset", "--hard", "HEAD~1"]
+    journaliser(f"$ {' '.join(commande_reset)}")
+    succes, sortie = executer_commande(
+        commande_reset,
+        racine_projet,
+        timeout_secondes=timeout_secondes,
+        consommateur_sortie=journaliser,
+        intervalle_lecture_secondes=intervalle_lecture,
+    )
+    if not succes:
+        journaliser(f"ERREUR: {extraire_premiere_ligne_sortie(sortie)}")
+        return False, "Retour commit precedent en echec (voir journal).", chemin_journal
+
+    return True, "Retour commit precedent termine.", chemin_journal
 
 
 def operation_pipeline_post_pull(
@@ -557,7 +788,7 @@ def operation_pipeline_post_pull(
     if succes:
         return True, "Pipeline post-pull termine.", chemin_journal
 
-    journaliser(f"ERREUR: {sortie.splitlines()[0]}")
+    journaliser(f"ERREUR: {extraire_premiere_ligne_sortie(sortie)}")
     return False, "Pipeline post-pull en erreur. Consultez le journal.", chemin_journal
 
 
@@ -605,7 +836,7 @@ def operation_mise_a_jour_os(
             intervalle_lecture_secondes=intervalle_lecture,
         )
         if not succes:
-            journaliser(f"ERREUR: {sortie.splitlines()[0]}")
+            journaliser(f"ERREUR: {extraire_premiere_ligne_sortie(sortie)}")
             return False, "Echec de la mise a jour OS (voir journal).", chemin_journal
 
     return True, "Mise a jour OS terminee.", chemin_journal
@@ -700,7 +931,7 @@ def operation_reset_pre_requis(
             intervalle_lecture_secondes=intervalle_lecture,
         )
         if not succes:
-            journaliser(f"ERREUR: {sortie.splitlines()[0]}")
+            journaliser(f"ERREUR: {extraire_premiere_ligne_sortie(sortie)}")
             return False, "Echec reset prerequis systeme (voir journal).", chemin_journal
 
     succes_nettoyage, message_nettoyage = nettoyer_artefacts_reset(racine_projet, journaliser)

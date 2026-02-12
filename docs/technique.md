@@ -23,8 +23,11 @@ qualite, configuration et contraintes MG2D.
 - Mode maintenance cache configure via `borne_arcade/config/maintenance_mode.properties`.
 - Mode maintenance pygame parametre via `borne_arcade/projet/MaintenanceMode/config_maintenance.json` (fenetre, theme, journal, timeouts).
 - Operations maintenance executees en arriere-plan (thread dedie) avec journal temps reel non bloquant pour eviter le freeze UI.
-- Journal maintenance scrollable en mode manuel (`PgUp`/`PgDn`) avec auto-scroll pilotable (`A`/`Fin`) et indicateur visuel `AUTO`/`MANUEL`.
+- Journal maintenance scrollable en mode manuel (`PgUp`/`PgDn` + `Gauche`/`Droite`) avec auto-scroll pilotable (`A`/`Fin`) et indicateurs visuels vertical/horizontal synchronises.
+- Journal maintenance aligne sur les usages console: lignes recentes affichees en bas et barre verticale orientee recent->bas.
 - Journal maintenance resilient: selection automatique d un dossier logs ecrivable (`logs/`, puis `~/.cache/maintenance_logicielle/logs/`, puis `/tmp/maintenance_logicielle/logs/`) et retour d erreur actionnable en cas d exception inattendue.
+- Diagnostic maintenance durci: verification explicite des pre-requis borne et gestion robuste des sorties vides/commandes absentes.
+- Operations git maintenance durcies: `git pull` et `retour commit precedent` verifient d abord la presence de git, puis retournent une erreur actionnable.
 - Reset prerequis integre au mode maintenance: purge apt ciblee + nettoyage des artefacts locaux (`.venv`, `build`, `site`, etat bootstrap) pour retester une installation complete.
 - Installation systeme idempotente: verification paquet par paquet puis installation des dependances manquantes.
 - Permissions partagees appliquees par l installateur pour eviter les blocages multi-utilisateurs (`logs/`, `build/`, `.cache/`, `.venv/`, scripts et fichiers de jeu).
@@ -33,9 +36,11 @@ qualite, configuration et contraintes MG2D.
 - Bootstrap lance via `sudo`: les etapes non-systeme (compilation/lint/tests/docs) sont executees avec l utilisateur appelant (`SUDO_USER`) pour eviter les artefacts root dans `build/`.
 - Bootstrap finalise par une normalisation ownership/permissions de `build/`, `logs/`, `.cache/`, `.venv/` et `site/`.
 - Pipeline post-pull resilient: installation en mode systeme optionnel et fallback de journalisation vers `~/.cache/maintenance_logicielle/logs/` si `logs/` n est pas accessible.
+- Hook `post-merge` durci: controle de la presence de git et messages d erreur explicites si depot/script indisponible.
 - Protection permissions build: message clair si `build/` n est pas accessible en ecriture.
 - Menu optimise: suppression des chargements repetes police/son en boucle.
 - Menu NeonSumo ameliore: rendu titre neon anime parametre via `config_jeu.json` (`menu_titre`) sans impacter la boucle gameplay.
+- NeonSumo attract durci: les collisions/eliminations en mode attract declenchent une reinitialisation IA sans sortie vers les etats competitifs.
 - PianoTile robuste: fallback sans `librosa` si la dependance n est pas disponible.
 - PianoTile durci: lecture audio non bloquante (message actionnable en cas d echec ALSA/PulseAudio), chronometrage de secours sans audio et sortie d urgence `Echap` pendant une partie.
 - CI/CD et tests automatisees via `.github/workflows/qualite.yml` et `scripts/tests/lancer_suite.sh`.

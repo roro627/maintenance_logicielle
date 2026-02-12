@@ -21,8 +21,11 @@ from main import (  # pylint: disable=import-error
     EtatInterface,
     activer_auto_scroll_journal,
     ajouter_ligne_journal,
+    ajuster_decalage_horizontal_journal,
     ajuster_decalage_journal,
+    calculer_decalage_horizontal_max_journal,
     calculer_decalage_max_journal,
+    extraire_segment_horizontal,
 )
 
 
@@ -103,6 +106,55 @@ class TestInterfaceMaintenanceMode(unittest.TestCase):
         activer_auto_scroll_journal(etat)
         self.assertTrue(etat.auto_scroll_journal)
         self.assertEqual(etat.decalage_lignes_journal, 0)
+
+    def test_calculer_decalage_horizontal_max_journal(self) -> None:
+        """Controle le calcul du decalage horizontal maximal.
+
+        Args:
+            Aucun.
+
+        Returns:
+            Aucun.
+        """
+
+        lignes = ["abc", "abcdefghij", "abcd"]
+        self.assertEqual(calculer_decalage_horizontal_max_journal(lignes, 4), 6)
+        self.assertEqual(calculer_decalage_horizontal_max_journal(lignes, 20), 0)
+
+    def test_ajuster_decalage_horizontal_journal_borne(self) -> None:
+        """Controle le bornage du decalage horizontal en mode manuel.
+
+        Args:
+            Aucun.
+
+        Returns:
+            Aucun.
+        """
+
+        etat = EtatInterface()
+        ajuster_decalage_horizontal_journal(etat, 7, 10)
+        self.assertEqual(etat.decalage_colonnes_journal, 7)
+
+        ajuster_decalage_horizontal_journal(etat, 100, 10)
+        self.assertEqual(etat.decalage_colonnes_journal, 10)
+
+        ajuster_decalage_horizontal_journal(etat, -20, 10)
+        self.assertEqual(etat.decalage_colonnes_journal, 0)
+
+    def test_extraire_segment_horizontal(self) -> None:
+        """Controle l extraction d une fenetre de texte horizontale.
+
+        Args:
+            Aucun.
+
+        Returns:
+            Aucun.
+        """
+
+        texte = "abcdefghij"
+        self.assertEqual(extraire_segment_horizontal(texte, 0, 4), "abcd")
+        self.assertEqual(extraire_segment_horizontal(texte, 3, 4), "defg")
+        self.assertEqual(extraire_segment_horizontal(texte, 9, 4), "j")
 
 
 if __name__ == "__main__":

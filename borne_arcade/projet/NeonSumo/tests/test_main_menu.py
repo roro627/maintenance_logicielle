@@ -26,6 +26,8 @@ MODULE_MAIN_NEON_SUMO = importlib.util.module_from_spec(SPEC_MAIN_NEON_SUMO)
 sys.modules[SPEC_MAIN_NEON_SUMO.name] = MODULE_MAIN_NEON_SUMO
 SPEC_MAIN_NEON_SUMO.loader.exec_module(MODULE_MAIN_NEON_SUMO)
 construire_parametres_menu_titre = MODULE_MAIN_NEON_SUMO.construire_parametres_menu_titre
+mode_competitif_actif = MODULE_MAIN_NEON_SUMO.mode_competitif_actif
+doit_reinitialiser_attract = MODULE_MAIN_NEON_SUMO.doit_reinitialiser_attract
 
 
 class TestConfigurationMenuTitre(unittest.TestCase):
@@ -78,6 +80,36 @@ class TestConfigurationMenuTitre(unittest.TestCase):
         self.assertEqual(parametres.taille_police_titre, 96)
         self.assertEqual(parametres.taille_police_sous_titre, 30)
         self.assertEqual(parametres.taille_police_info, 21)
+
+    def test_mode_competitif_actif_reconnait_uniquement_manche(self) -> None:
+        """Controle la detection de l etat competitif.
+
+        Args:
+            Aucun.
+
+        Returns:
+            Aucun.
+        """
+
+        self.assertTrue(mode_competitif_actif("manche"))
+        self.assertFalse(mode_competitif_actif("attract"))
+        self.assertFalse(mode_competitif_actif("titre"))
+
+    def test_doit_reinitialiser_attract_uniquement_sur_elimination_attract(self) -> None:
+        """Controle le comportement de relance du mode attract.
+
+        Args:
+            Aucun.
+
+        Returns:
+            Aucun.
+        """
+
+        self.assertTrue(doit_reinitialiser_attract("attract", True, False))
+        self.assertTrue(doit_reinitialiser_attract("attract", False, True))
+        self.assertTrue(doit_reinitialiser_attract("attract", True, True))
+        self.assertFalse(doit_reinitialiser_attract("manche", True, False))
+        self.assertFalse(doit_reinitialiser_attract("attract", False, False))
 
 
 if __name__ == "__main__":

@@ -80,11 +80,13 @@
   "journal": {
     "taille_max_lignes_interface": 240,
     "intervalle_lecture_processus_ms": 100,
-    "pas_scroll_journal": 6
+    "pas_scroll_journal": 6,
+    "pas_scroll_horizontal_journal": 8
   },
   "temps_max_secondes": {
     "diagnostic": 20,
     "git_pull": 240,
+    "git_retour_precedent": 240,
     "pipeline_post_pull": 600,
     "mise_a_jour_os": 1800,
     "reset_pre_requis": 1800

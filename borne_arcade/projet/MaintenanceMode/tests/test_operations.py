@@ -172,6 +172,52 @@ class TestOperationsMaintenance(unittest.TestCase):
         operations_disponibles = operations.lister_operations()
         identifiants = [operation["id"] for operation in operations_disponibles]
         self.assertIn("reset_pre_requis", identifiants)
+        self.assertIn("git_retour_precedent", identifiants)
+
+    def test_extraire_premiere_ligne_sortie_gere_sortie_vide(self) -> None:
+        """Controle l extraction robuste de premiere ligne de sortie.
+
+        Args:
+            Aucun.
+
+        Returns:
+            Aucun.
+        """
+
+        self.assertEqual(operations.extraire_premiere_ligne_sortie(""), "(sortie indisponible)")
+        self.assertEqual(
+            operations.extraire_premiere_ligne_sortie("ligne1\nligne2"),
+            "ligne1",
+        )
+
+    def test_operation_diagnostic_tolere_sortie_vide_si_pre_requis_absents(self) -> None:
+        """Controle la robustesse du diagnostic quand des outils manquent.
+
+        Args:
+            Aucun.
+
+        Returns:
+            Aucun.
+        """
+
+        configuration = operations.charger_configuration(Path("config_introuvable.json"))
+        lignes_capturees: list[str] = []
+        with tempfile.TemporaryDirectory() as dossier_temporaire:
+            racine_temporaire = Path(dossier_temporaire)
+            with (
+                patch.object(operations, "diagnostiquer_pre_requis_borne", return_value=False),
+                patch.object(operations, "executer_commande", return_value=(False, "")),
+            ):
+                succes, message, _ = operations.operation_diagnostic(
+                    configuration,
+                    racine_temporaire,
+                    racine_temporaire / "journal.log",
+                    lignes_capturees.append,
+                )
+
+                self.assertFalse(succes)
+                self.assertIn("Diagnostic termine avec erreurs", message)
+                self.assertTrue(any("(sortie indisponible)" in ligne for ligne in lignes_capturees))
 
     def test_operation_reset_pre_requis_refuse_sans_sudo(self) -> None:
         """Controle le message actionnable sans privileges sudo non interactifs.
@@ -197,6 +243,91 @@ class TestOperationsMaintenance(unittest.TestCase):
                 self.assertFalse(succes)
                 self.assertIn("sudo non disponible", message)
                 self.assertTrue(any("Action recommandee" in ligne for ligne in lignes_capturees))
+
+    def test_operation_git_pull_refuse_si_git_absent(self) -> None:
+        """Controle le message actionnable si git est absent.
+
+        Args:
+            Aucun.
+
+        Returns:
+            Aucun.
+        """
+
+        configuration = operations.charger_configuration(Path("config_introuvable.json"))
+        lignes_capturees: list[str] = []
+        with tempfile.TemporaryDirectory() as dossier_temporaire:
+            racine_temporaire = Path(dossier_temporaire)
+            with patch.object(operations.shutil, "which", return_value=None):
+                succes, message, _ = operations.operation_git_pull(
+                    configuration,
+                    racine_temporaire,
+                    racine_temporaire / "journal.log",
+                    lignes_capturees.append,
+                )
+                self.assertFalse(succes)
+                self.assertIn("git introuvable", message)
+                self.assertTrue(any("Action recommandee" in ligne for ligne in lignes_capturees))
+
+    def test_operation_git_retour_precedent_refuse_si_depot_modifie(self) -> None:
+        """Controle le refus de rollback quand le depot n est pas propre.
+
+        Args:
+            Aucun.
+
+        Returns:
+            Aucun.
+        """
+
+        configuration = operations.charger_configuration(Path("config_introuvable.json"))
+        lignes_capturees: list[str] = []
+        with tempfile.TemporaryDirectory() as dossier_temporaire:
+            racine_temporaire = Path(dossier_temporaire)
+            resultat_statut = type("Resultat", (), {"returncode": 0, "stdout": " M fichier.py\n"})()
+            with (
+                patch.object(operations, "verifier_git_disponible", return_value=True),
+                patch.object(operations, "executer_commande", return_value=(True, "ok")),
+                patch.object(operations.subprocess, "run", return_value=resultat_statut),
+            ):
+                succes, message, _ = operations.operation_git_retour_precedent(
+                    configuration,
+                    racine_temporaire,
+                    racine_temporaire / "journal.log",
+                    lignes_capturees.append,
+                )
+                self.assertFalse(succes)
+                self.assertIn("modifications locales detectees", message)
+
+    def test_operation_git_retour_precedent_succes(self) -> None:
+        """Controle l orchestration nominale du rollback git.
+
+        Args:
+            Aucun.
+
+        Returns:
+            Aucun.
+        """
+
+        configuration = operations.charger_configuration(Path("config_introuvable.json"))
+        lignes_capturees: list[str] = []
+        with tempfile.TemporaryDirectory() as dossier_temporaire:
+            racine_temporaire = Path(dossier_temporaire)
+            resultat_statut = type("Resultat", (), {"returncode": 0, "stdout": ""})()
+            with (
+                patch.object(operations, "verifier_git_disponible", return_value=True),
+                patch.object(operations, "executer_commande", return_value=(True, "ok")) as mock_exec,
+                patch.object(operations.subprocess, "run", return_value=resultat_statut),
+            ):
+                succes, message, _ = operations.operation_git_retour_precedent(
+                    configuration,
+                    racine_temporaire,
+                    racine_temporaire / "journal.log",
+                    lignes_capturees.append,
+                )
+
+                self.assertTrue(succes)
+                self.assertIn("Retour commit precedent termine", message)
+                self.assertEqual(mock_exec.call_count, 3)
 
     def test_operation_reset_pre_requis_enchaine_commandes_et_nettoyage(self) -> None:
         """Controle l orchestration complete du reset prerequis.

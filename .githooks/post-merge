@@ -1,5 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-RACINE_DEPOT="$(git rev-parse --show-toplevel)"
-"${RACINE_DEPOT}/scripts/deploiement/post_pull_update.sh"
+if ! command -v git >/dev/null 2>&1; then
+  printf '[%s] ERREUR: git introuvable pour le hook post-merge.\n' "$(date '+%Y-%m-%d %H:%M:%S')" >&2
+  printf '[%s] ACTION RECOMMANDEE: relancez sudo ./bootstrap_borne.sh pour installer git puis rejouez le pull.\n' \
+    "$(date '+%Y-%m-%d %H:%M:%S')" >&2
+  exit 1
+fi
+
+RACINE_DEPOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+if [[ -z "${RACINE_DEPOT}" ]]; then
+  printf '[%s] ERREUR: impossible de determiner la racine du depot git.\n' "$(date '+%Y-%m-%d %H:%M:%S')" >&2
+  printf '[%s] ACTION RECOMMANDEE: verifiez que la commande est lancee dans un depot git valide.\n' \
+    "$(date '+%Y-%m-%d %H:%M:%S')" >&2
+  exit 1
+fi
+
+SCRIPT_POST_PULL="${RACINE_DEPOT}/scripts/deploiement/post_pull_update.sh"
+if [[ ! -x "${SCRIPT_POST_PULL}" ]]; then
+  printf '[%s] ERREUR: script post-pull introuvable ou non executable: %s\n' \
+    "$(date '+%Y-%m-%d %H:%M:%S')" "${SCRIPT_POST_PULL}" >&2
+  printf '[%s] ACTION RECOMMANDEE: relancez sudo ./bootstrap_borne.sh pour restaurer les permissions.\n' \
+    "$(date '+%Y-%m-%d %H:%M:%S')" >&2
+  exit 1
+fi
+
+"${SCRIPT_POST_PULL}"

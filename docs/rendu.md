@@ -16,7 +16,7 @@ Documenter le bilan final des travaux avec une verification point par point de `
 8. Maintenance mode modernisee: execution asynchrone des commandes, logs temps reel et interface pygame plus lisible.
 9. Deploiement post-pull durci: permissions partagees, logs robustes et installation systeme optionnelle en non-root.
 10. Bootstrap sudo durci: etapes non-systeme sous utilisateur appelant + normalisation ownership/permissions finales pour eviter les blocages `Permission non accordee` au lancement borne.
-11. Maintenance/gameplay enrichis: journal maintenance scrollable + reset prerequis, et menu titre NeonSumo refondu en style neon anime.
+11. Maintenance/gameplay enrichis: journal maintenance scrollable vertical+horizontal (recent en bas) + reset prerequis + diagnostic prerequis robuste + rollback git au commit precedent (depot propre), et mode attract NeonSumo rendu continu apres collision.
 
 ## Conformite `consignes.md` (point par point)
 

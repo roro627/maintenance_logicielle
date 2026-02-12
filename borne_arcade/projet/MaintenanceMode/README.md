@@ -8,9 +8,14 @@ Jeu utilitaire cache pour l exploitation de la borne:
 - pipeline post-pull,
 - mise a jour OS.
 - reset prerequis (purge apt + nettoyage local pour retest a zero).
+- retour commit precedent (rollback git controle vers `HEAD~1` si depot propre).
 - journal temps reel des commandes.
 - execution asynchrone pour garder l interface fluide.
-- journal scrollable (PgUp/PgDn) avec auto-scroll activable (`A`) et retour bas (`Fin`).
+- journal scrollable verticalement (`PgUp`/`PgDn`) et horizontalement (`Gauche`/`Droite`).
+- auto-scroll vertical activable (`A`), retour bas (`Fin`) et retour debut de ligne (`Home`).
+- affichage coherent du journal: lignes recentes en bas et indicateurs de scroll synchronises.
+- diagnostic tolerant aux dependances manquantes avec messages actionnables (sans crash).
+- operations git durcies: verification explicite de la presence de `git` et message actionnable si indisponible.
 
 ## Deblocage
 

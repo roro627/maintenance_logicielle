@@ -23,7 +23,8 @@ lanceur, tests et documentation).
 Si vous modifiez le gameplay ou le rendu d un jeu deja integre (ex: menu titre NeonSumo):
 1. Garder les reglages dans la configuration du jeu (`config_jeu.json`).
 2. Ajouter/mettre a jour des tests unitaires pour la logique ajoutee.
-3. Mettre a jour `docs/utilisateur.md`, `docs/tests.md` et `docs/rendu.md`.
+3. Pour un mode attract/demo, verifier explicitement qu une elimination relance bien la demo sans bloquer l etat attract.
+4. Mettre a jour `docs/utilisateur.md`, `docs/tests.md` et `docs/rendu.md`.
 
 ## Commandes
 

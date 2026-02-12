@@ -17,9 +17,13 @@ commandes principales et depannage rapide.
 - Deblocage: sequence secrete configuree dans `borne_arcade/config/maintenance_mode.properties`.
 - Ouverture apres debloquage: bouton configure (par defaut `J1B`).
 - Une operation maintenance lancee (`F`) tourne en arriere-plan avec journal temps reel visible dans l ecran.
-- Le journal maintenance est scrollable: `PgUp`/`PgDn` (historique/recent), `A` pour activer/desactiver l auto-scroll, `Fin` pour revenir en bas.
+- Le journal maintenance est scrollable: `PgUp`/`PgDn` (historique/recent), `Gauche`/`Droite` (horizontal), `A` pour activer/desactiver l auto-scroll, `Fin` pour revenir en bas, `Home` pour revenir au debut de ligne.
+- Le journal est affiche de facon coherente: les lignes recentes restent en bas de la zone.
+- Le diagnostic signale explicitement les pre-requis manquants (avec action recommandee) au lieu de planter.
 - Pendant une operation, la sortie est bloquee pour eviter les etats partiels.
 - Option reset disponible: `Reset prerequis` (purge apt prerequis borne + nettoyage local) pour rejouer une installation depuis zero.
+- Option rollback disponible: `Retour commit precedent` (retour `HEAD~1`) uniquement si le depot est propre.
+- Les operations git (`Git pull`, rollback) affichent maintenant un message explicite si `git` est absent.
 - Reverrouillage manuel: dans `MaintenanceMode`, bouton `J1C` (touche `H`).
 - Au redemarrage, le mode maintenance redevient verrouille automatiquement.
 - Si le jeu maintenance est selectionne sans debloquage, son lancement est refuse.
@@ -32,6 +36,7 @@ Chaque jeu decrit ses commandes dans `borne_arcade/projet/<jeu>/bouton.txt`.
 - Match: BO3.
 - B1 Dash, B2 Frein, B3 Bump, B4 Bouclier, B5 Taunt, B6 Ultime.
 - Menu titre ameliore: theme neon anime, panneau controles lisible et rappel clair de l attract mode.
+- Mode attract robuste: une collision/elimination en mode demo relance automatiquement une nouvelle manche IA sans sortir du mode attract.
 
 ### PianoTile (resume)
 - Le jeu tente d utiliser `librosa` pour analyser le rythme.

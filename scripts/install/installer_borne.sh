@@ -391,6 +391,12 @@ configurer_permissions_partagees() {
 #   0
 #######################################
 configurer_hook_git() {
+  if ! command -v git >/dev/null 2>&1; then
+    journaliser \
+      "ATTENTION: git introuvable, configuration hook reportee. Action recommandee: relancez sudo ./bootstrap_borne.sh."
+    return 0
+  fi
+
   if git -C "${RACINE_PROJET}" rev-parse --git-dir >/dev/null 2>&1; then
     journaliser "Activation core.hooksPath=.githooks"
     git -C "${RACINE_PROJET}" config core.hooksPath .githooks
