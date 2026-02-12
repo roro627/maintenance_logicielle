@@ -16,6 +16,9 @@ ConsommateurJournal = Callable[[str], None]
 TIMEOUT_PAR_DEFAUT = 120
 TIMEOUT_DIAGNOSTIC_SECONDES = 20
 INTERVALLE_LECTURE_PAR_DEFAUT_MS = 100
+DOSSIER_CACHE_LOGS_RELATIF = Path(".cache") / "maintenance_logicielle" / "logs"
+DOSSIER_TEMPORAIRE_LOGS = Path("/tmp") / "maintenance_logicielle" / "logs"
+FICHIER_TEST_ECRITURE_LOGS = ".ecriture_logs_maintenance.tmp"
 
 CONFIGURATION_PAR_DEFAUT = {
     "fenetre": {"largeur": 1280, "hauteur": 720, "fps": 30},
@@ -98,6 +101,67 @@ def obtenir_racine_projet() -> Path:
     """
 
     return Path(__file__).resolve().parents[3]
+
+
+def lister_dossiers_logs_candidats(racine_projet: Path) -> List[Path]:
+    """Liste les dossiers potentiels de journalisation.
+
+    Args:
+        racine_projet: Racine du depot.
+
+    Returns:
+        Liste ordonnee des dossiers candidats.
+    """
+
+    return [
+        racine_projet / "logs",
+        Path.home() / DOSSIER_CACHE_LOGS_RELATIF,
+        DOSSIER_TEMPORAIRE_LOGS,
+    ]
+
+
+def tester_ecriture_dossier_logs(dossier_logs: Path) -> bool:
+    """Verifie qu un dossier de logs est bien inscriptible.
+
+    Args:
+        dossier_logs: Dossier a tester.
+
+    Returns:
+        True si l ecriture est possible, sinon False.
+    """
+
+    fichier_test = dossier_logs / FICHIER_TEST_ECRITURE_LOGS
+    try:
+        dossier_logs.mkdir(parents=True, exist_ok=True)
+        fichier_test.write_text("ok", encoding="utf-8")
+        fichier_test.unlink()
+        return True
+    except OSError:
+        return False
+
+
+def selectionner_dossier_logs(racine_projet: Path) -> Path:
+    """Selectionne le premier dossier de logs accessible en ecriture.
+
+    Args:
+        racine_projet: Racine du depot.
+
+    Returns:
+        Dossier valide pour la journalisation.
+
+    Raises:
+        OSError: Si aucun dossier n est inscriptible.
+    """
+
+    for dossier_logs in lister_dossiers_logs_candidats(racine_projet):
+        if tester_ecriture_dossier_logs(dossier_logs):
+            return dossier_logs
+
+    message = (
+        "Aucun dossier de logs accessible. "
+        "Action recommandee: verifier les permissions puis relancer l operation."
+    )
+    raise OSError(message)
 
 
 def lister_operations() -> List[Dict[str, str]]:
@@ -230,34 +294,49 @@ def executer_operation(
     """
 
     racine_projet = obtenir_racine_projet()
-    chemin_journal = preparer_fichier_journal(racine_projet, operation_id)
-    journaliser = creer_journaliseur(chemin_journal, consommateur_journal)
-    journaliser(f"Debut de l operation '{operation_id}'.")
+    chemin_journal = DOSSIER_TEMPORAIRE_LOGS / "maintenance_mode_journal_indisponible.log"
+    journaliser: ConsommateurJournal | None = None
 
-    if operation_id == "diagnostic":
-        succes, message, _ = operation_diagnostic(configuration, racine_projet, chemin_journal, journaliser)
-    elif operation_id == "git_pull":
-        succes, message, _ = operation_git_pull(configuration, racine_projet, chemin_journal, journaliser)
-    elif operation_id == "pipeline_post_pull":
-        succes, message, _ = operation_pipeline_post_pull(
-            configuration,
-            racine_projet,
-            chemin_journal,
-            journaliser,
-        )
-    elif operation_id == "mise_a_jour_os":
-        succes, message, _ = operation_mise_a_jour_os(configuration, racine_projet, chemin_journal, journaliser)
-    else:
+    try:
+        chemin_journal = preparer_fichier_journal(racine_projet, operation_id)
+        journaliser = creer_journaliseur(chemin_journal, consommateur_journal)
+        journaliser(f"Debut de l operation '{operation_id}'.")
+
+        if operation_id == "diagnostic":
+            succes, message, _ = operation_diagnostic(configuration, racine_projet, chemin_journal, journaliser)
+        elif operation_id == "git_pull":
+            succes, message, _ = operation_git_pull(configuration, racine_projet, chemin_journal, journaliser)
+        elif operation_id == "pipeline_post_pull":
+            succes, message, _ = operation_pipeline_post_pull(
+                configuration,
+                racine_projet,
+                chemin_journal,
+                journaliser,
+            )
+        elif operation_id == "mise_a_jour_os":
+            succes, message, _ = operation_mise_a_jour_os(configuration, racine_projet, chemin_journal, journaliser)
+        else:
+            message = (
+                f"Operation inconnue: {operation_id}. "
+                "Action recommandee: selectionnez une operation valide dans la liste."
+            )
+            journaliser(message)
+            return False, message, chemin_journal
+
+        etat_final = "SUCCES" if succes else "ECHEC"
+        journaliser(f"Fin de l operation '{operation_id}' ({etat_final}).")
+        return succes, message, chemin_journal
+    except Exception as erreur:  # pylint: disable=broad-exception-caught
         message = (
-            f"Operation inconnue: {operation_id}. "
-            "Action recommandee: selectionnez une operation valide dans la liste."
+            f"Operation interrompue par une erreur inattendue: {erreur}. "
+            "Action recommandee: consulter le journal puis relancer l operation."
         )
-        journaliser(message)
+        ligne = f"ERREUR: {message}"
+        if journaliser is not None:
+            journaliser(ligne)
+        elif consommateur_journal is not None:
+            consommateur_journal(preparer_ligne_journal(ligne))
         return False, message, chemin_journal
-
-    etat_final = "SUCCES" if succes else "ECHEC"
-    journaliser(f"Fin de l operation '{operation_id}' ({etat_final}).")
-    return succes, message, chemin_journal
 
 
 def preparer_fichier_journal(racine_projet: Path, operation_id: str) -> Path:
@@ -271,8 +350,7 @@ def preparer_fichier_journal(racine_projet: Path, operation_id: str) -> Path:
         Chemin complet du journal.
     """
 
-    dossier_logs = racine_projet / "logs"
-    dossier_logs.mkdir(parents=True, exist_ok=True)
+    dossier_logs = selectionner_dossier_logs(racine_projet)
     horodatage = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
     return dossier_logs / f"maintenance_mode_{operation_id}_{horodatage}.log"
 

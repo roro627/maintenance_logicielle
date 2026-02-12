@@ -39,13 +39,17 @@ TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 .
 - parsing configuration,
 - logique NeonSumo (collisions, sortie arene, cooldowns, ultime),
 - mode maintenance Python (`borne_arcade/projet/MaintenanceMode/tests/test_operations.py`):
-  streaming logs temps reel, timeout actionnable, journalisation des erreurs.
+  streaming logs temps reel, timeout actionnable, journalisation des erreurs,
+  fallback de dossier logs et capture des exceptions inattendues.
+- PianoTile (`borne_arcade/projet/PianoTile/tests/test_piano.py`):
+  echec audio non bloquant et chronometrage de secours sans mixer actif.
 
 ### Integration et systeme
 - catalogue jeux,
 - compilation Java + verifications syntaxiques Python/Lua,
 - ajout de jeu,
 - deploiement post-pull,
+- deploiement post-pull + verification permissions partagees (`logs/`, `build/`, `.cache/`, scripts critiques),
 - generation documentation,
 - architecture et couts,
 - mode maintenance cache (presence, verrouillage, integration menu),

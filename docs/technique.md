@@ -23,12 +23,16 @@ qualite, configuration et contraintes MG2D.
 - Mode maintenance cache configure via `borne_arcade/config/maintenance_mode.properties`.
 - Mode maintenance pygame parametre via `borne_arcade/projet/MaintenanceMode/config_maintenance.json` (fenetre, theme, journal, timeouts).
 - Operations maintenance executees en arriere-plan (thread dedie) avec journal temps reel non bloquant pour eviter le freeze UI.
+- Journal maintenance resilient: selection automatique d un dossier logs ecrivable (`logs/`, puis `~/.cache/maintenance_logicielle/logs/`, puis `/tmp/maintenance_logicielle/logs/`) et retour d erreur actionnable en cas d exception inattendue.
 - Installation systeme idempotente: verification paquet par paquet puis installation des dependances manquantes.
+- Permissions partagees appliquees par l installateur pour eviter les blocages multi-utilisateurs (`logs/`, `build/`, `.cache/`, scripts et fichiers de jeu).
 - Dependance LÖVE obligatoire: installation stricte dans le bootstrap, avec contournement automatique Debian 11 si le paquet `love` casse sa post-installation.
 - Privileges systeme obligatoires au bootstrap (`sudo`/root), avec echec explicite et action recommandee si indisponibles.
+- Pipeline post-pull resilient: installation en mode systeme optionnel et fallback de journalisation vers `~/.cache/maintenance_logicielle/logs/` si `logs/` n est pas accessible.
 - Protection permissions build: message clair si `build/` n est pas accessible en ecriture.
 - Menu optimise: suppression des chargements repetes police/son en boucle.
 - PianoTile robuste: fallback sans `librosa` si la dependance n est pas disponible.
+- PianoTile durci: lecture audio non bloquante (message actionnable en cas d echec ALSA/PulseAudio), chronometrage de secours sans audio et sortie d urgence `Echap` pendant une partie.
 - CI/CD et tests automatisees via `.github/workflows/qualite.yml` et `scripts/tests/lancer_suite.sh`.
 - Pipeline reel ajoute: `.github/workflows/verification_reelle.yml` (Debian 11 minimal, 2 Go RAM, sans variables de simulation).
 

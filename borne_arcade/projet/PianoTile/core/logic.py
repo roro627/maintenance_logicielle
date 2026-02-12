@@ -417,6 +417,17 @@ class Logic:
                             if event.type == pygame.QUIT:
                                 pygame.quit()
                                 exit()
+                            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                                try:
+                                    pygame.mixer.music.stop()
+                                except pygame.error:
+                                    pass
+                                running = False
+                                self.getInterface().setUpdate(True)
+                                break
+
+                        if not running:
+                            break
 
                         keys = pygame.key.get_pressed()
                         for key in self.getButton().getAll().keys():
@@ -430,6 +441,9 @@ class Logic:
                             timer.draw()
                             if timer.getFinished():
                                 piano.play()
+                                message_erreur_audio = piano.getDerniereErreurAudio()
+                                if message_erreur_audio:
+                                    print(message_erreur_audio)
                                 game_started = True
                                 self.getInterface().setUpdate(True)
                         else:

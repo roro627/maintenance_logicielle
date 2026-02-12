@@ -95,7 +95,22 @@ tester_unitaire_neon_sumo() {
 tester_unitaire_maintenance_mode() {
   (
     cd "${RACINE_PROJET}"
-    "${COMMANDE_PYTHON}" -m unittest borne_arcade/projet/MaintenanceMode/tests/test_operations.py
+    "${COMMANDE_PYTHON}" -m unittest discover -s borne_arcade/projet/MaintenanceMode/tests -p "test_*.py"
+  )
+}
+
+#######################################
+# Execute les tests unitaires Python de
+# PianoTile.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+tester_unitaire_pianotile() {
+  (
+    cd "${RACINE_PROJET}"
+    "${COMMANDE_PYTHON}" -m unittest discover -s borne_arcade/projet/PianoTile/tests -p "test_*.py"
   )
 }
 
@@ -112,6 +127,7 @@ main() {
   verifier_lanceurs
   tester_unitaire_neon_sumo
   tester_unitaire_maintenance_mode
+  tester_unitaire_pianotile
   tester_lancement_tous_les_jeux
   journaliser "Test jeux: OK"
 }

@@ -100,6 +100,65 @@ class TestOperationsMaintenance(unittest.TestCase):
                 self.assertIn("Operation inconnue", contenu_journal)
                 self.assertTrue(any("Operation inconnue" in ligne for ligne in lignes_capturees))
 
+    def test_selectionner_dossier_logs_fallback_si_racine_non_ecrivable(self) -> None:
+        """Controle la selection de dossier logs avec repli sur un second candidat.
+
+        Args:
+            Aucun.
+
+        Returns:
+            Aucun.
+        """
+
+        dossier_principal = Path("/racine/inaccessible")
+        dossier_secours = Path("/tmp/maintenance_mode_logs_test")
+
+        with (
+            patch.object(
+                operations,
+                "lister_dossiers_logs_candidats",
+                return_value=[dossier_principal, dossier_secours],
+            ),
+            patch.object(
+                operations,
+                "tester_ecriture_dossier_logs",
+                side_effect=[False, True],
+            ),
+        ):
+            dossier_selectionne = operations.selectionner_dossier_logs(Path("/projet"))
+            self.assertEqual(dossier_selectionne, dossier_secours)
+
+    def test_executer_operation_capture_exception_inattendue(self) -> None:
+        """Controle qu une exception interne retourne un echec actionnable.
+
+        Args:
+            Aucun.
+
+        Returns:
+            Aucun.
+        """
+
+        lignes_capturees: list[str] = []
+        configuration = operations.charger_configuration(Path("config_introuvable.json"))
+
+        with tempfile.TemporaryDirectory() as dossier_temporaire:
+            racine_temporaire = Path(dossier_temporaire)
+            with (
+                patch.object(operations, "obtenir_racine_projet", return_value=racine_temporaire),
+                patch.object(operations, "operation_diagnostic", side_effect=RuntimeError("boom")),
+            ):
+                succes, message, chemin_journal = operations.executer_operation(
+                    "diagnostic",
+                    configuration,
+                    lignes_capturees.append,
+                )
+
+                self.assertFalse(succes)
+                self.assertIn("Operation interrompue", message)
+                self.assertIn("Action recommandee", message)
+                self.assertTrue(chemin_journal.exists())
+                self.assertTrue(any("ERREUR: Operation interrompue" in ligne for ligne in lignes_capturees))
+
 
 if __name__ == "__main__":
     unittest.main()

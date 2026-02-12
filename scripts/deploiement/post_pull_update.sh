@@ -10,6 +10,45 @@ FICHIER_JOURNAL_PIPELINE=""
 VERROU_FICHIER_ACTIF=0
 
 #######################################
+# Selectionne un dossier de journaux
+# accessible en ecriture pour ce run.
+# Arguments:
+#   aucun
+# Retour:
+#   ecrit le chemin du dossier logs
+#######################################
+selectionner_dossier_journaux_accessible() {
+  local dossier_projet="${RACINE_PROJET}/logs"
+  local dossier_repli_home="${HOME}/.cache/maintenance_logicielle/logs"
+  local dossier_repli_tmp="${TMPDIR:-/tmp}/maintenance_logicielle_logs"
+
+  mkdir -p "${dossier_projet}" 2>/dev/null || true
+  chmod a+rwx "${dossier_projet}" 2>/dev/null || true
+  if [[ -d "${dossier_projet}" && -w "${dossier_projet}" ]]; then
+    printf '%s\n' "${dossier_projet}"
+    return 0
+  fi
+
+  mkdir -p "${dossier_repli_home}" 2>/dev/null || true
+  chmod a+rwx "${dossier_repli_home}" 2>/dev/null || true
+  if [[ -d "${dossier_repli_home}" && -w "${dossier_repli_home}" ]]; then
+    printf '%s\n' "${dossier_repli_home}"
+    return 0
+  fi
+
+  mkdir -p "${dossier_repli_tmp}" 2>/dev/null || true
+  chmod a+rwx "${dossier_repli_tmp}" 2>/dev/null || true
+  if [[ -d "${dossier_repli_tmp}" && -w "${dossier_repli_tmp}" ]]; then
+    printf '%s\n' "${dossier_repli_tmp}"
+    return 0
+  fi
+
+  arreter_sur_erreur \
+    "Aucun dossier de journalisation accessible en ecriture." \
+    "Corrigez les droits du projet puis relancez sudo ./bootstrap_borne.sh."
+}
+
+#######################################
 # Active la journalisation du pipeline
 # vers un fichier horodate dedie.
 # Arguments:
@@ -18,10 +57,13 @@ VERROU_FICHIER_ACTIF=0
 #   0
 #######################################
 activer_journalisation_pipeline() {
-  local dossier_journaux="${RACINE_PROJET}/logs"
-  mkdir -p "${dossier_journaux}"
+  local dossier_journaux
+  dossier_journaux="$(selectionner_dossier_journaux_accessible)"
   FICHIER_JOURNAL_PIPELINE="${dossier_journaux}/post_pull_update_$(date '+%Y%m%d_%H%M%S').log"
   exec > >(tee -a "${FICHIER_JOURNAL_PIPELINE}") 2>&1
+  if [[ "${dossier_journaux}" != "${RACINE_PROJET}/logs" ]]; then
+    journaliser "ATTENTION: logs projet non accessibles, journal ecrit dans ${dossier_journaux}."
+  fi
   journaliser "Journal pipeline: ${FICHIER_JOURNAL_PIPELINE}"
 }
 
@@ -97,7 +139,7 @@ gerer_echec_pipeline() {
 #######################################
 executer_pipeline_post_pull() {
   journaliser "Pipeline post-pull: installation"
-  "${RACINE_PROJET}/scripts/install/installer_borne.sh"
+  INSTALLATION_SYSTEME_OPTIONNEL=1 "${RACINE_PROJET}/scripts/install/installer_borne.sh"
 
   journaliser "Pipeline post-pull: compilation"
   "${REPERTOIRE_BORNE}/compilation.sh"

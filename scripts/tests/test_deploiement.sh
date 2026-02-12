@@ -25,6 +25,45 @@ verifier_pipeline_post_pull() {
 }
 
 #######################################
+# Verifie que les dossiers partages
+# restent accessibles en ecriture.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+verifier_permissions_partagees() {
+  local dossiers_partages=(
+    "${RACINE_PROJET}/logs"
+    "${RACINE_PROJET}/build"
+    "${RACINE_PROJET}/.cache"
+    "${REPERTOIRE_BORNE}/projet"
+  )
+  local dossier
+  for dossier in "${dossiers_partages[@]}"; do
+    [[ -d "${dossier}" ]] || arreter_sur_erreur "Dossier partage manquant: ${dossier}"
+    [[ -w "${dossier}" ]] \
+      || arreter_sur_erreur \
+        "Dossier non accessible en ecriture: ${dossier}" \
+        "Relancez sudo ./bootstrap_borne.sh pour reappliquer les droits partages."
+  done
+
+  local scripts_critiques=(
+    "${RACINE_PROJET}/bootstrap_borne.sh"
+    "${RACINE_PROJET}/scripts/deploiement/post_pull_update.sh"
+    "${RACINE_PROJET}/.githooks/post-merge"
+    "${REPERTOIRE_BORNE}/lancerBorne.sh"
+  )
+  local script
+  for script in "${scripts_critiques[@]}"; do
+    [[ -x "${script}" ]] \
+      || arreter_sur_erreur \
+        "Script critique non executable: ${script}" \
+        "Relancez sudo ./bootstrap_borne.sh pour restaurer les permissions d execution."
+  done
+}
+
+#######################################
 # Point d entree test deploiement.
 # Arguments:
 #   aucun
@@ -34,6 +73,7 @@ verifier_pipeline_post_pull() {
 main() {
   charger_configuration_borne
   verifier_pipeline_post_pull
+  verifier_permissions_partagees
   journaliser "Test deploiement: OK"
 }
 

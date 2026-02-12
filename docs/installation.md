@@ -21,6 +21,7 @@ Le script `bootstrap_borne.sh` enchaine:
 - creation/maintenance de la venv Python,
 - installation des dependances par jeu (`requirements.txt`),
 - permissions scripts, autostart, layout clavier,
+- droits partages multi-utilisateurs sur `logs/`, `build/`, `.cache/` et fichiers d exploitation,
 - compilation, lint, tests smoke, documentation.
 
 Le bootstrap est **obligatoirement lance en sudo/root** (hors mode test).
@@ -48,6 +49,18 @@ sudo ./scripts/install/installer_borne.sh
 ./scripts/docs/generer_documentation.sh
 ```
 
+### Mode installation sans elevation (post-pull)
+
+Pour un run automatique apres `git pull` sans bloquer si les dependances systeme
+sont deja installees:
+
+```bash
+INSTALLATION_SYSTEME_OPTIONNEL=1 ./scripts/install/installer_borne.sh
+```
+
+Si une dependance systeme manque, le script echoue avec une action recommandee
+(`sudo ./bootstrap_borne.sh`).
+
 ## Validation
 
 ```bash
@@ -61,6 +74,8 @@ Le journal bootstrap est ecrit dans `logs/bootstrap_borne_YYYYMMDD_HHMMSS.log`.
 ## Depannage
 
 - Erreur sudo: relancer avec `sudo ./bootstrap_borne.sh`.
+- Erreur droits journaux (`Permission non accordee` dans `logs/`):
+  relancer `sudo ./bootstrap_borne.sh` pour reappliquer les droits partages.
 - Erreur droits build (`Permission non accordee`): corriger les droits puis relancer.
 
 ```bash

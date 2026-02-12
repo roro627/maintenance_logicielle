@@ -6,10 +6,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/../lib/outils_communs.sh"
 
 COMMANDE_PYTHON_VENV=""
+PRIVILEGES_SYSTEME_ACTIFS=0
+INSTALLATION_SYSTEME_OPTIONNEL="${INSTALLATION_SYSTEME_OPTIONNEL:-0}"
 
 #######################################
-# Verifie que les privileges systeme
-# necessaires sont disponibles.
+# Initialise la strategie de privileges
+# systeme pour l installation.
 # Arguments:
 #   aucun
 # Retour:
@@ -17,28 +19,50 @@ COMMANDE_PYTHON_VENV=""
 #######################################
 verifier_privileges_systeme() {
   if [[ "${BORNE_MODE_TEST:-0}" == "1" ]]; then
+    PRIVILEGES_SYSTEME_ACTIFS=1
     return 0
   fi
 
   if [[ "$(id -u)" -eq 0 ]]; then
+    PRIVILEGES_SYSTEME_ACTIFS=1
     return 0
   fi
 
-  command -v sudo >/dev/null 2>&1 \
-    || arreter_sur_erreur \
+  if ! command -v sudo >/dev/null 2>&1; then
+    if [[ "${INSTALLATION_SYSTEME_OPTIONNEL}" == "1" ]]; then
+      PRIVILEGES_SYSTEME_ACTIFS=0
+      journaliser "ATTENTION: sudo introuvable, les etapes systeme seront ignorees (mode optionnel)."
+      return 0
+    fi
+    arreter_sur_erreur \
       "sudo introuvable pour executer les etapes systeme obligatoires." \
       "Installez sudo ou lancez ce script en root."
+  fi
 
   if sudo_non_interactif_disponible; then
+    PRIVILEGES_SYSTEME_ACTIFS=1
     return 0
   fi
 
   if [[ -t 0 ]]; then
     journaliser "Privilege root requis: demande d authentification sudo"
-    sudo -v \
-      || arreter_sur_erreur \
-        "Impossible de valider sudo pour l installation systeme." \
-        "Utilisez un compte membre sudo, ou executez ce script en root."
+    if sudo -v; then
+      PRIVILEGES_SYSTEME_ACTIFS=1
+      return 0
+    fi
+    if [[ "${INSTALLATION_SYSTEME_OPTIONNEL}" == "1" ]]; then
+      PRIVILEGES_SYSTEME_ACTIFS=0
+      journaliser "ATTENTION: sudo refuse, les etapes systeme seront ignorees (mode optionnel)."
+      return 0
+    fi
+    arreter_sur_erreur \
+      "Impossible de valider sudo pour l installation systeme." \
+      "Utilisez un compte membre sudo, ou executez ce script en root."
+  fi
+
+  if [[ "${INSTALLATION_SYSTEME_OPTIONNEL}" == "1" ]]; then
+    PRIVILEGES_SYSTEME_ACTIFS=0
+    journaliser "ATTENTION: session non interactive sans sudo, etapes systeme ignorees (mode optionnel)."
     return 0
   fi
 
@@ -89,24 +113,14 @@ obtenir_prefixe_elevation_apt() {
     return 0
   fi
 
-  if sudo_non_interactif_disponible; then
-    printf '%s\n' "sudo"
-    return 0
-  fi
-
-  if command -v sudo >/dev/null 2>&1 && [[ -t 0 ]]; then
-    journaliser "Privilege root requis: demande d authentification sudo"
-    sudo -v \
-      || arreter_sur_erreur \
-        "Impossible d obtenir les privileges sudo pour installer les dependances systeme ciblees." \
-        "Relancez avec un compte autorise sudo, ou executez ce script en root."
+  if [[ "${PRIVILEGES_SYSTEME_ACTIFS}" == "1" ]]; then
     printf '%s\n' "sudo"
     return 0
   fi
 
   arreter_sur_erreur \
     "Privileges systeme insuffisants pour apt-get." \
-    "Relancez avec un compte root ou un compte sudo valide."
+    "Relancez avec sudo ./bootstrap_borne.sh pour autoriser l installation systeme."
 }
 
 #######################################
@@ -210,6 +224,12 @@ installer_dependances_systeme() {
     return 0
   fi
 
+  if [[ "${PRIVILEGES_SYSTEME_ACTIFS}" != "1" ]]; then
+    arreter_sur_erreur \
+      "Dependances systeme manquantes sans privileges root/sudo: ${paquets_obligatoires_manquants[*]}" \
+      "Relancez sudo ./bootstrap_borne.sh pour installer automatiquement ces dependances."
+  fi
+
   prefixe_elevation="$(obtenir_prefixe_elevation_apt)"
 
   if [[ -n "${prefixe_elevation}" ]]; then
@@ -272,6 +292,28 @@ installer_dependances_python() {
 }
 
 #######################################
+# Applique un chmod sur une liste de
+# cibles sans echouer si un element
+# est non modifiable.
+# Arguments:
+#   $1: mode chmod
+#   $2..n: chemins cibles
+# Retour:
+#   0
+#######################################
+appliquer_chmod_si_possible() {
+  local mode="$1"
+  shift
+  local cible
+  for cible in "$@"; do
+    [[ -e "${cible}" ]] || continue
+    if ! chmod "${mode}" "${cible}" 2>/dev/null; then
+      journaliser "ATTENTION: impossible d appliquer chmod ${mode} sur ${cible}."
+    fi
+  done
+}
+
+#######################################
 # Configure les permissions d execution des scripts.
 # Arguments:
 #   aucun
@@ -280,14 +322,47 @@ installer_dependances_python() {
 #######################################
 configurer_permissions_scripts() {
   journaliser "Configuration des permissions scripts"
-  chmod +x "${RACINE_PROJET}/bootstrap_borne.sh"
-  chmod +x "${RACINE_PROJET}/scripts/deploiement/post_pull_update.sh"
-  chmod +x "${RACINE_PROJET}/scripts/docs/generer_documentation.sh"
-  chmod +x "${RACINE_PROJET}/scripts/lint/lancer_lint.sh"
-  chmod +x "${RACINE_PROJET}/scripts/tests"/*.sh
-  chmod +x "${RACINE_PROJET}/.githooks/post-merge"
-  chmod +x "${REPERTOIRE_BORNE}"/*.sh
-  chmod +x "${REPERTOIRE_BORNE}"/projet/*/*.sh 2>/dev/null || true
+  appliquer_chmod_si_possible a+rwx \
+    "${RACINE_PROJET}/bootstrap_borne.sh" \
+    "${RACINE_PROJET}/scripts/deploiement/post_pull_update.sh" \
+    "${RACINE_PROJET}/scripts/docs/generer_documentation.sh" \
+    "${RACINE_PROJET}/scripts/lint/lancer_lint.sh" \
+    "${RACINE_PROJET}/.githooks/post-merge"
+
+  local script
+  while IFS= read -r script; do
+    appliquer_chmod_si_possible a+rwx "${script}"
+  done < <(find "${RACINE_PROJET}/scripts" "${REPERTOIRE_BORNE}" -type f -name '*.sh' | sort)
+}
+
+#######################################
+# Applique des droits partages pour
+# eviter les blocages multi-utilisateurs.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+configurer_permissions_partagees() {
+  journaliser "Configuration des droits partages (tout utilisateur)"
+  mkdir -p "${RACINE_PROJET}/logs" "${RACINE_PROJET}/build" "${RACINE_PROJET}/.cache"
+
+  appliquer_chmod_si_possible a+rwx \
+    "${RACINE_PROJET}/logs" \
+    "${RACINE_PROJET}/build" \
+    "${RACINE_PROJET}/.cache" \
+    "${REPERTOIRE_BORNE}" \
+    "${REPERTOIRE_BORNE}/projet"
+
+  local chemin
+  while IFS= read -r chemin; do
+    appliquer_chmod_si_possible a+rwX "${chemin}"
+  done < <(find "${RACINE_PROJET}/logs" "${RACINE_PROJET}/build" "${RACINE_PROJET}/.cache" \
+    "${REPERTOIRE_BORNE}/projet" -mindepth 1 -print 2>/dev/null | sort)
+
+  while IFS= read -r chemin; do
+    appliquer_chmod_si_possible a+rw "${chemin}"
+  done < <(find "${REPERTOIRE_BORNE}/projet" -type f \( -name 'highscore' -o -name 'bouton.txt' -o -name 'description.txt' \) | sort)
 }
 
 #######################################
@@ -334,19 +409,15 @@ installer_layout_clavier_borne() {
   fi
 
   if [[ "$(id -u)" -ne 0 ]]; then
-    if sudo_non_interactif_disponible; then
+    if [[ "${PRIVILEGES_SYSTEME_ACTIFS}" == "1" ]]; then
       prefixe_commande=(sudo)
-    elif [[ -t 0 ]]; then
-      journaliser "Privilege root requis: demande d authentification sudo"
-      sudo -v \
-        || arreter_sur_erreur \
-          "Impossible de valider sudo pour installer le layout systeme." \
-          "Utilisez un compte membre sudo, ou executez ce script en root."
-      prefixe_commande=(sudo)
+    elif [[ "${INSTALLATION_SYSTEME_OPTIONNEL}" == "1" ]]; then
+      journaliser "ATTENTION: copie systeme du layout ignoree (absence de privileges root/sudo)."
+      return 0
     else
       arreter_sur_erreur \
         "Privileges systeme insuffisants pour copier le layout clavier." \
-        "Relancez avec un compte root ou un compte sudo valide."
+        "Relancez sudo ./bootstrap_borne.sh pour appliquer le layout systeme."
     fi
   fi
 
@@ -424,14 +495,15 @@ main() {
   charger_configuration_borne
   verifier_privileges_systeme
   journaliser "Debut installation borne"
+  preparer_dossiers_organisation
   installer_dependances_systeme
   installer_dependances_python
   installer_layout_clavier_borne
   installer_autostart_borne
-  configurer_permissions_scripts
-  configurer_hook_git
   initialiser_fichiers_highscore
-  preparer_dossiers_organisation
+  configurer_permissions_scripts
+  configurer_permissions_partagees
+  configurer_hook_git
   journaliser "Installation terminee"
 }
 

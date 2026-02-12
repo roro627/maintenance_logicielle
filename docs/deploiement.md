@@ -25,7 +25,18 @@ Mecanismes utilises:
 - hook versionne `.githooks/post-merge`,
 - pipeline local `scripts/deploiement/post_pull_update.sh`,
 - verrou anti-concurrence `.post_pull.lock`,
-- journaux `logs/post_pull_update_YYYYMMDD_HHMMSS.log`.
+- journaux `logs/post_pull_update_YYYYMMDD_HHMMSS.log` (ou fallback automatique
+  `~/.cache/maintenance_logicielle/logs/` si `logs/` n est pas accessible).
+
+Le pipeline appelle l installateur en mode optionnel:
+
+```bash
+INSTALLATION_SYSTEME_OPTIONNEL=1 ./scripts/install/installer_borne.sh
+```
+
+Resultat:
+- si les dependances systeme sont deja presentes, le deploiement continue sans root,
+- si des dependances manquent, echec clair avec action recommandee (`sudo ./bootstrap_borne.sh`).
 
 ### Validation CI/CD locale (obligatoire en fin de run)
 
@@ -57,6 +68,7 @@ Execution locale equivalente via `act`:
 ## Depannage
 
 - Consulter le dernier journal dans `logs/post_pull_update_*.log`.
+- Si le journal est absent dans `logs/`, verifier `~/.cache/maintenance_logicielle/logs/`.
 - Verifier qu aucun verrou stale n est present (`.post_pull.lock`).
 - Relancer `./scripts/deploiement/post_pull_update.sh`.
 

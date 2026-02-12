@@ -34,6 +34,9 @@ Chaque jeu decrit ses commandes dans `borne_arcade/projet/<jeu>/bouton.txt`.
 - Le jeu tente d utiliser `librosa` pour analyser le rythme.
 - Si `librosa` est indisponible, un mode fallback genere des notes automatiquement
   pour garder le jeu jouable.
+- Si l audio ne peut pas demarrer (ALSA/PulseAudio), la partie reste jouable avec
+  un chronometrage de secours et un message actionnable est affiche en console.
+- Pendant une partie PianoTile, `Echap` force le retour propre sans bloquer la borne.
 
 ## Validation
 

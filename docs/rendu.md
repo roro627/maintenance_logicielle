@@ -11,9 +11,10 @@ Documenter le bilan final des travaux avec une verification point par point de `
 3. Documentation centralisee: pages projet regroupees dans `docs/` avec generation MkDocs.
 4. Nouveau jeu integre: `NeonSumo` ajoute avec config externe, tests Python et lancement borne.
 5. Mode maintenance cache integre: deblocage par sequence secrete, operations d exploitation, reverrouillage manuel.
-6. Robustesse runtime accrue: garde permissions build et fallback PianoTile sans `librosa`.
+6. Robustesse runtime accrue: garde permissions build, mode maintenance tolerant aux erreurs et PianoTile audio non bloquant.
 7. Gouvernance MG2D durcie: source canonique imposee et integrite testee sans modification locale.
 8. Maintenance mode modernisee: execution asynchrone des commandes, logs temps reel et interface pygame plus lisible.
+9. Deploiement post-pull durci: permissions partagees, logs robustes et installation systeme optionnelle en non-root.
 
 ## Conformite `consignes.md` (point par point)
 
@@ -48,6 +49,7 @@ Documenter le bilan final des travaux avec une verification point par point de `
   - installateur `scripts/install/installer_borne.sh` avec detection/installation des dependances manquantes.
   - deploiement post-pull `scripts/deploiement/post_pull_update.sh` + hook `.githooks/post-merge`.
   - validation CI/CD locale obligatoire via `act` (job `verification`) en fin de run.
+  - test unitaire PianoTile ajoute (`borne_arcade/projet/PianoTile/tests/test_piano.py`) pour valider le comportement sans audio.
 - Pourquoi c est conforme:
   - apres `git pull`, la chaine qualite/deploiement est rejouable automatiquement.
 - A quoi ca sert:
@@ -69,6 +71,8 @@ Documenter le bilan final des travaux avec une verification point par point de `
 - Ce qui a ete fait:
   - nouveau module `borne_arcade/projet/MaintenanceMode/` (pygame) avec operations: diagnostic, git pull, pipeline post-pull, mise a jour OS.
   - execution des operations en arriere-plan pour eviter le blocage de l interface.
+  - selection automatique d un dossier logs ecrivable (`logs/`, `~/.cache/...`, `/tmp/...`) avant chaque operation.
+  - capture globale des exceptions d operation avec message actionnable et retour d etat propre a l interface.
   - journal temps reel en direct dans l UI et dans `logs/maintenance_mode_*.log`.
   - deblocage par sequence secrete + bouton d ouverture configurable.
   - reverrouillage manuel par bouton dans le mode maintenance et reverrouillage automatique au redemarrage.
