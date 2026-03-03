@@ -17,6 +17,9 @@ sudo ./bootstrap_borne.sh
 Le script `bootstrap_borne.sh` enchaine:
 
 - installation systeme ciblee (paquet par paquet si manquant),
+- installation de `Docker Engine` depuis le depot officiel si absent, puis verification `docker version` + `docker info`,
+- installation de `act` depuis la release officielle (`/usr/local/bin/act`) avec lien utilisateur `~/.local/bin/act`,
+- ajout de l utilisateur appelant au groupe `docker` pour executer `act` sans `sudo`,
 - installation de l outillage de qualite (dont `curl` pour les telechargements lint),
 - creation/maintenance de la venv Python,
 - installation des dependances par jeu (`requirements.txt`),
@@ -28,6 +31,37 @@ Le script `bootstrap_borne.sh` enchaine:
 
 Le bootstrap est **obligatoirement lance en sudo/root** (hors mode test).
 Sinon il s arrete avec un message clair et la commande de relance.
+
+### Outil optionnel pour la proposition de PR
+
+Le workflow de migration versions peut proposer une PR via CLI avec `gh`.
+Cette dependance n est pas obligatoire pour faire tourner la borne, mais elle est
+requise pour l etape finale `proposer-pr`:
+
+```bash
+gh --version
+```
+
+### Outils optionnels pour l etape IA de migration
+
+L etape `preparer-ia` utilise `codex exec` avec un provider Ollama et le modele
+configure dans `config/assistant_ia_migration.json` (par defaut `qwen3:8b`).
+Le bootstrap installe `codex` automatiquement via `npm`.
+Si la distribution expose un Node.js trop ancien pour Codex (cas typique Debian 11),
+le bootstrap prepare d abord Node.js 22.x via le depot officiel NodeSource, puis
+relance l installation de `codex`.
+Le serveur Ollama est joignable via `ollama.base_url` dans cette meme configuration
+et n exige pas le binaire `ollama` sur la borne si Codex peut atteindre l URL distante.
+En environnement conteneurise de validation, le bootstrap n exige pas `docker`, `act`
+ni `codex` pour reutiliser un etat deja prepare.
+En mode `BORNE_MODE_TEST=1`, l installation et la verification de `codex` sont ignorees
+pour ne pas fausser la CI de simulation.
+Ces dependances ne sont pas requises pour lancer les jeux, mais elles sont
+necessaires pour l adaptation assistee du depot pendant une migration:
+
+```bash
+codex --help
+```
 
 ### Relance idempotente
 
@@ -99,6 +133,9 @@ sudo chown -R "$USER:$USER" ./build ./.venv ./logs ./.cache ./site
 - Emplacement recommande du depot: dossier utilisateur (ex: `~/git/maintenance_logicielle`),
   pas un dossier systeme ou verrouille.
 - Si `love` echoue sur Debian 11 minimal: le script applique automatiquement un contournement, puis corrige l etat `dpkg`.
+- Si `act` reste inutilisable localement: verifier `docker info`, se deconnecter/reconnecter pour reappliquer le groupe `docker`, puis relancer `sudo ./bootstrap_borne.sh`.
+- Si Docker vient juste d etre installe et que `docker info` ne repond qu avec `sudo`: fermer puis rouvrir la session utilisateur pour activer le groupe `docker`.
+- Si `proposer-pr` echoue: verifier que `gh` est installe, authentifie (`gh auth status`) et que la branche de migration n est pas `main`.
 - Si la borne ne demarre pas automatiquement: verifier `~/.config/autostart/borne.desktop`.
 - Si le layout clavier ne s applique pas: verifier `~/.xkb/symbols/borne`.
 

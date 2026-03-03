@@ -1,4 +1,4 @@
-# Rendu final - Maintenance de la borne d arcade
+# Rendu final - ArcadeCare
 
 ## Objectif
 
@@ -17,6 +17,9 @@ Documenter le bilan final des travaux avec une verification point par point de `
 9. Deploiement post-pull durci: permissions partagees, logs robustes et installation systeme optionnelle en non-root.
 10. Bootstrap sudo durci: etapes non-systeme sous utilisateur appelant + normalisation ownership/permissions finales pour eviter les blocages `Permission non accordee` au lancement borne.
 11. Maintenance/gameplay enrichis: journal maintenance scrollable vertical+horizontal (recent en bas) + reset prerequis en mode sur (sans autoremove global, avec protection explicite de `python3`/`python3-venv`/`python3-pip`) + diagnostic prerequis robuste + rollback git au commit precedent (depot propre), et mode attract NeonSumo rendu continu apres collision.
+12. Couverture automatique borne + jeux renforcee: contrat global commun, test cible obligatoire par jeu, controleur headless du menu et noyaux purs ajoutes pour les jeux Java legacy les plus couples au rendu.
+13. Workflow migration borne finalise: CLI stable `tsv/json`, selection cible dans `MaintenanceMode`, session persistante hors git, assistant IA `Codex/Ollama` avec brief Markdown+JSON + reponse Markdown + trace JSONL, rapport qualite JSON et garde-fous avant `gh pr create`.
+14. README de jeux industrialises: template unique, metadonnees editoriales centralisees, generation deterministe et verification automatique du nommage/contenu.
 
 ## Conformite `consignes.md` (point par point)
 
@@ -27,6 +30,7 @@ Documenter le bilan final des travaux avec une verification point par point de `
   - documentation installation: `docs/installation.md`
   - documentation ajout de jeu: `docs/ajout_jeu.md`
   - documentation utilisateur: `docs/utilisateur.md`
+  - template source README de jeux: `docs/modeles/README_jeu.md`
   - documents complementaires: architecture, tests, deploiement, compatibilite, validation materielle, couts
 - Pourquoi c est conforme:
   - toutes les categories demandees existent et sont regroupees dans `docs/`.
@@ -39,6 +43,8 @@ Documenter le bilan final des travaux avec une verification point par point de `
   - versions minimales centralisees dans `config/versions_minimales.env`.
   - test automatique de compatibilite: `scripts/tests/test_versions_compatibilite.sh`.
   - verification multi-langage Java/Python/Lua dans `borne_arcade/compilation.sh`.
+  - matrice centralisee des jeux et de leur test cible: `config/matrice_tests_jeux.json`.
+  - cibles de migration centralisees dans `config/cibles_migration.json`.
 - Pourquoi c est conforme:
   - la compatibilite n est plus declarative: elle est controlee automatiquement.
 - A quoi ca sert:
@@ -52,6 +58,8 @@ Documenter le bilan final des travaux avec une verification point par point de `
   - deploiement post-pull `scripts/deploiement/post_pull_update.sh` + hook `.githooks/post-merge`.
   - validation CI/CD locale obligatoire via `act` (job `verification`) en fin de run.
   - test unitaire PianoTile ajoute (`borne_arcade/projet/PianoTile/tests/test_piano.py`) pour valider le comportement sans audio.
+  - orchestration unique des jeux via `scripts/tests/test_contrats_jeux.py`.
+  - workflow migration versions expose via `scripts/migration/workflow_migration.py`.
 - Pourquoi c est conforme:
   - apres `git pull`, la chaine qualite/deploiement est rejouable automatiquement.
 - A quoi ca sert:
@@ -74,13 +82,20 @@ Documenter le bilan final des travaux avec une verification point par point de `
 
 - Ce qui a ete fait:
   - nouveau module `borne_arcade/projet/MaintenanceMode/` (pygame) avec operations: diagnostic, git pull, pipeline post-pull, mise a jour OS, reset prerequis en mode sur.
+  - workflow migration complet ajoute au mode maintenance: rechargement des cibles, application migration cible, assistant IA `Codex/Ollama`, qualite complete, proposition PR.
+  - relance `qualite` resynchronisee sur le commit courant avant `proposer-pr`.
   - execution des operations en arriere-plan pour eviter le blocage de l interface.
   - selection automatique d un dossier logs ecrivable (`logs/`, `~/.cache/...`, `/tmp/...`) avant chaque operation.
   - capture globale des exceptions d operation avec message actionnable et retour d etat propre a l interface.
   - journal temps reel en direct dans l UI et dans `logs/maintenance_mode_*.log`, avec defilement manuel + auto-scroll.
+  - selection cible reellement pilotable au clavier (`Tab`, `Entree`, `Haut/Bas`, `Gauche/Droite`) dans la combobox.
+  - etat de session migration persistant dans `.cache/maintenance_logicielle/etat_migration.json`.
+  - rapport qualite de migration structure dans `logs/rapport_qualite_migration_*.json`.
   - deblocage par sequence secrete + bouton d ouverture configurable.
   - reverrouillage manuel par bouton dans le mode maintenance et reverrouillage automatique au redemarrage.
   - tests unitaires dedies au mode maintenance (`test_operations.py`, `test_interface.py`) integres a `scripts/tests/test_jeux.sh`.
+  - test borne headless (`scripts/tests/test_borne_headless.sh`) couvrant compilation complete du menu, catalogue, fermeture et lancement verrouille/deverrouille du mode maintenance.
+  - alignement catalogue logique / index visuel du menu borne explicitement verrouille par les tests headless.
 - Pourquoi c est conforme:
   - repond au besoin d operations terrain sans toucher au code MG2D.
 - A quoi ca sert:
@@ -103,6 +118,8 @@ Documenter le bilan final des travaux avec une verification point par point de `
 - Anti-regression appliquee avec ajout/renforcement de tests.
 - CI/CD local equivalent valide via `scripts/tests/lancer_suite.sh`.
 - CI/CD local equivalent GitHub valide via `act` sur `.github/workflows/qualite.yml`.
+- Couverture par jeu explicite et automatique: aucun jeu n est accepte dans la matrice sans `commande_test_cible`.
+- README de jeux homogenes: aucun README local n est accepte hors du generateur et du test `scripts/tests/test_readme_jeux.sh`.
 
 ## Validation finale
 

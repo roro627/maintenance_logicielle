@@ -7,6 +7,44 @@ import pygame
 import random
 
 
+def calculer_scissions_balle(detruite, niveau, position_x, position_y, niveaux_balles):
+    """Retourne les specifications des boules filles a creer apres destruction.
+
+    Args:
+        detruite: Indique si la boule touchee a ete detruite.
+        niveau: Niveau actuel de la boule detruite.
+        position_x: Abscisse de reference.
+        position_y: Ordonnee de reference.
+        niveaux_balles: Table des niveaux de boules ``[couleur, rayon]``.
+
+    Returns:
+        Liste des specifications de boules filles a instancier.
+    """
+
+    if not detruite or niveau >= len(niveaux_balles) - 1:
+        return []
+
+    couleur, rayon = niveaux_balles[niveau + 1]
+    return [
+        {
+            "x": position_x,
+            "y": position_y,
+            "rayon": rayon,
+            "niveau": niveau + 1,
+            "couleur": couleur,
+            "decalage": 10,
+        },
+        {
+            "x": position_x,
+            "y": position_y,
+            "rayon": rayon,
+            "niveau": niveau + 1,
+            "couleur": couleur,
+            "decalage": -10,
+        },
+    ]
+
+
 class Game():
     def __init__(self, screen: pygame.Surface):
         self.screen: pygame.Surface = screen
@@ -108,33 +146,23 @@ class Game():
             # Si la boule touchée n'est pas la plus petite
             if destroyed:
                 self.player.score += hit.base_life_points
-                if hit.level < len(self.ball_level)-1:
-                    #pygame.mixer.Sound.play(self.sonPop)
-                    # On crée une boule aux mêmes co que la boule détruite
-                    ball1 = Ball(
-                        hit.rect.x, hit.rect.y, self.ball_level[hit.level+1][1], hit.level+1, self.ball_level[hit.level+1][0])
-
-                    # on la décale à droite
-                    ball1.decale(10)
-
-                    # Ajout au groupe de collision des boules
-                    self.balls.add(ball1)
-
-                    # Ajout au groupe de tout les sprites
-                    self.all_sprites.add(ball1)
-
-                    # On crée une autre boule
-                    ball2 = Ball(
-                        hit.rect.x, hit.rect.y, self.ball_level[hit.level+1][1], hit.level+1, self.ball_level[hit.level+1][0])
-
-                    # On la décale à gauche
-                    ball2.decale(-10)
-
-                    # Ajout au groupe de collision des boules
-                    self.balls.add(ball2)
-
-                    # Ajout au groupe de tout les sprites
-                    self.all_sprites.add(ball2)
+                for specification in calculer_scissions_balle(
+                    destroyed,
+                    hit.level,
+                    hit.rect.x,
+                    hit.rect.y,
+                    self.ball_level,
+                ):
+                    boule_fille = Ball(
+                        specification["x"],
+                        specification["y"],
+                        specification["rayon"],
+                        specification["niveau"],
+                        specification["couleur"],
+                    )
+                    boule_fille.decale(specification["decalage"])
+                    self.balls.add(boule_fille)
+                    self.all_sprites.add(boule_fille)
                 hit.kill()
 
         # Draw / render

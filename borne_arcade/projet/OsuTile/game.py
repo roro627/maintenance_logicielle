@@ -44,6 +44,34 @@ def draw_pause_menu(screen, font):
     pygame.display.flip()
 
 
+def evaluer_frappe_tuile(
+    tuile,
+    temps_courant,
+    position_ligne=HIT_LINE_Y,
+    marge_pixels=HIT_BOX_PIXEL,
+    hauteur_tuile=TILE_HEIGHT,
+):
+    """Retourne le resultat de frappe pour une tuile a un instant donne.
+
+    Args:
+        tuile: Tuile a evaluer.
+        temps_courant: Temps de reference en millisecondes.
+        position_ligne: Ordonnée de la ligne de frappe.
+        marge_pixels: Tolérance verticale de frappe.
+        hauteur_tuile: Hauteur de la tuile.
+
+    Returns:
+        ``Perfect`` si la tuile est dans la fenetre de frappe, sinon ``Miss``.
+    """
+
+    position_y = tuile.get_y(temps_courant)
+    sommet = position_y
+    bas = position_y + hauteur_tuile
+    if sommet <= position_ligne + marge_pixels and bas >= position_ligne - marge_pixels:
+        return "Perfect"
+    return "Miss"
+
+
 def draw_scene(screen, font, tiles, current_time, score, combo, feedbacks):
     screen.fill(BACKGROUND_COLOR)
     pygame.draw.line(
@@ -183,13 +211,7 @@ def play_map(filename):
                             for tile in tiles:
                                 if tile.hit:
                                     continue
-                                tile_y = tile.get_y(current_time)
-                                top = tile_y
-                                bottom = tile_y + TILE_HEIGHT
-                                if tile.lane == lane and (
-                                    top <= HIT_LINE_Y + HIT_BOX_PIXEL
-                                    and bottom >= HIT_LINE_Y - HIT_BOX_PIXEL
-                                ):
+                                if tile.lane == lane and evaluer_frappe_tuile(tile, current_time) == "Perfect":
                                     tile.hit = True
                                     score += 1
                                     combo += 1

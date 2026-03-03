@@ -26,6 +26,7 @@ main() {
   "${SCRIPT_DIR}/test_architecture.sh"
   "${SCRIPT_DIR}/test_couts.sh"
   "${SCRIPT_DIR}/test_jeux.sh"
+  "${SCRIPT_DIR}/test_readme_jeux.sh"
   "${SCRIPT_DIR}/test_documentation.sh"
 
   if [[ "${EVITER_TEST_DEPLOIEMENT:-0}" != "1" ]]; then

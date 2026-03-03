@@ -13,6 +13,21 @@ ETAPE_BOOTSTRAP_COURANTE="initialisation"
 VERROU_BOOTSTRAP_ACTIF=0
 UTILISATEUR_APPELANT_BOOTSTRAP=""
 GROUPE_APPELANT_BOOTSTRAP=""
+VERSION_ETAT_INSTALLATION_BOOTSTRAP="2"
+
+#######################################
+# Indique si le bootstrap s execute
+# dans un environnement conteneurise.
+# Arguments:
+#   aucun
+# Retour:
+#   0 si conteneur detecte
+#######################################
+bootstrap_environnement_conteneurise() {
+  [[ -f "/.dockerenv" ]] && return 0
+  [[ -f "/run/.containerenv" ]] && return 0
+  grep -qaE '(docker|containerd|kubepods|podman|lxc)' /proc/1/cgroup 2>/dev/null
+}
 
 #######################################
 # Verifie que le bootstrap est execute
@@ -125,9 +140,25 @@ preparer_etat_bootstrap() {
 #   0 si installation deja prete
 #######################################
 installation_initiale_deja_preparee() {
+  local version_etat=""
+  local outils_locaux_valides=0
+  if [[ -f "${FICHIER_ETAT_INSTALLATION_BOOTSTRAP}" ]]; then
+    version_etat="$(sed -n 's/^version=//p' "${FICHIER_ETAT_INSTALLATION_BOOTSTRAP}" | head -n 1)"
+  fi
+
+  if bootstrap_environnement_conteneurise; then
+    outils_locaux_valides=1
+  elif command -v docker >/dev/null 2>&1 \
+    && command -v act >/dev/null 2>&1 \
+    && command -v codex >/dev/null 2>&1; then
+    outils_locaux_valides=1
+  fi
+
   [[ -f "${FICHIER_ETAT_INSTALLATION_BOOTSTRAP}" ]] \
+    && [[ "${version_etat}" == "${VERSION_ETAT_INSTALLATION_BOOTSTRAP}" ]] \
     && [[ -x "${RACINE_PROJET}/.venv/bin/python" ]] \
     && "${RACINE_PROJET}/.venv/bin/python" -c 'import pygame, pytest, mkdocs, pylint' >/dev/null 2>&1 \
+    && [[ "${outils_locaux_valides}" -eq 1 ]] \
     && [[ -f "${HOME}/.config/autostart/borne.desktop" ]] \
     && [[ -f "${HOME}/.xkb/symbols/borne" ]]
 }
@@ -141,7 +172,7 @@ installation_initiale_deja_preparee() {
 #######################################
 marquer_installation_initiale_prete() {
   {
-    printf 'version=1\n'
+    printf 'version=%s\n' "${VERSION_ETAT_INSTALLATION_BOOTSTRAP}"
     printf 'date=%s\n' "$(date '+%Y-%m-%d %H:%M:%S')"
     printf 'hote=%s\n' "$(hostname)"
   } > "${FICHIER_ETAT_INSTALLATION_BOOTSTRAP}"

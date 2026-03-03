@@ -71,46 +71,28 @@ tester_lancement_tous_les_jeux() {
 }
 
 #######################################
-# Execute les tests unitaires Python de Neon Sumo.
+# Execute le test borne headless.
 # Arguments:
 #   aucun
 # Retour:
 #   0
 #######################################
-tester_unitaire_neon_sumo() {
-  (
-    cd "${RACINE_PROJET}"
-    "${COMMANDE_PYTHON}" -m unittest discover -s borne_arcade/projet/NeonSumo/tests -p "test_*.py"
-  )
+tester_borne_headless() {
+  "${SCRIPT_DIR}/test_borne_headless.sh"
 }
 
 #######################################
-# Execute les tests unitaires Python du
-# mode maintenance.
+# Execute les contrats automatiques de
+# tous les jeux du catalogue.
 # Arguments:
 #   aucun
 # Retour:
 #   0
 #######################################
-tester_unitaire_maintenance_mode() {
+tester_contrats_jeux() {
   (
     cd "${RACINE_PROJET}"
-    "${COMMANDE_PYTHON}" -m unittest discover -s borne_arcade/projet/MaintenanceMode/tests -p "test_*.py"
-  )
-}
-
-#######################################
-# Execute les tests unitaires Python de
-# PianoTile.
-# Arguments:
-#   aucun
-# Retour:
-#   0
-#######################################
-tester_unitaire_pianotile() {
-  (
-    cd "${RACINE_PROJET}"
-    "${COMMANDE_PYTHON}" -m unittest discover -s borne_arcade/projet/PianoTile/tests -p "test_*.py"
+    "${COMMANDE_PYTHON}" ./scripts/tests/test_contrats_jeux.py
   )
 }
 
@@ -125,9 +107,8 @@ main() {
   charger_configuration_borne
   compiler_borne
   verifier_lanceurs
-  tester_unitaire_neon_sumo
-  tester_unitaire_maintenance_mode
-  tester_unitaire_pianotile
+  tester_borne_headless
+  tester_contrats_jeux
   tester_lancement_tous_les_jeux
   journaliser "Test jeux: OK"
 }

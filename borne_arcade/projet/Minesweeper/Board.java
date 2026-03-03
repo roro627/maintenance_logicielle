@@ -17,12 +17,17 @@ public class Board {
                     this.tiles.add(new Empty(i, j));
                 }
             }
-            for (int i = 0; i < nbBombs; i++) {
+            int bombesPlacees = 0;
+            while (bombesPlacees < nbBombs) {
                 int x = (int) (Math.random() * width);
                 int y = (int) (Math.random() * height);
                 Tile c = this.getCase(x, y);
+                if (c instanceof Bomb) {
+                    continue;
+                }
                 this.tiles.remove(c);
                 this.tiles.add(new Bomb(x, y));
+                bombesPlacees++;
             }
             this.neighbourhood();
         // } else {

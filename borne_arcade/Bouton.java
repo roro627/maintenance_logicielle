@@ -1,10 +1,5 @@
 import java.awt.Font;
-import java.io.IOException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
+import java.util.List;
 
 import MG2D.Couleur;
 import MG2D.geometrie.Point;
@@ -33,31 +28,46 @@ public class Bouton {
 	this.nom = nom;
     }
 
-    public static void remplirBouton(){
+    /**
+     * Remplit les boutons du menu a partir du catalogue de jeux.
+     *
+     * @param jeuxCatalogue jeux detectes dans le catalogue borne.
+     */
+    public static void remplirBouton(List<JeuCatalogue> jeuxCatalogue){
 	for(int i = 0 ; i < Graphique.tableau.length ; i++){
 	    Graphique.tableau[i] = new Bouton();
 	}
 
-	Path yourPath = FileSystems.getDefault().getPath("projet/");
-
-	try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(yourPath)) {
-	    int i = Graphique.tableau.length - 1;
-	    for (Path path : directoryStream) {
-		Graphique.tableau[i].setTexte(new Texte(Couleur .NOIR, path.getFileName().toString(), new Font("Calibri", Font.TYPE1_FONT, 30), new Point(310, 510)));
-		Graphique.tableau[i].setTexture(new Texture("img/bouton2.png", new Point(100, 478), 400, 65));
-		for(int j=0;j<Graphique.tableau.length-(i+1);j++){
-		    Graphique.tableau[i].getTexte().translater(0,-110);
-		    Graphique.tableau[i].getTexture().translater(0,-110);
-		}
-		Graphique.tableau[i].setChemin("projet/"+path.getFileName().toString());
-		Graphique.tableau[i].setNom(path.getFileName().toString());
-		Graphique.tableau[i].setNumeroDeJeu(i);
-		i--;
-	    }
-	} catch (IOException e) {
-	    e.printStackTrace();
+	for(int position = 0 ; position < jeuxCatalogue.size() ; position++){
+	    JeuCatalogue jeu = jeuxCatalogue.get(position);
+	    int indexTableau = calculerIndexTableauDepuisPositionCatalogue(position);
+	    Graphique.tableau[indexTableau].setTexte(
+		new Texte(Couleur.NOIR, jeu.getNom(), new Font("Calibri", Font.TYPE1_FONT, 30), new Point(310, 510))
+	    );
+	    Graphique.tableau[indexTableau].setTexture(new Texture("img/bouton2.png", new Point(100, 478), 400, 65));
+	    Graphique.tableau[indexTableau].getTexte().translater(0, -ConstantesMenu.ECART_ELEMENTS * position);
+	    Graphique.tableau[indexTableau].getTexture().translater(0, -ConstantesMenu.ECART_ELEMENTS * position);
+	    Graphique.tableau[indexTableau].setChemin(jeu.getCheminJeu());
+	    Graphique.tableau[indexTableau].setNom(jeu.getNom());
+	    Graphique.tableau[indexTableau].setNumeroDeJeu(indexTableau);
 	}
+    }
 
+    /**
+     * Remplit les boutons du menu avec le catalogue courant.
+     */
+    public static void remplirBouton(){
+	remplirBouton(CatalogueJeux.listerJeux());
+    }
+
+    /**
+     * Retourne l index visuel associe a une position du catalogue logique.
+     *
+     * @param positionCatalogue position du jeu dans le catalogue.
+     * @return index de stockage du bouton correspondant.
+     */
+    public static int calculerIndexTableauDepuisPositionCatalogue(int positionCatalogue){
+	return positionCatalogue;
     }
 
     public String getChemin() {

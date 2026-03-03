@@ -13,7 +13,6 @@ nav:
   - Ajout de jeu: ajout_jeu.md
   - Compatibilite dependances: compatibilite_dependances.md
   - Couts: cost.md
-  - Suivi TODO: todo.md
   - Rendu final: rendu.md
 theme:
   name: mkdocs

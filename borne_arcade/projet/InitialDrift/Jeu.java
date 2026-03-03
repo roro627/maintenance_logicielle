@@ -335,73 +335,39 @@ class Jeu{ // Définition de la classe
 
     //////////////////////////////////////////////////Génération aléatoire ennemis
     public void GenererEnnemi(){
-	if(score<5){
-	    random = 2;	//only police
+	ConfigurationEnnemiInitialDrift configuration = new FabriqueEnnemiInitialDrift().creerConfiguration(
+	    score,
+	    tabEnnemis.size(),
+	    Math.random(),
+	    Math.random(),
+	    TAILLEY
+	);
+	if(!configuration.isCreationAutorisee()){
+	    return;
 	}
-	else if(score<15){
 
-	    random = (int)(Math.random()*(3-1))+1; // only police + jeep
-	}
-	else{
-	    random = (int)(Math.random()*(4-1))+1; // police + jeep + tonneau
-	}
-	
-	random_position = (int)(Math.random()*(7-1))+1; // Pour générer sa position dans la voie de circulation
-	a = new Point(0,TAILLEY);
-	
-	switch (random_position){ // position
-	    
+	a = new Point(configuration.getAbscisse(), configuration.getOrdonnee());
+	random = configuration.getType();
+	random_position = configuration.getAbscisse();
+
+	Ennemi ennemi = new Ennemi(configuration.getCheminTexture(),a);
+	ennemi.setVitesse(configuration.getVitesse());
+	tabEnnemis.add(ennemi);
+	fen.ajouter(ennemi.getTextureEnnemi());
+
+	switch(random){
 	case 1:
-	    a.setX(350);
-	    break;
-
-	case 2:
-	    a.setX(451);
-	    break;
-	    
-	case 3:
-	    a.setX(552);
-	    break;
-	    
-	case 4:
-	    a.setX(653);
-	    break;
-	    
-	case 5:
-	    a.setX(754);
-	    break;	
-	    
-	case 6:
-	    a.setX(855);
-	    break;
-	}
-
-	switch(random){ // type d'ennemi
-	    
-	case 1:
-	    army = new Ennemi("img/jeep.png",a);
-	    army.setVitesse((int)(10+score*0.1));
-	    tabEnnemis.add(army);
-	    fen.ajouter(army.getTextureEnnemi()); 
+	    army = ennemi;
 	    break;
 	case 2:
-	    if(tabEnnemis.size() < 6){ // pour éviter qu'il y ait trop de voitures
-		police = new Ennemi("img/police.png",a);
-		police.setVitesse((int)(15+score*0.2));
-		tabEnnemis.add(police);
-		fen.ajouter(police.getTextureEnnemi());
-	    }	
+	    police = ennemi;
 	    break;
 	case 3:
-	    tonneau_ennemi = new Ennemi("img/tonneau_ennemi.png",a);
-	    tonneau_ennemi.setVitesse((int)(18+score*0.3));
-	    tabEnnemis.add(tonneau_ennemi);
-	    fen.ajouter(tonneau_ennemi.getTextureEnnemi());
+	    tonneau_ennemi = ennemi;
 	    break;
 	default:
 	    break;
-	    
-	}//Switch
+	}
 
     }//GenererEnnemi()
 

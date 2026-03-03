@@ -8,19 +8,35 @@ commandes principales et depannage rapide.
 ## Procedure d usage
 
 ### Navigation menu
+
 - Joystick J1 haut/bas: selection du jeu.
 - Bouton J1A: lancer le jeu.
 - Bouton J1Z: quitter le menu (confirmation).
 
 ### Mode maintenance cache
+
 - Le mode est verrouille au lancement de la borne.
 - Deblocage: sequence secrete configuree dans `borne_arcade/config/maintenance_mode.properties`.
 - Ouverture apres debloquage: bouton configure (par defaut `J1B`).
 - Une operation maintenance lancee (`F`) tourne en arriere-plan avec journal temps reel visible dans l ecran.
+- La cible de migration se choisit dans la combobox en haut de la colonne operations:
+  `Tab` pour donner le focus,
+  `Entree` pour ouvrir/fermer,
+  `Haut`/`Bas` pour changer de cible,
+  `Gauche`/`Droite` pour changer rapidement de cible quand la combobox est fermee.
 - Le journal maintenance est scrollable: `PgUp`/`PgDn` (historique/recent), `Gauche`/`Droite` (horizontal), `A` pour activer/desactiver l auto-scroll, `Fin` pour revenir en bas, `Home` pour revenir au debut de ligne.
 - Le journal est affiche de facon coherente: les lignes recentes restent en bas de la zone.
 - Le diagnostic signale explicitement les pre-requis manquants (avec action recommandee) au lieu de planter.
 - Pendant une operation, la sortie est bloquee pour eviter les etats partiels.
+- Workflow migration borne:
+  1. `Recharger cibles migration`
+  2. choisir la cible
+  3. `Appliquer migration cible`
+  4. `Lancer assistant IA migration`
+  5. suivre la reponse IA en temps reel, puis laisser l IA/humain finaliser code, tests, docs et scripts
+  6. `Relancer qualite complete`
+  7. `Proposer PR migration`
+- Sur un poste non Debian/Raspberry Pi, la detection reste consultable mais l application reelle d une migration apt est refusee avec un message clair.
 - Option reset disponible: `Reset prerequis` (mode sur: purge des prerequis non-systeme seulement, sans autoremove global, + nettoyage local). Les paquets Python systeme (`python3`, `python3-venv`, `python3-pip`) sont explicitement proteges pour eviter toute casse de la VM/systeme.
 - Option rollback disponible: `Retour commit precedent` (retour `HEAD~1`) uniquement si le depot est propre.
 - Les operations git (`Git pull`, rollback) affichent maintenant un message explicite si `git` est absent.
@@ -29,9 +45,11 @@ commandes principales et depannage rapide.
 - Si le jeu maintenance est selectionne sans debloquage, son lancement est refuse.
 
 ### En jeu
+
 Chaque jeu decrit ses commandes dans `borne_arcade/projet/<jeu>/bouton.txt`.
 
 ### NeonSumo (resume)
+
 - But: ejecter l adversaire hors de l arene.
 - Match: BO3.
 - B1 Dash, B2 Frein, B3 Bump, B4 Bouclier, B5 Taunt, B6 Ultime.
@@ -39,6 +57,7 @@ Chaque jeu decrit ses commandes dans `borne_arcade/projet/<jeu>/bouton.txt`.
 - Mode attract robuste: une collision/elimination en mode demo relance automatiquement une nouvelle manche IA sans sortir du mode attract.
 
 ### PianoTile (resume)
+
 - Le jeu tente d utiliser `librosa` pour analyser le rythme.
 - Si `librosa` est indisponible, un mode fallback genere des notes automatiquement
   pour garder le jeu jouable.

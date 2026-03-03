@@ -27,8 +27,9 @@ You have access to external tools and should use them when it improves correctne
 10. **Anti-regression**: when fixing a bug, add or update a test that would have caught it.
 11. **Messages d erreur clairs**: all error messages shown to users/operators must be clear, understandable, and actionable (cause + concrete next step).
 12. **CI/CD vert en fin de run**: at the end of every user request/change, CI/CD must be green. Validate with:
-   - `~/.local/bin/act -W .github/workflows/qualite.yml -j verification --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:act-latest`
-   - `~/.local/bin/act -W .github/workflows/verification_reelle.yml -j verification_reelle_debian11 --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:act-latest`
+
+- `~/.local/bin/act -W .github/workflows/qualite.yml -j verification --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:act-latest`
+- `~/.local/bin/act -W .github/workflows/verification_reelle.yml -j verification_reelle_debian11 --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:act-latest`
    before considering the work complete.
 
 ## Stack specifics

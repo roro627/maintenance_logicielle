@@ -22,6 +22,7 @@ chmod +x .githooks/post-merge scripts/deploiement/post_pull_update.sh
 ```
 
 Mecanismes utilises:
+
 - hook versionne `.githooks/post-merge`,
 - pipeline local `scripts/deploiement/post_pull_update.sh`,
 - verrou anti-concurrence `.post_pull.lock`,
@@ -35,9 +36,32 @@ INSTALLATION_SYSTEME_OPTIONNEL=1 ./scripts/install/installer_borne.sh
 ```
 
 Resultat:
+
 - si les dependances systeme sont deja presentes, le deploiement continue sans root,
 - si des dependances manquent, echec clair avec action recommandee (`sudo ./bootstrap_borne.sh`).
 - les permissions partagees restent reappliquees (`logs/`, `build/`, `.cache/`, `.venv/`) pour eviter les blocages apres une installation root.
+
+### Workflow migration et PR
+
+Le workflow de migration versions est expose en CLI via:
+
+```bash
+python scripts/migration/workflow_migration.py lister-cibles --format json
+python scripts/migration/workflow_migration.py appliquer --cible java17
+python scripts/migration/workflow_migration.py preparer-ia --cible java17
+python scripts/migration/workflow_migration.py qualite --cible java17
+python scripts/migration/workflow_migration.py proposer-pr --cible java17
+```
+
+Contraintes:
+
+- `preparer-ia` genere un brief Markdown/JSON, lance `codex exec --json --oss --local-provider ollama` via `CODEX_OSS_BASE_URL` vers le serveur Ollama configure puis stocke une reponse Markdown et une trace JSONL.
+- le comportement IA est versionne dans `config/assistant_ia_migration.json` et `config/prompt_migration_ia.md`.
+- `proposer-pr` pousse la branche courante puis appelle `gh pr create`.
+- `qualite` peut etre relancee sur le commit courant apres revision locale; l etat de session est alors resynchronise avant `proposer-pr`.
+- la PR est refusee si la session migration n est pas coherente avec `HEAD`.
+- la PR est refusee si le rapport qualite migration n est pas vert.
+- la revue humaine et le merge restent manuels.
 
 ### Validation CI/CD locale (obligatoire en fin de run)
 

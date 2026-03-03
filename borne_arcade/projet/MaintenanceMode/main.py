@@ -12,6 +12,7 @@ import pygame
 
 from operations import (
     charger_configuration,
+    collecter_cibles_migration,
     creer_fichier_verrouillage,
     executer_operation,
     lister_operations,
@@ -33,6 +34,10 @@ MARGE_BARRE_DEFILEMENT_JOURNAL_HORIZONTAL_GAUCHE = 14
 MARGE_BARRE_DEFILEMENT_JOURNAL_HORIZONTAL_DROITE = 28
 SEUIL_MIN_POUCE_BARRE_DEFILEMENT = 16
 SEUIL_MIN_POUCE_BARRE_DEFILEMENT_HORIZONTAL = 28
+HAUTEUR_COMBOBOX_CIBLE = 42
+HAUTEUR_LIGNE_COMBOBOX_CIBLE = 34
+ESPACEMENT_BLOC_CIBLE = 12
+MARGE_INTERNE_COMBOBOX = 12
 
 
 TAILLES_PAR_DEFAUT = {
@@ -81,6 +86,174 @@ class EtatInterface:
     decalage_lignes_journal: int = 0
     decalage_colonnes_journal: int = 0
     thread_operation: threading.Thread | None = None
+    cibles_migration: List[Dict[str, object]] = field(default_factory=list)
+    index_cible_migration: int = 0
+    focus_combobox_cible: bool = False
+    combobox_cibles_ouvert: bool = False
+    operation_id_en_cours: str = ""
+
+
+def borner_index_cible_migration(etat: EtatInterface) -> None:
+    """Borne l index de la cible migration selectionnee.
+
+    Args:
+        etat: Etat mutable de l interface.
+
+    Returns:
+        Aucun.
+    """
+
+    if not etat.cibles_migration:
+        etat.index_cible_migration = 0
+        return
+    etat.index_cible_migration %= len(etat.cibles_migration)
+
+
+def obtenir_cible_migration_selectionnee(etat: EtatInterface) -> Dict[str, object] | None:
+    """Retourne la cible actuellement selectionnee dans la combobox.
+
+    Args:
+        etat: Etat mutable de l interface.
+
+    Returns:
+        Dictionnaire cible ou None si aucune cible n est disponible.
+    """
+
+    borner_index_cible_migration(etat)
+    if not etat.cibles_migration:
+        return None
+    return etat.cibles_migration[etat.index_cible_migration]
+
+
+def changer_selection_cible_migration(etat: EtatInterface, variation: int) -> bool:
+    """Deplace la selection de la combobox de migration.
+
+    Args:
+        etat: Etat mutable de l interface.
+        variation: Variation relative a appliquer.
+
+    Returns:
+        True si une cible a pu etre selectionnee, sinon False.
+    """
+
+    if not etat.cibles_migration:
+        return False
+
+    borner_index_cible_migration(etat)
+    etat.index_cible_migration = (etat.index_cible_migration + variation) % len(etat.cibles_migration)
+    return True
+
+
+def obtenir_identifiant_cible_selectionnee(etat: EtatInterface) -> str:
+    """Retourne l identifiant de la cible actuellement selectionnee.
+
+    Args:
+        etat: Etat mutable de l interface.
+
+    Returns:
+        Identifiant cible ou chaine vide.
+    """
+
+    cible = obtenir_cible_migration_selectionnee(etat)
+    if cible is None:
+        return ""
+    identifiant = cible.get("id")
+    return str(identifiant) if identifiant is not None else ""
+
+
+def basculer_focus_cible_migration(etat: EtatInterface) -> bool:
+    """Bascule le focus clavier entre la liste et la combobox cible.
+
+    Args:
+        etat: Etat mutable de l interface.
+
+    Returns:
+        True si le focus cible est actif apres bascule.
+    """
+
+    etat.focus_combobox_cible = not etat.focus_combobox_cible
+    if not etat.focus_combobox_cible:
+        etat.combobox_cibles_ouvert = False
+    return etat.focus_combobox_cible
+
+
+def basculer_combobox_cibles(etat: EtatInterface) -> bool:
+    """Ouvre ou ferme la liste deroulante des cibles.
+
+    Args:
+        etat: Etat mutable de l interface.
+
+    Returns:
+        True si la combobox est ouverte apres bascule.
+    """
+
+    if not etat.focus_combobox_cible or not etat.cibles_migration:
+        etat.combobox_cibles_ouvert = False
+        return False
+    etat.combobox_cibles_ouvert = not etat.combobox_cibles_ouvert
+    return etat.combobox_cibles_ouvert
+
+
+def recharger_cibles_migration_interface(etat: EtatInterface) -> tuple[bool, str]:
+    """Recharge les cibles de migration a partir du systeme courant.
+
+    Args:
+        etat: Etat mutable de l interface.
+
+    Returns:
+        Tuple (succes, message) pour l interface.
+    """
+
+    identifiant_courant = obtenir_identifiant_cible_selectionnee(etat)
+    try:
+        etat.cibles_migration = collecter_cibles_migration()
+        if identifiant_courant:
+            for index, cible in enumerate(etat.cibles_migration):
+                if cible.get("id") == identifiant_courant:
+                    etat.index_cible_migration = index
+                    break
+        borner_index_cible_migration(etat)
+        if not etat.cibles_migration:
+            return False, "Aucune cible de migration configuree."
+        return True, f"{len(etat.cibles_migration)} cible(s) de migration chargee(s)."
+    except Exception as erreur:  # pylint: disable=broad-exception-caught
+        etat.cibles_migration = []
+        etat.index_cible_migration = 0
+        return False, f"Echec chargement cibles migration: {erreur}"
+
+
+def formater_etiquette_cible_migration(cible: Dict[str, object] | None) -> str:
+    """Construit l etiquette courte de la cible de migration.
+
+    Args:
+        cible: Cible selectionnee.
+
+    Returns:
+        Texte de combobox.
+    """
+
+    if cible is None:
+        return "Aucune cible disponible"
+    return f"{cible.get('titre')} -> {cible.get('version_candidate')}"
+
+
+def calculer_fenetre_operations(index_selection: int, total: int, visibles: int) -> tuple[int, int]:
+    """Calcule la fenetre visible de la liste d operations.
+
+    Args:
+        index_selection: Index actuellement selectionne.
+        total: Nombre total d operations.
+        visibles: Nombre de lignes visibles.
+
+    Returns:
+        Tuple (index debut, index fin exclusif).
+    """
+
+    if total <= visibles:
+        return 0, total
+
+    debut = max(0, min(index_selection - visibles // 2, total - visibles))
+    return debut, debut + visibles
 
 
 def calculer_decalage_max_journal(nombre_lignes_total: int, nombre_lignes_visibles: int) -> int:
@@ -525,6 +698,158 @@ def dessiner_entete(
     fenetre.blit(rendu_etat, (position_x, rectangle.y + 36))
 
 
+def dessiner_bloc_cible_migration(
+    fenetre: pygame.Surface,
+    rectangle: pygame.Rect,
+    polices: Dict[str, pygame.font.Font],
+    theme: Dict[str, tuple[int, int, int]],
+    tailles: Dict[str, int],
+    etat: EtatInterface,
+) -> int:
+    """Dessine la combobox et le resume de la cible de migration.
+
+    Args:
+        fenetre: Surface principale.
+        rectangle: Zone operations complete.
+        polices: Polices chargees.
+        theme: Palette graphique.
+        tailles: Tailles de l interface.
+        etat: Etat courant.
+
+    Returns:
+        Ordonnee Y a partir de laquelle la liste des operations peut demarrer.
+    """
+
+    titre = polices["texte"].render("Cible migration", True, theme["accent"])
+    fenetre.blit(titre, (rectangle.x + 16, rectangle.y + 12))
+
+    rectangle_combobox = pygame.Rect(
+        rectangle.x + 16,
+        rectangle.y + 46,
+        rectangle.width - 32,
+        HAUTEUR_COMBOBOX_CIBLE,
+    )
+    couleur_bord = theme["info"] if etat.focus_combobox_cible else theme["selection"]
+    pygame.draw.rect(
+        fenetre,
+        theme["selection"],
+        rectangle_combobox,
+        border_radius=max(6, tailles["rayon_bordure"] - 8),
+    )
+    pygame.draw.rect(
+        fenetre,
+        couleur_bord,
+        rectangle_combobox,
+        width=2,
+        border_radius=max(6, tailles["rayon_bordure"] - 8),
+    )
+
+    cible = obtenir_cible_migration_selectionnee(etat)
+    etiquette = tronquer_texte(
+        polices["texte"],
+        formater_etiquette_cible_migration(cible),
+        rectangle_combobox.width - 2 * MARGE_INTERNE_COMBOBOX - 24,
+    )
+    rendu_etiquette = polices["texte"].render(etiquette, True, theme["texte_principal"])
+    fenetre.blit(
+        rendu_etiquette,
+        (
+            rectangle_combobox.x + MARGE_INTERNE_COMBOBOX,
+            rectangle_combobox.y + 8,
+        ),
+    )
+
+    fleche = "▲" if etat.combobox_cibles_ouvert else "▼"
+    rendu_fleche = polices["texte"].render(fleche, True, theme["texte_secondaire"])
+    fenetre.blit(
+        rendu_fleche,
+        (
+            rectangle_combobox.right - rendu_fleche.get_width() - MARGE_INTERNE_COMBOBOX,
+            rectangle_combobox.y + 8,
+        ),
+    )
+
+    zone_details_y = rectangle_combobox.bottom + 8
+    if cible is None:
+        lignes_details = [
+            "Installee: (indisponible)",
+            "Candidate: (indisponible)",
+            "Etat: aucune cible configuree",
+        ]
+    else:
+        if cible.get("supportee_sur_hote"):
+            etat_cible = "Migration disponible" if cible.get("migration_disponible") else "Deja aligne"
+        else:
+            etat_cible = str(cible.get("raison_indisponibilite") or "Indisponible sur cet hote")
+        lignes_details = [
+            f"Installee: {cible.get('version_installee')}",
+            f"Candidate: {cible.get('version_candidate')}",
+            f"Etat: {etat_cible}",
+        ]
+
+    for index, ligne in enumerate(lignes_details):
+        rendu_ligne = polices["journal"].render(
+            tronquer_texte(polices["journal"], ligne, rectangle.width - 32),
+            True,
+            theme["texte_secondaire"],
+        )
+        fenetre.blit(rendu_ligne, (rectangle.x + 16, zone_details_y + index * 20))
+
+    bas_bloc = zone_details_y + len(lignes_details) * 20
+
+    if etat.combobox_cibles_ouvert and etat.cibles_migration:
+        rectangle_options = pygame.Rect(
+            rectangle_combobox.x,
+            rectangle_combobox.bottom + 4,
+            rectangle_combobox.width,
+            len(etat.cibles_migration) * HAUTEUR_LIGNE_COMBOBOX_CIBLE,
+        )
+        pygame.draw.rect(
+            fenetre,
+            theme["panneau"],
+            rectangle_options,
+            border_radius=max(6, tailles["rayon_bordure"] - 8),
+        )
+        pygame.draw.rect(
+            fenetre,
+            theme["panneau_bord"],
+            rectangle_options,
+            width=2,
+            border_radius=max(6, tailles["rayon_bordure"] - 8),
+        )
+
+        for index, cible_option in enumerate(etat.cibles_migration):
+            option_rect = pygame.Rect(
+                rectangle_options.x + 4,
+                rectangle_options.y + index * HAUTEUR_LIGNE_COMBOBOX_CIBLE + 2,
+                rectangle_options.width - 8,
+                HAUTEUR_LIGNE_COMBOBOX_CIBLE - 4,
+            )
+            if index == etat.index_cible_migration:
+                pygame.draw.rect(
+                    fenetre,
+                    theme["selection"],
+                    option_rect,
+                    border_radius=max(4, tailles["rayon_bordure"] - 10),
+                )
+
+            etiquette_option = tronquer_texte(
+                polices["journal"],
+                f"{cible_option.get('titre')} -> {cible_option.get('version_candidate')}",
+                option_rect.width - 16,
+            )
+            rendu_option = polices["journal"].render(
+                etiquette_option,
+                True,
+                theme["texte_principal"] if index == etat.index_cible_migration else theme["texte_secondaire"],
+            )
+            fenetre.blit(rendu_option, (option_rect.x + 8, option_rect.y + 6))
+
+        bas_bloc = rectangle_options.bottom
+
+    return bas_bloc + ESPACEMENT_BLOC_CIBLE
+
+
 def dessiner_colonne_operations(
     fenetre: pygame.Surface,
     rectangle: pygame.Rect,
@@ -550,15 +875,20 @@ def dessiner_colonne_operations(
     """
 
     dessiner_panneau(fenetre, rectangle, theme["panneau"], theme["panneau_bord"], tailles["rayon_bordure"])
+    base_y = dessiner_bloc_cible_migration(fenetre, rectangle, polices, theme, tailles, etat)
     titre = polices["texte"].render("Operations", True, theme["accent"])
-    fenetre.blit(titre, (rectangle.x + 16, rectangle.y + 12))
+    fenetre.blit(titre, (rectangle.x + 16, base_y))
 
     zone_texte_x = rectangle.x + 16
     zone_texte_largeur = rectangle.width - 32
-    base_y = rectangle.y + 54
+    base_y += 34
+    hauteur_disponible = max(tailles["hauteur_ligne_operation"], rectangle.bottom - base_y - 12)
+    nombre_visibles = max(1, hauteur_disponible // tailles["hauteur_ligne_operation"])
+    index_debut, index_fin = calculer_fenetre_operations(etat.index_selection, len(operations), nombre_visibles)
 
-    for index, operation in enumerate(operations):
-        position_y = base_y + index * tailles["hauteur_ligne_operation"]
+    for index in range(index_debut, index_fin):
+        operation = operations[index]
+        position_y = base_y + (index - index_debut) * tailles["hauteur_ligne_operation"]
         ligne_rect = pygame.Rect(
             rectangle.x + 10,
             position_y - 4,
@@ -753,8 +1083,9 @@ def dessiner_pied(
 
     dessiner_panneau(fenetre, rectangle, theme["panneau"], theme["panneau_bord"], tailles["rayon_bordure"])
     controles = (
-        "Haut/Bas: selection | F: executer | PgUp/PgDn: scroll vertical | "
-        "Gauche/Droite: scroll horizontal | A: auto-scroll | Fin: bas | Home: gauche | H: lock+quitter | Echap: quitter"
+        "Tab: focus cible | Entree: ouvrir/fermer cibles | Haut/Bas: liste ou cible | F: executer | "
+        "PgUp/PgDn: scroll vertical | Gauche/Droite: cible si focus sinon journal | A: auto-scroll | "
+        "Fin: bas | Home: gauche | H: lock+quitter | Echap: quitter"
     )
     controles = tronquer_texte(polices["journal"], controles, rectangle.width - 28)
     rendu_controles = polices["journal"].render(controles, True, theme["texte_secondaire"])
@@ -867,6 +1198,7 @@ def ajouter_ligne_journal(
 def executer_operation_en_arriere_plan(
     operation_id: str,
     configuration: Dict[str, object],
+    contexte_operation: Dict[str, object] | None,
     file_journal: queue.Queue[str],
     file_resultat: queue.Queue[tuple[bool, str, Path]],
 ) -> None:
@@ -894,7 +1226,12 @@ def executer_operation_en_arriere_plan(
 
         file_journal.put(message)
 
-    succes, message, chemin_journal = executer_operation(operation_id, configuration, pousser_ligne)
+    succes, message, chemin_journal = executer_operation(
+        operation_id,
+        configuration,
+        pousser_ligne,
+        contexte_operation,
+    )
     file_resultat.put((succes, message, chemin_journal))
 
 
@@ -928,7 +1265,13 @@ def lancer_operation_asynchrone(
         return
 
     operation = operations[etat.index_selection]
+    cible_migration = obtenir_cible_migration_selectionnee(etat)
+    contexte_operation = None
+    if cible_migration is not None:
+        contexte_operation = {"cible_migration_id": cible_migration.get("id")}
+
     etat.operation_en_cours = True
+    etat.operation_id_en_cours = operation["id"]
     etat.titre_operation_en_cours = operation["titre"]
     etat.succes_operation = True
     etat.message_statut = f"Operation lancee: {operation['titre']}"
@@ -943,7 +1286,7 @@ def lancer_operation_asynchrone(
 
     thread_operation = threading.Thread(
         target=executer_operation_en_arriere_plan,
-        args=(operation["id"], configuration, file_journal, file_resultat),
+        args=(operation["id"], configuration, contexte_operation, file_journal, file_resultat),
         daemon=True,
     )
     etat.thread_operation = thread_operation
@@ -975,10 +1318,25 @@ def traiter_flux_asynchrones(
 
     while not file_resultat.empty():
         succes, message, chemin_journal = file_resultat.get_nowait()
+        operation_terminee = etat.operation_id_en_cours
         etat.operation_en_cours = False
+        etat.operation_id_en_cours = ""
         etat.titre_operation_en_cours = ""
         etat.succes_operation = succes
-        etat.message_statut = f"{message} Journal: {chemin_journal}"
+        if succes and operation_terminee in {"actualiser_cibles_migration", "appliquer_migration_cible"}:
+            recharger_cibles_migration_interface(etat)
+
+        cible = obtenir_cible_migration_selectionnee(etat)
+        prefixe_cible = ""
+        if cible is not None and operation_terminee in {
+            "actualiser_cibles_migration",
+            "appliquer_migration_cible",
+            "preparer_placeholder_ia_migration",
+            "relancer_qualite_complete",
+            "proposer_pr_migration",
+        }:
+            prefixe_cible = f"Cible: {cible.get('titre')} | "
+        etat.message_statut = f"{prefixe_cible}{message} Journal: {chemin_journal}"
 
 
 def gerer_evenement_touche(
@@ -1011,15 +1369,55 @@ def gerer_evenement_touche(
         True si la boucle doit quitter, False sinon.
     """
 
+    if evenement.key == pygame.K_TAB:
+        focus_cible = basculer_focus_cible_migration(etat)
+        etat.succes_operation = True
+        etat.message_statut = (
+            "Focus sur la cible de migration."
+            if focus_cible
+            else "Focus sur la liste des operations."
+        )
+        return False
+
+    if evenement.key == pygame.K_RETURN:
+        if etat.focus_combobox_cible:
+            ouverte = basculer_combobox_cibles(etat)
+            etat.succes_operation = True
+            etat.message_statut = (
+                "Combobox cibles ouverte." if ouverte else "Combobox cibles fermee."
+            )
+            return False
+        etat.succes_operation = False
+        etat.message_statut = "Entree agit uniquement quand le focus est sur la cible de migration."
+        return False
+
     if evenement.key == pygame.K_UP:
+        if etat.focus_combobox_cible or etat.combobox_cibles_ouvert:
+            if changer_selection_cible_migration(etat, -1):
+                etat.message_statut = "Cible de migration mise a jour."
+                etat.succes_operation = True
+            else:
+                etat.message_statut = "Aucune cible de migration disponible."
+                etat.succes_operation = False
+            return False
+
         etat.index_selection = (etat.index_selection - 1) % len(operations)
-        etat.message_statut = "Selection mise a jour."
+        etat.message_statut = "Selection operation mise a jour."
         etat.succes_operation = True
         return False
 
     if evenement.key == pygame.K_DOWN:
+        if etat.focus_combobox_cible or etat.combobox_cibles_ouvert:
+            if changer_selection_cible_migration(etat, 1):
+                etat.message_statut = "Cible de migration mise a jour."
+                etat.succes_operation = True
+            else:
+                etat.message_statut = "Aucune cible de migration disponible."
+                etat.succes_operation = False
+            return False
+
         etat.index_selection = (etat.index_selection + 1) % len(operations)
-        etat.message_statut = "Selection mise a jour."
+        etat.message_statut = "Selection operation mise a jour."
         etat.succes_operation = True
         return False
 
@@ -1058,6 +1456,15 @@ def gerer_evenement_touche(
         return False
 
     if evenement.key == pygame.K_LEFT:
+        if etat.focus_combobox_cible and not etat.combobox_cibles_ouvert:
+            if changer_selection_cible_migration(etat, -1):
+                etat.succes_operation = True
+                etat.message_statut = "Cible de migration precedente."
+            else:
+                etat.succes_operation = False
+                etat.message_statut = "Aucune cible de migration disponible."
+            return False
+
         ajuster_decalage_horizontal_journal(
             etat,
             -pas_scroll_horizontal_journal,
@@ -1068,6 +1475,15 @@ def gerer_evenement_touche(
         return False
 
     if evenement.key == pygame.K_RIGHT:
+        if etat.focus_combobox_cible and not etat.combobox_cibles_ouvert:
+            if changer_selection_cible_migration(etat, 1):
+                etat.succes_operation = True
+                etat.message_statut = "Cible de migration suivante."
+            else:
+                etat.succes_operation = False
+                etat.message_statut = "Aucune cible de migration disponible."
+            return False
+
         ajuster_decalage_horizontal_journal(
             etat,
             pas_scroll_horizontal_journal,
@@ -1175,6 +1591,10 @@ def boucle_principale(configuration: Dict[str, object]) -> int:
         "Pret: F pour executer une operation, H pour reverrouiller.",
         "Journal: PgUp/PgDn (vertical), Gauche/Droite (horizontal), A auto, Fin bas, Home gauche.",
     ]
+    succes_cibles, message_cibles = recharger_cibles_migration_interface(etat)
+    etat.succes_operation = succes_cibles
+    etat.message_statut = message_cibles
+    ajouter_ligne_journal(etat, message_cibles, limite_lignes, nombre_lignes_visibles)
 
     file_journal: queue.Queue[str] = queue.Queue()
     file_resultat: queue.Queue[tuple[bool, str, Path]] = queue.Queue()

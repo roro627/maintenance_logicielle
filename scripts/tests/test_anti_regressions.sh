@@ -64,8 +64,10 @@ verifier_integration_mode_maintenance() {
 
   grep -Fq "EtatModeMaintenance" "${REPERTOIRE_BORNE}/Graphique.java" \
     || arreter_sur_erreur "Mode maintenance non reference dans Graphique.java"
-  grep -Fq "!etatModeMaintenance.estDebloque()" "${REPERTOIRE_BORNE}/Graphique.java" \
-    || arreter_sur_erreur "Verrouillage d acces du mode maintenance absent dans Graphique.java"
+  grep -Fq "ControleurMenuBorne" "${REPERTOIRE_BORNE}/Graphique.java" \
+    || arreter_sur_erreur "Controleur de menu headless non reference dans Graphique.java"
+  grep -Fq "estJeuMaintenanceVerrouille" "${REPERTOIRE_BORNE}/ControleurMenuBorne.java" \
+    || arreter_sur_erreur "Verrouillage d acces du mode maintenance absent dans ControleurMenuBorne.java"
 
   if grep -Eq "getJoyJ1(Haut|Bas|Gauche|Droite)Tape" "${REPERTOIRE_BORNE}/EtatModeMaintenance.java"; then
     arreter_sur_erreur "EtatModeMaintenance utilise des lectures joystick Tape qui consomment les entrees du menu"
@@ -125,6 +127,44 @@ verifier_bootstrap_permissions_apres_sudo() {
 }
 
 #######################################
+# Verifie que la configuration Docker
+# locale reutilise bien l elevation
+# systeme pour groupadd/usermod.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+verifier_elevation_groupe_docker() {
+  grep -Fq "prefixe_systeme=(\"\${prefixe_elevation}\")" "${RACINE_PROJET}/scripts/install/installer_borne.sh" \
+    || arreter_sur_erreur "Elevation systeme du groupe docker absente dans installer_borne.sh"
+  grep -Fq "\"\${prefixe_systeme[@]}\" groupadd docker" "${RACINE_PROJET}/scripts/install/installer_borne.sh" \
+    || arreter_sur_erreur "groupadd docker n utilise pas l elevation systeme dans installer_borne.sh"
+  grep -Fq "\"\${prefixe_systeme[@]}\" usermod -aG docker" "${RACINE_PROJET}/scripts/install/installer_borne.sh" \
+    || arreter_sur_erreur "usermod docker n utilise pas l elevation systeme dans installer_borne.sh"
+}
+
+#######################################
+# Verifie que le bootstrap n exige pas
+# Codex CLI en mode test et gere les
+# Node.js trop anciens pour Codex.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+verifier_garde_codex_et_nodejs() {
+  grep -Fq "garantir_nodejs_compatible_codex" "${RACINE_PROJET}/scripts/install/installer_borne.sh" \
+    || arreter_sur_erreur "Mise a niveau Node.js pour Codex absente dans installer_borne.sh"
+  grep -Fq "https://deb.nodesource.com/setup_\${VERSION_NODE_SOURCE_MAJEURE}.x" "${RACINE_PROJET}/scripts/install/installer_borne.sh" \
+    || arreter_sur_erreur "Depot officiel NodeSource absent dans installer_borne.sh"
+  grep -Fq "Mode test actif: verification Codex CLI ignoree" "${RACINE_PROJET}/scripts/install/installer_borne.sh" \
+    || arreter_sur_erreur "Garde Codex en mode test absente dans installer_borne.sh"
+  grep -Fq "NODE_VERSION_MIN_CODEX=16.0" "${RACINE_PROJET}/config/versions_minimales.env" \
+    || arreter_sur_erreur "Version minimale Node.js pour Codex absente de config/versions_minimales.env"
+}
+
+#######################################
 # Point d entree du test anti regressions.
 # Arguments:
 #   aucun
@@ -140,6 +180,8 @@ main() {
   verifier_fallback_pianotile_librosa
   verifier_messages_permission_build
   verifier_bootstrap_permissions_apres_sudo
+  verifier_elevation_groupe_docker
+  verifier_garde_codex_et_nodejs
   journaliser "Test anti regressions: OK"
 }
 

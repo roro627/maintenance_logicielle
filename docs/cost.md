@@ -25,7 +25,7 @@ conformement aux attentes de `consignes.md`.
 ## Tableau de suivi (couts directs + charge)
 
 | Poste | Quantite | Cout unitaire EUR | Total EUR | Temps h | Commentaire |
-|---|---:|---:|---:|---:|---|
+| --- | ---: | ---: | ---: | ---: | --- |
 | Pilotage, cadrage, suivi qualite | 1 lot | 0 | 0 | 8 | Organisation, priorisation, revues |
 | Migration scripts installation/deploiement | 1 lot | 0 | 0 | 12 | `installer_borne.sh`, pipeline post-pull |
 | Documentation technique et utilisateur | 1 lot | 0 | 0 | 12 | Pages `docs/`, MkDocs, tutoriels |
@@ -37,7 +37,7 @@ conformement aux attentes de `consignes.md`.
 | Consommables maintenance borne | 1 pack | 18 | 18 | 1 | Nettoyant contact, attaches, adaptateurs |
 | Stock de securite carte microSD | 1 unite | 12 | 12 | 1 | Image systeme de secours |
 | Cablage/connexions de remplacement | 1 kit | 15 | 15 | 2 | Remplacement rapide en cas de panne |
-| Total |  |  | 45 | 89 | Cout direct cumule + charge projet |
+| Total | none | none | 45 | 89 | Cout direct cumule + charge projet |
 
 ## Synthese budgetaire
 
@@ -49,20 +49,24 @@ conformement aux attentes de `consignes.md`.
 ## Detail par categorie
 
 ### Temps
+
 - Conception et pilotage: 9 h
 - Developpement scripts/jeux: 41 h
 - Qualite/tests: 24 h
 - Documentation et transfert: 15 h
 
 ### Materiel
+
 - Consommables et stock securite: 45 EUR
 - Materiel principal: reutilisation de l existant (0 EUR additionnel)
 
 ### Licences
+
 - Java (OpenJDK), Python, MkDocs, pytest, pylint, shellcheck, pygame, LÖVE: 0 EUR
 - Condition: conserver des dependances compatibles open source/education
 
 ### Exploitation et risques
+
 - Risque principal: panne carte SD -> mitigation par stock de secours.
 - Risque principal: regression apres pull -> mitigation par pipeline auto + tests.
 - Risque principal: ecart docs/code -> mitigation par generation + tests documentation.

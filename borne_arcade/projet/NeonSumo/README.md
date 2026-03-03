@@ -1,66 +1,55 @@
-# Neon Sumo (NeonSumo)
+# Neon Sumo
 
-## Pitch
-Neon Sumo est un duel arcade 1v1. Le but est d ejecter l adversaire hors de l arene.
+## Objectif
 
-## Lancement
-Depuis la racine du projet:
-```bash
-./borne_arcade/NeonSumo.sh
-```
+Neon Sumo est un duel arcade 1v1 ou il faut ejecter l adversaire de l arene en exploitant dash, bump, bouclier et ultime.
 
-## Controles borne
-- Joystick J1: fleches
-- Joystick J2: O (haut), L (bas), K (gauche), M (droite)
-- B1: Dash (`F` J1, `Q` J2)
-- B2: Frein (`G` J1, `S` J2)
-- B3: Bump (`H` J1, `D` J2)
-- B4: Bouclier (`R` J1, `A` J2)
-- B5: Taunt (`T` J1, `Z` J2)
-- B6: Ultime (`Y` J1, `E` J2)
+## Runtime et lancement
 
-## Boucle de jeu
-- Ecran titre
-- Manche avec compte a rebours
-- Collision passive entre capsules (push au contact)
-- Hit feedback: flash ecran, freeze frame court, particules directionnelles sur dash/bump/ultime
-- Arene neon vivante: glow anime + lignes electriques reactives aux impacts
-- Systeme de style en direct: chaines d impacts, esquives proches, sauvetages du bord
-- BO3 (premier a 2)
-- Ecran resultat / revanche
-- Retour menu
+- Runtime principal: `Python`.
+- Point d entree: `main.py`.
+- Lanceur borne: `borne_arcade/NeonSumo.sh`.
+- Lancement depuis la racine: `./borne_arcade/NeonSumo.sh`.
+- Dependances Python locales: `pip install -r borne_arcade/projet/NeonSumo/requirements.txt`.
 
-## Configuration equilibrage
-Le fichier `config_jeu.json` contient tous les reglages:
-- physique (acceleration, friction, vitesse)
-- collision passive (`coefficient_rebond_collision`)
-- cooldowns
-- puissance des actions
-- retrecissement de l arene
-- durees de manche
-- style (`style.*`)
-- effets visuels arene (`effets_arene.*`)
+## Commandes borne
 
-## HUD lisibilite combat
-- Icones B1/B3/B4 pres de chaque joueur:
-  - B1 = Dash
-  - B3 = Bump
-  - B4 = Bouclier
-- Chaque icone se remplit selon le cooldown restant.
-- Panneaux style J1/J2:
-  - score style cumule en direct
-  - combo courant
-  - dernier bonus recu (`CHAIN`, `ESQUIVE`, `SAVE`)
+| Commande | Action |
+| --- | --- |
+| Joystick | Diriger le joueur courant dans l arene. |
+| Bouton 1 | Dash. |
+| Bouton 2 | Frein. |
+| Bouton 3 | Bump. |
+| Bouton 4 | Bouclier. |
+| Bouton 5 | Taunt. |
+| Bouton 6 | Ultime. |
 
-## Sons
-Les fichiers MP3 sont dans `assets/sons/`.
-Ils sont initialises vides pour integration ulterieure des sons definitifs.
+## Fichiers importants
 
-## Tests
-```bash
-python3 -m unittest borne_arcade/projet/NeonSumo/tests/test_logique.py
-```
+- `description.txt`: Description courte affichee dans le menu principal.
+- `bouton.txt`: Mapping borne lu par le menu et les boites de description.
+- `highscore`: Persistance locale du score.
+- `photo_small.png`: Vignette affichee dans le catalogue de jeux.
+- `requirements.txt`: dependances Python specifiques au jeu.
+- `config_jeu.json`: configuration supplementaire du jeu.
+- `tests/`: tests locaux du jeu.
 
-## Dependances
-- Python 3
-- pygame
+## Tests et validation
+
+- Test cible du jeu: `./scripts/tests/test_jeux_python_cibles.sh --jeu NeonSumo`.
+- Validation globale de la borne: `TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 ./scripts/tests/lancer_suite.sh`.
+
+## Maintenance et evolution
+
+- Le jeu propose un mode attract robuste, un HUD lisible et une arene neon qui retrecit au fil de la manche.
+- Le lancement borne passe par le wrapper Python commun et doit rester compatible avec `python3`.
+- Les dependances specifiques sont centralisees dans `requirements.txt`.
+- Des tests locaux existent dans `tests/` et doivent etre maintenus a jour.
+- Surveiller `config_jeu.json` pour toute evolution de configuration.
+- Le fichier `config_jeu.json` centralise l equilibrage, les effets visuels et le menu titre anime.
+
+## Liens associes
+
+- [Ajout d un jeu](../../../docs/ajout_jeu.md).
+- [Tests](../../../docs/tests.md).
+- [Utilisateur](../../../docs/utilisateur.md).

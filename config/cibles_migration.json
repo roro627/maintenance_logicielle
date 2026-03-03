@@ -1,0 +1,104 @@
+{
+  "cibles": [
+    {
+      "id": "systeme_apt",
+      "titre": "Systeme apt",
+      "description": "Mise a jour globale Debian/Raspberry Pi OS via apt full-upgrade.",
+      "type": "systeme_apt",
+      "commande_version_installee": [
+        "sh",
+        "-lc",
+        ". /etc/os-release && printf '%s (%s)\\n' \"${PRETTY_NAME:-Systeme inconnu}\" \"${VERSION_ID:-?}\""
+      ],
+      "commandes_migration": [
+        [
+          "apt-get",
+          "update"
+        ],
+        [
+          "apt-get",
+          "full-upgrade",
+          "-y"
+        ]
+      ]
+    },
+    {
+      "id": "python3",
+      "titre": "Python",
+      "description": "Interpreteur Python systeme et outils pip/venv.",
+      "type": "paquet_apt",
+      "paquet_apt": "python3",
+      "commande_version_installee": [
+        "python3",
+        "--version"
+      ],
+      "commandes_migration": [
+        [
+          "apt-get",
+          "install",
+          "-y",
+          "python3",
+          "python3-venv",
+          "python3-pip"
+        ]
+      ]
+    },
+    {
+      "id": "java17",
+      "titre": "Java 17",
+      "description": "JDK OpenJDK cible pour la borne Java/MG2D.",
+      "type": "paquet_apt",
+      "paquet_apt": "openjdk-17-jdk",
+      "commande_version_installee": [
+        "java",
+        "-version"
+      ],
+      "commandes_migration": [
+        [
+          "apt-get",
+          "install",
+          "-y",
+          "openjdk-17-jdk"
+        ]
+      ]
+    },
+    {
+      "id": "lua54",
+      "titre": "Lua 5.4",
+      "description": "Interpreteur Lua utilise par les validateurs et jeux Lua.",
+      "type": "paquet_apt",
+      "paquet_apt": "lua5.4",
+      "commande_version_installee": [
+        "lua",
+        "-v"
+      ],
+      "commandes_migration": [
+        [
+          "apt-get",
+          "install",
+          "-y",
+          "lua5.4"
+        ]
+      ]
+    },
+    {
+      "id": "love",
+      "titre": "LÖVE",
+      "description": "Runtime LÖVE2D utilise par les jeux CursedWare.",
+      "type": "paquet_apt",
+      "paquet_apt": "love",
+      "commande_version_installee": [
+        "love",
+        "--version"
+      ],
+      "commandes_migration": [
+        [
+          "apt-get",
+          "install",
+          "-y",
+          "love"
+        ]
+      ]
+    }
+  ]
+}

@@ -1,0 +1,148 @@
+{
+  "jeux": [
+    {
+      "nom": "Columns",
+      "runtime": "java",
+      "dossier": "borne_arcade/projet/Columns",
+      "lanceur": "borne_arcade/Columns.sh",
+      "entree": "Main",
+      "fichiers_obligatoires": ["description.txt", "bouton.txt", "highscore", "photo_small.png"],
+      "commande_test_cible": ["./scripts/tests/test_jeux_java_cibles.sh", "--jeu", "Columns"]
+    },
+    {
+      "nom": "CursedWare",
+      "runtime": "lua",
+      "dossier": "borne_arcade/projet/CursedWare",
+      "lanceur": "borne_arcade/CursedWare.sh",
+      "entree": "main.lua",
+      "fichiers_obligatoires": ["description.txt", "bouton.txt", "highscore", "photo_small.png"],
+      "commande_test_cible": ["./scripts/tests/test_jeux_lua_cibles.sh", "--jeu", "CursedWare"]
+    },
+    {
+      "nom": "DinoRail",
+      "runtime": "java",
+      "dossier": "borne_arcade/projet/DinoRail",
+      "lanceur": "borne_arcade/DinoRail.sh",
+      "entree": "DinoRail",
+      "fichiers_obligatoires": ["description.txt", "bouton.txt", "highscore", "photo_small.png"],
+      "commande_test_cible": ["./scripts/tests/test_jeux_java_cibles.sh", "--jeu", "DinoRail"]
+    },
+    {
+      "nom": "InitialDrift",
+      "runtime": "java",
+      "dossier": "borne_arcade/projet/InitialDrift",
+      "lanceur": "borne_arcade/InitialDrift.sh",
+      "entree": "Main",
+      "fichiers_obligatoires": ["description.txt", "bouton.txt", "highscore", "photo_small.png"],
+      "commande_test_cible": ["./scripts/tests/test_jeux_java_cibles.sh", "--jeu", "InitialDrift"]
+    },
+    {
+      "nom": "JavaSpace",
+      "runtime": "java",
+      "dossier": "borne_arcade/projet/JavaSpace",
+      "lanceur": "borne_arcade/JavaSpace.sh",
+      "entree": "Main",
+      "fichiers_obligatoires": ["description.txt", "bouton.txt", "highscore", "photo_small.png"],
+      "commande_test_cible": ["./scripts/tests/test_jeux_java_cibles.sh", "--jeu", "JavaSpace"]
+    },
+    {
+      "nom": "Kowasu_Renga",
+      "runtime": "java",
+      "dossier": "borne_arcade/projet/Kowasu_Renga",
+      "lanceur": "borne_arcade/Kowasu_Renga.sh",
+      "entree": "Kowasu_Renga",
+      "fichiers_obligatoires": ["description.txt", "bouton.txt", "highscore", "photo_small.png"],
+      "commande_test_cible": ["./scripts/tests/test_jeux_java_cibles.sh", "--jeu", "Kowasu_Renga"]
+    },
+    {
+      "nom": "MaintenanceMode",
+      "runtime": "python",
+      "dossier": "borne_arcade/projet/MaintenanceMode",
+      "lanceur": "borne_arcade/MaintenanceMode.sh",
+      "entree": "main.py",
+      "fichiers_obligatoires": ["description.txt", "bouton.txt", "highscore", "photo_small.png"],
+      "commande_test_cible": ["./scripts/tests/test_jeux_python_cibles.sh", "--jeu", "MaintenanceMode"]
+    },
+    {
+      "nom": "Minesweeper",
+      "runtime": "java",
+      "dossier": "borne_arcade/projet/Minesweeper",
+      "lanceur": "borne_arcade/Minesweeper.sh",
+      "entree": "Minesweeper",
+      "fichiers_obligatoires": ["description.txt", "bouton.txt", "highscore", "photo_small.png"],
+      "commande_test_cible": ["./scripts/tests/test_jeux_java_cibles.sh", "--jeu", "Minesweeper"]
+    },
+    {
+      "nom": "NeonSumo",
+      "runtime": "python",
+      "dossier": "borne_arcade/projet/NeonSumo",
+      "lanceur": "borne_arcade/NeonSumo.sh",
+      "entree": "main.py",
+      "fichiers_obligatoires": ["description.txt", "bouton.txt", "highscore", "photo_small.png"],
+      "commande_test_cible": ["./scripts/tests/test_jeux_python_cibles.sh", "--jeu", "NeonSumo"]
+    },
+    {
+      "nom": "OsuTile",
+      "runtime": "python",
+      "dossier": "borne_arcade/projet/OsuTile",
+      "lanceur": "borne_arcade/OsuTile.sh",
+      "entree": "main.py",
+      "fichiers_obligatoires": ["description.txt", "bouton.txt", "highscore", "photo_small.png"],
+      "commande_test_cible": ["./scripts/tests/test_jeux_python_cibles.sh", "--jeu", "OsuTile"]
+    },
+    {
+      "nom": "PianoTile",
+      "runtime": "python",
+      "dossier": "borne_arcade/projet/PianoTile",
+      "lanceur": "borne_arcade/PianoTile.sh",
+      "entree": "app/game.py",
+      "fichiers_obligatoires": ["description.txt", "bouton.txt", "highscore", "photo_small.png"],
+      "commande_test_cible": ["./scripts/tests/test_jeux_python_cibles.sh", "--jeu", "PianoTile"]
+    },
+    {
+      "nom": "Pong",
+      "runtime": "java",
+      "dossier": "borne_arcade/projet/Pong",
+      "lanceur": "borne_arcade/Pong.sh",
+      "entree": "Main",
+      "fichiers_obligatoires": ["description.txt", "bouton.txt", "highscore", "photo_small.png"],
+      "commande_test_cible": ["./scripts/tests/test_jeux_java_cibles.sh", "--jeu", "Pong"]
+    },
+    {
+      "nom": "Puissance_X",
+      "runtime": "java",
+      "dossier": "borne_arcade/projet/Puissance_X",
+      "lanceur": "borne_arcade/Puissance_X.sh",
+      "entree": "Main",
+      "fichiers_obligatoires": ["description.txt", "bouton.txt", "highscore", "photo_small.png"],
+      "commande_test_cible": ["./scripts/tests/test_jeux_java_cibles.sh", "--jeu", "Puissance_X"]
+    },
+    {
+      "nom": "Snake_Eater",
+      "runtime": "java",
+      "dossier": "borne_arcade/projet/Snake_Eater",
+      "lanceur": "borne_arcade/Snake_Eater.sh",
+      "entree": "Snake_Eater",
+      "fichiers_obligatoires": ["description.txt", "bouton.txt", "highscore", "photo_small.png"],
+      "commande_test_cible": ["./scripts/tests/test_jeux_java_cibles.sh", "--jeu", "Snake_Eater"]
+    },
+    {
+      "nom": "TronGame",
+      "runtime": "python",
+      "dossier": "borne_arcade/projet/TronGame",
+      "lanceur": "borne_arcade/TronGame.sh",
+      "entree": "main.py",
+      "fichiers_obligatoires": ["description.txt", "bouton.txt", "highscore", "photo_small.png"],
+      "commande_test_cible": ["./scripts/tests/test_jeux_python_cibles.sh", "--jeu", "TronGame"]
+    },
+    {
+      "nom": "ball-blast",
+      "runtime": "python",
+      "dossier": "borne_arcade/projet/ball-blast",
+      "lanceur": "borne_arcade/ball-blast.sh",
+      "entree": "./src",
+      "fichiers_obligatoires": ["description.txt", "bouton.txt", "highscore", "photo_small.png"],
+      "commande_test_cible": ["./scripts/tests/test_jeux_python_cibles.sh", "--jeu", "ball-blast"]
+    }
+  ]
+}

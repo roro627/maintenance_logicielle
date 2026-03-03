@@ -33,10 +33,40 @@ TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 .
 
 ## Couverture
 
+### Contrat global vs test cible
+
+- Contrat global: chaque jeu doit passer une verification structurelle commune via `scripts/tests/test_contrats_jeux.py`:
+  presence du dossier, des fichiers obligatoires, du lanceur, du point d entree et smoke test non interactif.
+- Test cible: chaque jeu declare en plus une `commande_test_cible` obligatoire dans `config/matrice_tests_jeux.json`.
+- La suite `scripts/tests/test_jeux.sh` compile toute la borne, execute le test borne headless, puis laisse `scripts/tests/test_contrats_jeux.py` enchainer contrat global + test cible pour chaque jeu.
+- Le test borne headless recharge aussi le classpath MG2D a l execution afin de verifier l alignement catalogue/logique menu sans fenetre graphique.
+
+### Matrice de couverture par jeu
+
+- `Columns`: `TestContratColumns.java` couvre combos, suppression animee, chute et deplacement de colonne.
+- `CursedWare`: `scripts/tests/test_jeux_lua_cibles.sh` + `borne_arcade/projet/CursedWare/tests/test_contrat_minijeux.lua` couvrent syntaxe Lua si disponible et contrat API des mini-jeux; aucun lancement LÖVE headless n est impose a cette phase.
+- `DinoRail`: `TestContratDinoRail.java` couvre collisions et sortie ecran.
+- `InitialDrift`: `TestContratInitialDrift.java` couvre la fabrique pure de generation des ennemis.
+- `JavaSpace`: `TestContratJavaSpace.java` couvre apparition/rebond du boss et bornage du joueur.
+- `Kowasu_Renga`: `TestContratKowasuRenga.java` couvre le noyau pur briques/vies/score/acceleration.
+- `MaintenanceMode`: `test_operations.py` et `test_interface.py`.
+- `Minesweeper`: `TestContratMinesweeper.java`.
+- `NeonSumo`: `test_logique.py` et `test_main_menu.py`.
+- `OsuTile`: `test_osutile.py`.
+- `PianoTile`: `test_piano.py`.
+- `Pong`: `TestContratPong.java` couvre rebonds, score, reset de manche et retour menu.
+- `Puissance_X`: `TestContratPuissanceX.java`.
+- `Snake_Eater`: `TestContratSnakeEater.java` couvre persistance/highscore.
+- `TronGame`: `test_tron_game.py`.
+- `ball-blast`: `test_ball_blast.py`.
+
 ### Unitaires
+
 - HighScore (lecture/ecriture),
 - mapping clavier borne,
 - parsing configuration,
+- controleur headless du menu borne (`borne_arcade/tests/unit/TestContratControleurMenuBorne.java`),
+- logique pure de `Columns`, `InitialDrift`, `JavaSpace`, `Pong`, `Kowasu_Renga` et `Snake_Eater`,
 - logique NeonSumo (collisions, sortie arene, cooldowns, ultime),
 - configuration menu NeonSumo + logique d etats attract (`borne_arcade/projet/NeonSumo/tests/test_main_menu.py`),
 - mode maintenance Python (`borne_arcade/projet/MaintenanceMode/tests/test_operations.py`):
@@ -44,41 +74,65 @@ TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 .
   fallback de dossier logs, operation `reset_pre_requis`, operation `git_retour_precedent`,
   robustesse diagnostic en absence de pre-requis, gestion de l absence de `git`,
   verification du reset prerequis en mode sur (sans `autoremove --purge`), protection explicite de `python3`,
-  et capture des exceptions inattendues.
+  capture des exceptions inattendues, persistence de session migration,
+  execution IA `Codex/Ollama` avec brief Markdown+JSON, reponse Markdown, trace JSONL,
+  rapport qualite migration et gardes avant `proposer-pr`.
 - logique d interface maintenance (`borne_arcade/projet/MaintenanceMode/tests/test_interface.py`):
-  defilement vertical/horizontal du journal, auto-scroll, bornage de l historique et extraction de segment horizontal.
+  defilement vertical/horizontal du journal, auto-scroll, bornage de l historique, extraction de segment horizontal,
+  focus combobox cible et preservation de la cible selectionnee apres rechargement.
+- CLI migration (`borne_arcade/projet/MaintenanceMode/tests/test_workflow_migration_cli.py`):
+  contrat `--format json`, propagation de `--cible` et de `--dossier-sortie`.
 - PianoTile (`borne_arcade/projet/PianoTile/tests/test_piano.py`):
   echec audio non bloquant et chronometrage de secours sans mixer actif.
 
 ### Integration et systeme
+
 - catalogue jeux,
+- test borne headless:
+  compilation complete des `borne_arcade/*.java`,
+  execution de `TestUnitaireCatalogueJeux.java`,
+  execution de `TestContratControleurMenuBorne.java`,
 - compilation Java + verifications syntaxiques Python/Lua,
 - ajout de jeu,
 - deploiement post-pull,
 - deploiement post-pull + verification permissions partagees (`logs/`, `build/`, `.cache/`, `.venv/`, scripts critiques),
+- README de jeux: presence, nommage `README.md`, regeneration deterministe et coherence entre template, matrice technique et metadonnees editoriales,
 - generation documentation,
 - architecture et couts,
 - mode maintenance cache (presence, verrouillage, integration menu),
-- mode maintenance cache (presence, verrouillage, integration menu, operation reset prerequis),
+- mode maintenance cache (presence, verrouillage, integration menu, operation reset prerequis, workflow migration cible),
 - bootstrap robuste apres `sudo` (absence de regression sur normalisation permissions et execution non-systeme sous utilisateur appelant),
+- bootstrap robuste pour l outillage migration:
+  garde `codex` inactive en mode test et mise a niveau automatique Node.js via NodeSource si la distribution est trop ancienne,
 - robustesse PianoTile en absence de `librosa`,
 - validation materielle (checklist).
+- workflow migration portable:
+  `versions-installees --format json` / `versions-candidates --format json` sans crash sur poste non Debian,
+  avec message d indisponibilite actionnable pour l application reelle.
 
 ### Qualite outillage
+
 - shellcheck,
 - checkstyle,
 - pylint,
 - docstrings,
+- uniformite des README de jeux,
 - messages d erreur actionnables.
 
 ## Validation
 
 Scripts principaux:
+
 - `scripts/tests/test_installation.sh`
 - `scripts/tests/test_smoke.sh`
 - `scripts/tests/test_jeux.sh`
+- `scripts/tests/test_borne_headless.sh`
+- `scripts/tests/test_jeux_java_cibles.sh`
+- `scripts/tests/test_jeux_python_cibles.sh`
+- `scripts/tests/test_jeux_lua_cibles.sh`
 - `scripts/tests/test_deploiement.sh`
 - `scripts/tests/test_documentation.sh`
+- `scripts/tests/test_readme_jeux.sh`
 - `scripts/tests/test_integrite_mg2d.sh`
 - `scripts/tests/test_architecture.sh`
 - `scripts/tests/test_couts.sh`
@@ -88,6 +142,11 @@ Scripts principaux:
 ## Depannage
 
 - En cas d echec, relancer le script de test en erreur seul.
+- Si `test_contrats_jeux.py` signale `commande_test_cible obligatoire`, completer `config/matrice_tests_jeux.json` avant toute autre correction.
+- Si `test_readme_jeux.sh` echoue, regenerer les README avec `python3 scripts/docs/generer_readme_jeux.py` puis relancer la verification.
+- Si un jeu Java charge mal ses ressources en test cible, verifier que le wrapper l execute bien depuis `borne_arcade/projet/<jeu>/`.
+- Si `CursedWare` echoue sans `lua`, corriger d abord le validateur portable `scripts/tests/test_cursedware_minijeux.py`; si `lua` est disponible, verifier aussi `borne_arcade/projet/CursedWare/tests/test_contrat_minijeux.lua`.
+- Si le workflow migration refuse `proposer-pr`, verifier d abord `.cache/maintenance_logicielle/etat_migration.json` puis le dernier `logs/rapport_qualite_migration_*.json`.
 - Consulter `logs/` pour les pipelines post-pull/bootstrap.
 - Corriger la cause puis relancer `./scripts/tests/lancer_suite.sh`.
 - En cas d echec CI locale, corriger puis relancer `act` jusqu a statut vert.

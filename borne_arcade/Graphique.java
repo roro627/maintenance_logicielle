@@ -1,8 +1,11 @@
 import java.awt.Font;
 import java.io.IOException;
-import java.nio.file.*;
-import javax.swing.*;
 import java.io.File;
+import java.nio.file.DirectoryStream;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 
 import MG2D.geometrie.*;
 import MG2D.geometrie.Point;
@@ -26,6 +29,8 @@ public class Graphique {
     public static Bouton[] tableau;
     private Pointeur pointeur;
     private EtatModeMaintenance etatModeMaintenance;
+    private ControleurMenuBorne controleurMenu;
+    private LanceurJeuMenu lanceurJeu;
     private Texte texteModeMaintenance;
     private boolean texteModeMaintenanceAffiche;
     Font font;
@@ -59,16 +64,8 @@ public class Graphique {
 	f.addKeyListener(clavier);
 	f.getP().addKeyListener(clavier);
 
-	/*Retrouver le nombre de jeux dispo*/
-	Path yourPath = FileSystems.getDefault().getPath("projet/");
-	int cpt=0;
-	try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(yourPath)) {
-	    for (Path path : directoryStream) {
-		cpt++;
-	    }
-	} catch (IOException e) {
-	    e.printStackTrace();
-	}
+	List<JeuCatalogue> jeuxCatalogue = CatalogueJeux.listerJeux();
+	int cpt = jeuxCatalogue.size();
 
 	tableau = new Bouton[cpt];
 	textesAffiches = new boolean[cpt];
@@ -76,9 +73,12 @@ public class Graphique {
 		textesAffiches[i]=true;
 	}
 	
-	Bouton.remplirBouton();
-	pointeur = new Pointeur();
+	Bouton.remplirBouton(jeuxCatalogue);
 	etatModeMaintenance = new EtatModeMaintenance();
+	lanceurJeu = new LanceurJeuProcessus();
+	controleurMenu = new ControleurMenuBorne(jeuxCatalogue, etatModeMaintenance, lanceurJeu);
+	pointeur = new Pointeur();
+	pointeur.setValue(controleurMenu.getEtat().getIndexSelection());
 	Font policeModeMaintenance = new Font("Dialog", Font.PLAIN, 16);
 	if(font != null){
 	    policeModeMaintenance = font.deriveFont(16.0f);
@@ -180,7 +180,6 @@ public class Graphique {
 		int frame=0;
 		boolean fermetureMenu=false;
 		int selectionSur = 0;
-		Texte textePrec=tableau[pointeur.getValue()].getTexte();
 		while(true){
 			try {
 				if(frame==0){
@@ -219,31 +218,27 @@ public class Graphique {
 					mettreAJourAffichageModeMaintenance();
 					continue;
 				}
-
-				if(bs.selection(clavier)){
+				traiterNavigationMenu();
 				bi.setImage(tableau[pointeur.getValue()].getChemin());
 				tableau[pointeur.getValue()].getTexte().setPolice(font);
-
 				bd.lireFichier(tableau[pointeur.getValue()].getChemin());
 				bd.lireHighScore(tableau[pointeur.getValue()].getChemin());
 				bd.lireBouton(tableau[pointeur.getValue()].getChemin());
-				/*
-				// System.out.println(tableau[pointeur.getValue()].getChemin());
-				// bd.setMessage(tableau[pointeur.getValue()].getNom());
-				*/
-				if(estJeuMaintenanceSelectionne() && !etatModeMaintenance.estDebloque() && clavier.getBoutonJ1ATape()){
-					mettreAJourAffichageModeMaintenance();
-					f.rafraichir();
-					continue;
+
+				if(clavier.getBoutonJ1ATape()){
+					if(!lancerJeuSelectionneDepuisControleur()){
+						mettreAJourAffichageModeMaintenance();
+						f.rafraichir();
+						continue;
+					}
+					if(estJeuMaintenanceSelectionne()){
+						etatModeMaintenance.appliquerDemandeVerrouillageExterne();
+						mettreAJourAffichageModeMaintenance();
+					}
 				}
-				pointeur.lancerJeu(clavier);
-				if(estJeuMaintenanceSelectionne()){
-					etatModeMaintenance.appliquerDemandeVerrouillageExterne();
-					mettreAJourAffichageModeMaintenance();
-				}
-				
-				
-				}else{
+
+				if(clavier.getBoutonJ1ZTape()){
+					controleurMenu.demanderFermeture();
 					f.ajouter(fondBlancTransparent);
 					f.ajouter(message);
 					f.ajouter(rectSelection);
@@ -252,7 +247,6 @@ public class Graphique {
 					f.ajouter(non);
 					f.ajouter(oui);
 					fermetureMenu=true;
-					
 				}
 			}else{
 					if(clavier.getJoyJ1DroiteEnfoncee()){
@@ -275,6 +269,7 @@ public class Graphique {
 					}
 					if(clavier.getBoutonJ1ATape()){
 						if(selectionSur==0){
+							controleurMenu.annulerFermeture();
 							f.supprimer(fondBlancTransparent);
 							f.supprimer(message);
 							f.supprimer(rectSelection);
@@ -285,6 +280,7 @@ public class Graphique {
 							fermetureMenu=false;
 						}
 						else{
+							controleurMenu.confirmerFermeture();
 							System.exit(0);
 						}
 					}
@@ -303,7 +299,10 @@ public class Graphique {
 	if(etatModeMaintenance == null || !etatModeMaintenance.estActif()){
 	    return false;
 	}
-	return tableau[pointeur.getValue()].getNom().equals(etatModeMaintenance.getNomJeuMaintenance());
+	if(controleurMenu == null || controleurMenu.getEtat().getJeuSelectionne() == null){
+	    return false;
+	}
+	return controleurMenu.getEtat().getJeuSelectionne().getNom().equals(etatModeMaintenance.getNomJeuMaintenance());
     }
     
     /**
@@ -349,6 +348,100 @@ public class Graphique {
 	    Thread.currentThread().interrupt();
 	}finally{
 	    Graphique.lectureMusiqueFond();
+	}
+    }
+
+    /**
+     * Traite la navigation haut/bas via le controleur logique.
+     */
+    private void traiterNavigationMenu(){
+	int ancienIndex = controleurMenu.getEtat().getIndexSelection();
+	if(clavier.getJoyJ1HautTape()){
+	    controleurMenu.deplacerHaut();
+	    appliquerTransitionSelection(ancienIndex, controleurMenu.getEtat().getIndexSelection());
+	}
+
+	ancienIndex = controleurMenu.getEtat().getIndexSelection();
+	if(clavier.getJoyJ1BasTape()){
+	    controleurMenu.deplacerBas();
+	    appliquerTransitionSelection(ancienIndex, controleurMenu.getEtat().getIndexSelection());
+	}
+    }
+
+    /**
+     * Lance le jeu selectionne via le controleur logique.
+     *
+     * @return true si le jeu a ete lance.
+     */
+    private boolean lancerJeuSelectionneDepuisControleur(){
+	try{
+	    if(controleurMenu.estSelectionMaintenanceVerrouillee()){
+		return false;
+	    }
+	    Graphique.stopMusiqueFond();
+	    return controleurMenu.lancerJeuSelectionne();
+	}catch(IOException exception){
+	    System.err.println("Impossible de lancer le jeu: "+exception.getMessage());
+	    return false;
+	}catch(InterruptedException exception){
+	    Thread.currentThread().interrupt();
+	    return false;
+	}catch(Exception exception){
+	    System.err.println("Erreur inattendue lors du lancement du jeu: "+exception.getMessage());
+	    return false;
+	}finally{
+	    Graphique.lectureMusiqueFond();
+	}
+    }
+
+    /**
+     * Applique la translation visuelle correspondant au changement de selection.
+     *
+     * @param ancienIndex index avant navigation.
+     * @param nouvelIndex index apres navigation.
+     */
+    private void appliquerTransitionSelection(int ancienIndex, int nouvelIndex){
+	if(ancienIndex == nouvelIndex){
+	    return;
+	}
+
+	reafficherTexteCourantSiNecessaire(ancienIndex);
+	if(ancienIndex == tableau.length - 1 && nouvelIndex == 0){
+	    translaterElementsMenu(ConstantesMenu.ECART_ELEMENTS * (tableau.length - 1));
+	}else if(ancienIndex == 0 && nouvelIndex == tableau.length - 1){
+	    translaterElementsMenu(-ConstantesMenu.ECART_ELEMENTS * (tableau.length - 1));
+	}else if(nouvelIndex > ancienIndex){
+	    translaterElementsMenu(-ConstantesMenu.ECART_ELEMENTS);
+	}else{
+	    translaterElementsMenu(ConstantesMenu.ECART_ELEMENTS);
+	}
+	pointeur.setValue(nouvelIndex);
+    }
+
+    /**
+     * Reaffiche un texte masque par le clignotement.
+     *
+     * @param index index du texte a reafficher.
+     */
+    private void reafficherTexteCourantSiNecessaire(int index){
+	if(textesAffiches[index]){
+	    return;
+	}
+	afficherTexte(index);
+	textesAffiches[index] = true;
+    }
+
+    /**
+     * Translate les widgets de menu d un decalage vertical.
+     *
+     * @param decalageY decalage a appliquer.
+     */
+    private void translaterElementsMenu(int decalageY){
+	for(int index = 0 ; index < tableau.length ; index++){
+	    tableau[index].getTexte().translater(0, decalageY);
+	    tableau[index].getTexture().translater(0, decalageY);
+	    tableau[index].getTexte().setPolice(font);
+	    tableau[index].getTexte().setCouleur(Couleur.BLANC);
 	}
     }
 

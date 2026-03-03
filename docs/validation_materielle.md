@@ -9,7 +9,7 @@ reproductible pour recette terrain.
 
 Date validation: 2026-02-11
 Borne: Raspberry Pi 3 Model B
-Validateur: Equipe SAE maintenance logicielle
+Validateur: Equipe SAE ArcadeCare
 
 ## Checklist
 

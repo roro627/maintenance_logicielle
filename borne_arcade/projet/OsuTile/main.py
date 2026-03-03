@@ -3,20 +3,45 @@ import subprocess
 from menu import run_menu
 
 
-def ensure_maps_exported():
-    osu_folder = "beatmaps"
-    map_folder = "maps"
+def lister_exports_manquants(dossier_osu="beatmaps", dossier_maps="maps"):
+    """Retourne les couples osu/python qui doivent etre exportes.
 
-    os.makedirs(map_folder, exist_ok=True)
-    for filename in os.listdir(osu_folder):
+    Args:
+        dossier_osu: Dossier contenant les fichiers `.osu`.
+        dossier_maps: Dossier de sortie des cartes Python.
+
+    Returns:
+        Liste de tuples `(chemin_osu, chemin_py)` a exporter.
+    """
+
+    exports_manquants = []
+    os.makedirs(dossier_maps, exist_ok=True)
+    for filename in os.listdir(dossier_osu):
         if filename.endswith(".osu"):
             map_name = os.path.splitext(filename)[0]
-            osu_path = os.path.join(osu_folder, filename)
-            py_path = os.path.join(map_folder, f"{map_name}.py")
+            osu_path = os.path.join(dossier_osu, filename)
+            py_path = os.path.join(dossier_maps, f"{map_name}.py")
 
             if not os.path.exists(py_path):
-                print(f"Génération de {py_path}")
-                subprocess.run(["python3", "tools/export_map.py", osu_path, py_path])
+                exports_manquants.append((osu_path, py_path))
+    return exports_manquants
+
+
+def ensure_maps_exported(dossier_osu="beatmaps", dossier_maps="maps", executeur=subprocess.run):
+    """Genere uniquement les cartes Python manquantes.
+
+    Args:
+        dossier_osu: Dossier contenant les fichiers `.osu`.
+        dossier_maps: Dossier de sortie des cartes Python.
+        executeur: Fonction d execution injectable pour les tests.
+
+    Returns:
+        Aucun.
+    """
+
+    for osu_path, py_path in lister_exports_manquants(dossier_osu, dossier_maps):
+        print(f"Génération de {py_path}")
+        executeur(["python3", "tools/export_map.py", osu_path, py_path], check=False)
 
 
 if __name__ == "__main__":

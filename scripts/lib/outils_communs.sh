@@ -73,9 +73,12 @@ charger_configuration_borne() {
   PYGAME_VERSION_MIN="${PYGAME_VERSION_MIN:-2.5}"
   LUA_VERSION_MIN="${LUA_VERSION_MIN:-5.3}"
   LOVE_VERSION_MIN="${LOVE_VERSION_MIN:-11.0}"
+  NODE_VERSION_MIN_CODEX="${NODE_VERSION_MIN_CODEX:-16.0}"
   VERSION_SHELLCHECK_OUTIL="${VERSION_SHELLCHECK_OUTIL:-0.10.0}"
   VERSION_CHECKSTYLE_OUTIL="${VERSION_CHECKSTYLE_OUTIL:-10.17.0}"
   VERSION_PYLINT_OUTIL="${VERSION_PYLINT_OUTIL:-3.3.1}"
+  VERSION_ACT_OUTIL="${VERSION_ACT_OUTIL:-0.2.84}"
+  VERSION_NODE_SOURCE_MAJEURE="${VERSION_NODE_SOURCE_MAJEURE:-22}"
 
   if [[ "${UTILISER_VENV_PROJET}" == "1" ]] && [[ -x "${RACINE_PROJET}/.venv/bin/python" ]]; then
     COMMANDE_PYTHON="${RACINE_PROJET}/.venv/bin/python"
@@ -88,8 +91,8 @@ charger_configuration_borne() {
   export RESOLUTION_X RESOLUTION_Y
   export UTILISER_VENV_PROJET
   export JAVA_VERSION_MIN PYTHON_VERSION_MIN PIP_VERSION_MIN PYTEST_VERSION_MIN
-  export MKDOCS_VERSION_MIN PYGAME_VERSION_MIN LUA_VERSION_MIN LOVE_VERSION_MIN
-  export VERSION_SHELLCHECK_OUTIL VERSION_CHECKSTYLE_OUTIL VERSION_PYLINT_OUTIL
+  export MKDOCS_VERSION_MIN PYGAME_VERSION_MIN LUA_VERSION_MIN LOVE_VERSION_MIN NODE_VERSION_MIN_CODEX
+  export VERSION_SHELLCHECK_OUTIL VERSION_CHECKSTYLE_OUTIL VERSION_PYLINT_OUTIL VERSION_ACT_OUTIL VERSION_NODE_SOURCE_MAJEURE
 }
 
 #######################################
@@ -133,6 +136,58 @@ arreter_sur_erreur() {
   local action="${2:-}"
   afficher_erreur_claire "${message}" "${action}"
   exit 1
+}
+
+#######################################
+# Compare deux versions numeriques.
+# Arguments:
+#   $1: version detectee
+#   $2: version minimale
+# Retour:
+#   0 si $1 >= $2, 1 sinon
+#######################################
+version_minimale_respectee() {
+  local version_detectee="$1"
+  local version_minimale="$2"
+  local commande_python_versions="${COMMANDE_PYTHON:-python3}"
+
+  "${commande_python_versions}" - "${version_detectee}" "${version_minimale}" <<'PY'
+import re
+import sys
+
+
+def parser(version):
+    """Retourne les composantes numeriques d une version."""
+    valeurs = [int(x) for x in re.findall(r"\d+", version)]
+    return tuple(valeurs)
+
+
+version_detectee = parser(sys.argv[1])
+version_minimale = parser(sys.argv[2])
+taille = max(len(version_detectee), len(version_minimale))
+version_detectee += (0,) * (taille - len(version_detectee))
+version_minimale += (0,) * (taille - len(version_minimale))
+sys.exit(0 if version_detectee >= version_minimale else 1)
+PY
+}
+
+#######################################
+# Verifie une version detectee contre
+# une version minimale.
+# Arguments:
+#   $1: libelle
+#   $2: version detectee
+#   $3: version minimale
+# Retour:
+#   0
+#######################################
+verifier_version_minimale() {
+  local libelle="$1"
+  local version_detectee="$2"
+  local version_minimale="$3"
+
+  version_minimale_respectee "${version_detectee}" "${version_minimale}" \
+    || arreter_sur_erreur "Version ${libelle} incompatible: detectee=${version_detectee}, minimum=${version_minimale}"
 }
 
 #######################################

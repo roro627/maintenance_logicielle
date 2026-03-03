@@ -1,0 +1,33 @@
+{
+  "codex": {
+    "commande": "codex",
+    "modele": "qwen3:8b",
+    "fournisseur_local": "ollama",
+    "utiliser_provider_oss": true,
+    "activer_recherche_web": true,
+    "sortie_json": true,
+    "couleur": "never",
+    "politique_approbation": "never",
+    "sandbox": "danger-full-access",
+    "ignorer_verification_git": false,
+    "arguments_supplementaires": []
+  },
+  "ollama": {
+    "base_url": "http://10.22.28.190:11434"
+  },
+  "mcp": {
+    "context7": {
+      "actif": true,
+      "commande": "npx",
+      "arguments": [
+        "-y",
+        "@upstash/context7-mcp"
+      ],
+      "delai_demarrage_secondes": 120,
+      "timeout_outil_secondes": 300
+    }
+  },
+  "prompt": {
+    "chemin_modele": "config/prompt_migration_ia.md"
+  }
+}

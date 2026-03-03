@@ -23,9 +23,12 @@ from main import (  # pylint: disable=import-error
     ajouter_ligne_journal,
     ajuster_decalage_horizontal_journal,
     ajuster_decalage_journal,
+    basculer_combobox_cibles,
+    basculer_focus_cible_migration,
     calculer_decalage_horizontal_max_journal,
     calculer_decalage_max_journal,
     extraire_segment_horizontal,
+    recharger_cibles_migration_interface,
 )
 
 
@@ -155,6 +158,64 @@ class TestInterfaceMaintenanceMode(unittest.TestCase):
         self.assertEqual(extraire_segment_horizontal(texte, 0, 4), "abcd")
         self.assertEqual(extraire_segment_horizontal(texte, 3, 4), "defg")
         self.assertEqual(extraire_segment_horizontal(texte, 9, 4), "j")
+
+    def test_bascule_focus_et_combobox_cibles(self) -> None:
+        """Controle la bascule de focus et d ouverture de la combobox cible.
+
+        Args:
+            Aucun.
+
+        Returns:
+            Aucun.
+        """
+
+        etat = EtatInterface(cibles_migration=[{"id": "java17", "titre": "Java 17"}])
+
+        self.assertTrue(basculer_focus_cible_migration(etat))
+        self.assertTrue(etat.focus_combobox_cible)
+        self.assertTrue(basculer_combobox_cibles(etat))
+        self.assertTrue(etat.combobox_cibles_ouvert)
+        self.assertFalse(basculer_focus_cible_migration(etat))
+        self.assertFalse(etat.combobox_cibles_ouvert)
+
+    def test_recharger_cibles_preserve_identifiant_selectionne(self) -> None:
+        """Controle le rechargement des cibles sans perdre la cible courante.
+
+        Args:
+            Aucun.
+
+        Returns:
+            Aucun.
+        """
+
+        etat = EtatInterface(
+            cibles_migration=[
+                {"id": "python3", "titre": "Python"},
+                {"id": "java17", "titre": "Java 17"},
+            ],
+            index_cible_migration=1,
+        )
+
+        def fausse_collecte() -> list[dict[str, object]]:
+            """Retourne un catalogue reordonne pour le test.
+
+            Args:
+                Aucun.
+
+            Returns:
+                Catalogue cible reordonne.
+            """
+
+            return [
+                {"id": "java17", "titre": "Java 17"},
+                {"id": "python3", "titre": "Python"},
+            ]
+
+        with unittest.mock.patch("main.collecter_cibles_migration", side_effect=fausse_collecte):
+            succes, _ = recharger_cibles_migration_interface(etat)
+
+        self.assertTrue(succes)
+        self.assertEqual(etat.index_cible_migration, 0)
 
 
 if __name__ == "__main__":
