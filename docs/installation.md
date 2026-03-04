@@ -23,9 +23,9 @@ Le script `bootstrap_borne.sh` enchaine:
 - creation/maintenance de la venv Python,
 - installation des dependances par jeu (`requirements.txt`),
 - permissions scripts, autostart, layout clavier,
-- droits partages multi-utilisateurs sur `logs/`, `build/`, `.cache/`, `.venv/`, `site/`, `scripts/`, `.githooks/` et `borne_arcade/`,
+- droits partages multi-utilisateurs sur tout le depot exploitable (racine du projet, `config/`, `docs/`, `.github/`, `logs/`, `build/`, `.cache/`, `.venv/`, `site/`, `scripts/`, `.githooks/`, `borne_arcade/`), hors `.git/` et `MG2D/`,
 - execution des etapes non-systeme (compilation/lint/tests/docs) sous l utilisateur appelant quand le bootstrap est lance via `sudo`,
-- normalisation finale ownership/permissions (`build/`, `logs/`, `.cache/`, `.venv/`, `site/`, `scripts/`, `.githooks/`, `borne_arcade/`) pour eviter les artefacts root bloquants et reappliquer le bit executable sur tous les lanceurs `.sh`,
+- normalisation finale ownership/permissions du depot exploitable pour eviter les artefacts root bloquants et reappliquer le bit executable sur tous les lanceurs `.sh`, y compris `./borne_arcade/lancerBorne.sh`,
 - compilation, lint, tests smoke, documentation.
 
 Quand `Node.js` provient du depot officiel NodeSource, l installateur considere
@@ -142,14 +142,10 @@ Le journal bootstrap est ecrit dans `logs/bootstrap_borne_YYYYMMDD_HHMMSS.log`.
 - Erreur droits journaux (`Permission non accordee` dans `logs/`):
   relancer `sudo bash ./bootstrap_borne.sh` pour reappliquer les droits partages.
 - Erreur droits build (`Permission non accordee`): corriger les droits puis relancer.
+- Erreur lancement menu (`./borne_arcade/lancerBorne.sh: Permission non accordee`):
+  relancer `sudo bash ./bootstrap_borne.sh` pour reappliquer les droits de partage sur tout le depot exploitable.
 - Erreur lancement jeu (`Cannot run program \"./NomJeu.sh\": error=13, Permission non accordee`):
   relancer `sudo bash ./bootstrap_borne.sh` pour reappliquer les permissions d execution sur tous les lanceurs et wrappers `.sh`.
-
-```bash
-sudo chown -R "$USER:$USER" ./build ./.venv ./logs ./.cache ./site ./scripts ./.githooks ./borne_arcade
-./borne_arcade/clean.sh
-./borne_arcade/compilation.sh
-```
 
 - Emplacement recommande du depot: dossier utilisateur (ex: `~/git/maintenance_logicielle`),
   pas un dossier systeme ou verrouille.

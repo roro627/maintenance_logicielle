@@ -74,6 +74,73 @@ verifier_venv_projet() {
 }
 
 #######################################
+# Verifie qu un chemin respecte une
+# permission minimale pour tous.
+# Arguments:
+#   $1: chemin a verifier
+#   $2: mode minimal attendu (ex: 777)
+# Retour:
+#   0
+#######################################
+verifier_permission_minimale_pour_tous() {
+  local chemin="$1"
+  local mode_attendu="$2"
+
+  if find "${chemin}" -maxdepth 0 ! -perm -"${mode_attendu}" -print -quit 2>/dev/null | grep -q .; then
+    arreter_sur_erreur \
+      "Permissions insuffisantes sur ${chemin}." \
+      "Relancez sudo bash ./bootstrap_borne.sh pour reappliquer les droits de partage."
+  fi
+}
+
+#######################################
+# Verifie que l installation a bien
+# rendu le depot exploitable sans sudo
+# pour les scripts et ressources borne.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+verifier_permissions_post_installation() {
+  local scripts_executables=(
+    "${RACINE_PROJET}/bootstrap_borne.sh"
+    "${RACINE_PROJET}/scripts/deploiement/post_pull_update.sh"
+    "${REPERTOIRE_BORNE}/lancerBorne.sh"
+    "${REPERTOIRE_BORNE}/compilation.sh"
+    "${REPERTOIRE_BORNE}/ball-blast.sh"
+  )
+  local fichiers_partages=(
+    "${RACINE_PROJET}/docs/installation.md"
+    "${RACINE_PROJET}/config/versions_minimales.env"
+    "${REPERTOIRE_BORNE}/config/borne.env"
+    "${REPERTOIRE_BORNE}/borne.desktop"
+    "${REPERTOIRE_BORNE}/img/fond.png"
+  )
+  local dossiers_partages=(
+    "${RACINE_PROJET}"
+    "${RACINE_PROJET}/config"
+    "${RACINE_PROJET}/docs"
+    "${RACINE_PROJET}/logs"
+    "${REPERTOIRE_BORNE}"
+    "${REPERTOIRE_BORNE}/projet"
+  )
+  local chemin
+
+  for chemin in "${scripts_executables[@]}"; do
+    verifier_permission_minimale_pour_tous "${chemin}" 777
+  done
+
+  for chemin in "${fichiers_partages[@]}"; do
+    verifier_permission_minimale_pour_tous "${chemin}" 666
+  done
+
+  for chemin in "${dossiers_partages[@]}"; do
+    verifier_permission_minimale_pour_tous "${chemin}" 777
+  done
+}
+
+#######################################
 # Point d entree du test installation.
 # Arguments:
 #   aucun
@@ -86,6 +153,7 @@ main() {
   valider_installation
   verifier_venv_projet
   verifier_autostart_utilisateur
+  verifier_permissions_post_installation
   journaliser "Test installation: OK"
 }
 

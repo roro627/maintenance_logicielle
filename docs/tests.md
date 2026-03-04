@@ -103,6 +103,7 @@ TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 b
 - ajout de jeu,
 - deploiement post-pull,
 - deploiement post-pull + verification permissions partagees (`logs/`, `build/`, `.cache/`, `.venv/`, scripts critiques, tous les `borne_arcade/**/*.sh`),
+- installation + verification permissions partagees sur scripts, dossiers et ressources critiques (`bootstrap_borne.sh`, `./borne_arcade/lancerBorne.sh`, `docs/`, `config/`, `borne.desktop`, images borne),
 - README de jeux: presence, nommage `README.md`, regeneration deterministe et coherence entre template, matrice technique et metadonnees editoriales,
 - generation documentation,
 - architecture et couts,

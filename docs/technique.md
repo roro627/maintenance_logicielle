@@ -88,12 +88,12 @@ qualite, configuration et contraintes MG2D.
 - Preparation `act` integree au bootstrap sur machine locale: installation/reutilisation de Docker Engine, ajout de l utilisateur appelant au groupe `docker`, installation de `act` dans `/usr/local/bin`, lien `~/.local/bin/act`, puis verification `docker info` et `act -W .github/workflows -l`.
 - Verification Docker locale tolerante au premier bootstrap via `sudo`: l installateur valide Docker avec elevation si le groupe `docker` vient juste d etre applique, puis recommande une reconnexion utilisateur.
 - Environnement conteneurise detecte: la preparation locale `Docker/act` est ignoree pour eviter les faux echecs CI sans daemon Docker.
-- Permissions partagees appliquees par l installateur pour eviter les blocages multi-utilisateurs (`logs/`, `build/`, `.cache/`, `.venv/`, `site/`, `scripts/`, `.githooks/`, `borne_arcade/` et fichiers de jeu).
+- Permissions partagees appliquees par l installateur pour eviter les blocages multi-utilisateurs sur tout le depot exploitable (racine du projet, `config/`, `docs/`, `.github/`, `logs/`, `build/`, `.cache/`, `.venv/`, `site/`, `scripts/`, `.githooks/`, `borne_arcade/` et fichiers de jeu), hors `.git/` et `MG2D/`.
 - Execution shell portable: les workflows GitHub Actions, le bootstrap, le pipeline post-pull et les scripts orienteurs de tests lancent les `.sh` via `bash` ou helper partage pour rester robustes meme si le depot est checkout avec des fichiers en mode Git `100644`.
 - Dependance LÖVE obligatoire: installation stricte dans le bootstrap, avec contournement automatique Debian 11 si le paquet `love` casse sa post-installation.
 - Privileges systeme obligatoires au bootstrap (`sudo`/root), avec echec explicite et action recommandee si indisponibles.
 - Bootstrap lance via `sudo`: les etapes non-systeme (compilation/lint/tests/docs) sont executees avec l utilisateur appelant (`SUDO_USER`) pour eviter les artefacts root dans `build/`.
-- Bootstrap finalise par une normalisation ownership/permissions de `build/`, `logs/`, `.cache/`, `.venv/`, `site/`, `scripts/`, `.githooks/` et `borne_arcade/`, avec reapplication explicite du bit executable sur tous les `.sh` de la borne.
+- Bootstrap finalise par une normalisation ownership/permissions de tout le depot exploitable, hors `.git/` et `MG2D/`, avec reapplication explicite du bit executable sur tous les `.sh` normalisables, y compris `bootstrap_borne.sh` et `./borne_arcade/lancerBorne.sh`.
 - Pipeline post-pull resilient: installation en mode systeme optionnel et fallback de journalisation vers `~/.cache/maintenance_logicielle/logs/` si `logs/` n est pas accessible.
 - Hook `post-merge` durci: controle de la presence de git et messages d erreur explicites si depot/script indisponible.
 - Protection permissions build: message clair si `build/` n est pas accessible en ecriture.
@@ -114,6 +114,7 @@ qualite, configuration et contraintes MG2D.
 - Garde anti-regression encodage Java: `scripts/tests/test_anti_regressions.sh` refuse toute invocation shell de `javac` hors helper centralise.
 - Cache MG2D durci: les classes compilees en cache sont maintenant revalidees contre la version majeure supportee par le `javac` courant, ce qui evite de reutiliser un cache genere avec une JDK plus recente que l environnement de test.
 - Garde anti-regression permissions: `scripts/tests/test_deploiement.sh` verifie maintenant que tous les wrappers/lanceurs `borne_arcade/**/*.sh` restent executables apres pipeline/normalisation.
+- Garde anti-regression installation: `scripts/tests/test_installation.sh` verifie maintenant aussi que des scripts, dossiers et ressources non executables restent partageables pour tous apres normalisation (`bootstrap_borne.sh`, `./borne_arcade/lancerBorne.sh`, `docs/`, `config/`, images borne).
 - Orchestrateur jeux unique: `scripts/tests/test_contrats_jeux.py` applique contrat global puis test cible declare par jeu.
 - Wrappers specialises: `scripts/tests/test_jeux_java_cibles.sh`, `scripts/tests/test_jeux_python_cibles.sh`, `scripts/tests/test_jeux_lua_cibles.sh`.
 - Garde fou documentaire jeux: `scripts/tests/test_readme_jeux.sh` verifie la regeneration exacte des `README.md` et le nommage normalise.

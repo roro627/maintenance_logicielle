@@ -128,6 +128,12 @@ verifier_bootstrap_permissions_apres_sudo() {
     || arreter_sur_erreur "Bootstrap ne reapplique pas la normalisation permissions partagees commune"
   grep -Fq "normaliser_permissions_exploitation_borne()" "${RACINE_PROJET}/scripts/lib/outils_communs.sh" \
     || arreter_sur_erreur "Helper commun de normalisation permissions absent de scripts/lib/outils_communs.sh"
+  grep -Fq "lister_chemins_normalisables_borne()" "${RACINE_PROJET}/scripts/lib/outils_communs.sh" \
+    || arreter_sur_erreur "Enumeration commune des chemins normalisables absente dans scripts/lib/outils_communs.sh"
+  grep -Fq -- "-path \"\${RACINE_PROJET}/.git\"" "${RACINE_PROJET}/scripts/lib/outils_communs.sh" \
+    || arreter_sur_erreur "Exclusion explicite de .git absente dans la normalisation des permissions"
+  grep -Fq -- "-path \"\${CHEMIN_MG2D}\"" "${RACINE_PROJET}/scripts/lib/outils_communs.sh" \
+    || arreter_sur_erreur "Exclusion explicite de MG2D absente dans la normalisation des permissions"
 }
 
 #######################################

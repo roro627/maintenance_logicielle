@@ -204,6 +204,21 @@ appliquer_chmod_si_possible() {
 }
 
 #######################################
+# Liste les chemins du projet qui
+# peuvent etre normalises sans toucher
+# au depot Git ni au miroir MG2D.
+# Arguments:
+#   $1...: predicats find supplementaires
+# Retour:
+#   ecrit les chemins sur stdout
+#######################################
+lister_chemins_normalisables_borne() {
+  find "${RACINE_PROJET}" \
+    \( -path "${RACINE_PROJET}/.git" -o -path "${CHEMIN_MG2D}" \) -prune -o \
+    "$@"
+}
+
+#######################################
 # Normalise les permissions partagees
 # et d execution des chemins utiles
 # a l exploitation de la borne.
@@ -214,6 +229,7 @@ appliquer_chmod_si_possible() {
 #######################################
 normaliser_permissions_exploitation_borne() {
   local chemins_partages=(
+    "${RACINE_PROJET}"
     "${RACINE_PROJET}/logs"
     "${RACINE_PROJET}/build"
     "${RACINE_PROJET}/.cache"
@@ -221,13 +237,16 @@ normaliser_permissions_exploitation_borne() {
     "${RACINE_PROJET}/site"
     "${RACINE_PROJET}/scripts"
     "${RACINE_PROJET}/.githooks"
+    "${RACINE_PROJET}/config"
+    "${RACINE_PROJET}/docs"
+    "${RACINE_PROJET}/.github"
     "${REPERTOIRE_BORNE}"
     "${REPERTOIRE_BORNE}/projet"
   )
   local chemin
   local script
 
-  journaliser "Configuration des permissions partagees et scripts de la borne"
+  journaliser "Configuration des permissions partagees sur tout le depot exploitable"
   mkdir -p "${RACINE_PROJET}/logs" "${RACINE_PROJET}/build" "${RACINE_PROJET}/.cache"
 
   for chemin in "${chemins_partages[@]}"; do
@@ -237,18 +256,11 @@ normaliser_permissions_exploitation_borne() {
 
   while IFS= read -r chemin; do
     appliquer_chmod_si_possible a+rwX "${chemin}"
-  done < <(find "${RACINE_PROJET}/logs" "${RACINE_PROJET}/build" "${RACINE_PROJET}/.cache" \
-    "${RACINE_PROJET}/.venv" "${RACINE_PROJET}/site" "${RACINE_PROJET}/scripts" "${RACINE_PROJET}/.githooks" \
-    "${REPERTOIRE_BORNE}" "${REPERTOIRE_BORNE}/projet" \
-    -mindepth 1 -print 2>/dev/null | sort)
-
-  appliquer_chmod_si_possible a+rwx \
-    "${RACINE_PROJET}/bootstrap_borne.sh" \
-    "${RACINE_PROJET}/.githooks/post-merge"
+  done < <(lister_chemins_normalisables_borne -mindepth 1 -print 2>/dev/null | sort)
 
   while IFS= read -r script; do
     appliquer_chmod_si_possible a+rwx "${script}"
-  done < <(find "${RACINE_PROJET}/scripts" "${REPERTOIRE_BORNE}" -type f -name '*.sh' -print 2>/dev/null | sort)
+  done < <(lister_chemins_normalisables_borne -type f -name '*.sh' -print 2>/dev/null | sort)
 }
 
 #######################################
