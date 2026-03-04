@@ -69,6 +69,13 @@ verifier_permissions_partagees() {
         "Script critique non executable: ${script}" \
         "Relancez sudo bash ./bootstrap_borne.sh pour restaurer les permissions d execution."
   done
+
+  while IFS= read -r script; do
+    [[ -x "${script}" ]] \
+      || arreter_sur_erreur \
+        "Lanceur ou wrapper non executable: ${script}" \
+        "Relancez sudo bash ./bootstrap_borne.sh pour restaurer les permissions d execution des scripts borne."
+  done < <(find "${REPERTOIRE_BORNE}" -type f -name '*.sh' -print 2>/dev/null | sort)
 }
 
 #######################################

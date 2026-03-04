@@ -23,9 +23,9 @@ Le script `bootstrap_borne.sh` enchaine:
 - creation/maintenance de la venv Python,
 - installation des dependances par jeu (`requirements.txt`),
 - permissions scripts, autostart, layout clavier,
-- droits partages multi-utilisateurs sur `logs/`, `build/`, `.cache/`, `.venv/` et fichiers d exploitation,
+- droits partages multi-utilisateurs sur `logs/`, `build/`, `.cache/`, `.venv/`, `site/`, `scripts/`, `.githooks/` et `borne_arcade/`,
 - execution des etapes non-systeme (compilation/lint/tests/docs) sous l utilisateur appelant quand le bootstrap est lance via `sudo`,
-- normalisation finale ownership/permissions (`build/`, `logs/`, `.cache/`, `.venv/`, `site/`) pour eviter les artefacts root bloquants,
+- normalisation finale ownership/permissions (`build/`, `logs/`, `.cache/`, `.venv/`, `site/`, `scripts/`, `.githooks/`, `borne_arcade/`) pour eviter les artefacts root bloquants et reappliquer le bit executable sur tous les lanceurs `.sh`,
 - compilation, lint, tests smoke, documentation.
 
 Quand `Node.js` provient du depot officiel NodeSource, l installateur considere
@@ -142,9 +142,11 @@ Le journal bootstrap est ecrit dans `logs/bootstrap_borne_YYYYMMDD_HHMMSS.log`.
 - Erreur droits journaux (`Permission non accordee` dans `logs/`):
   relancer `sudo bash ./bootstrap_borne.sh` pour reappliquer les droits partages.
 - Erreur droits build (`Permission non accordee`): corriger les droits puis relancer.
+- Erreur lancement jeu (`Cannot run program \"./NomJeu.sh\": error=13, Permission non accordee`):
+  relancer `sudo bash ./bootstrap_borne.sh` pour reappliquer les permissions d execution sur tous les lanceurs et wrappers `.sh`.
 
 ```bash
-sudo chown -R "$USER:$USER" ./build ./.venv ./logs ./.cache ./site
+sudo chown -R "$USER:$USER" ./build ./.venv ./logs ./.cache ./site ./scripts ./.githooks ./borne_arcade
 ./borne_arcade/clean.sh
 ./borne_arcade/compilation.sh
 ```

@@ -102,13 +102,14 @@ TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 b
 - compilation Java + verifications syntaxiques Python/Lua,
 - ajout de jeu,
 - deploiement post-pull,
-- deploiement post-pull + verification permissions partagees (`logs/`, `build/`, `.cache/`, `.venv/`, scripts critiques),
+- deploiement post-pull + verification permissions partagees (`logs/`, `build/`, `.cache/`, `.venv/`, scripts critiques, tous les `borne_arcade/**/*.sh`),
 - README de jeux: presence, nommage `README.md`, regeneration deterministe et coherence entre template, matrice technique et metadonnees editoriales,
 - generation documentation,
 - architecture et couts,
 - mode maintenance cache (presence, verrouillage, integration menu),
 - mode maintenance cache (presence, verrouillage, integration menu, operation reset prerequis, workflow migration cible),
 - bootstrap robuste apres `sudo` (absence de regression sur normalisation permissions et execution non-systeme sous utilisateur appelant),
+- bootstrap robuste apres `sudo` y compris si les bits executables des lanceurs de jeux ont ete perdus lors d un checkout/pull,
 - bootstrap robuste pour l outillage migration:
   garde `codex` inactive en mode test et mise a niveau automatique Node.js via NodeSource si la distribution est trop ancienne,
 - compilations Java deterministes:

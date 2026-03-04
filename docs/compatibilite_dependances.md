@@ -59,7 +59,8 @@ pour Raspberry Pi OS et la borne arcade.
 - L installation auto verifie et installe les paquets systeme manquants (dont `libsndfile1`) via `scripts/install/installer_borne.sh`.
 - L installation auto met a niveau Node.js via NodeSource quand `codex` ne peut pas tourner avec la version systeme.
 - Les tests cible Lua utilisent `luac`/`lua` si disponibles; en leur absence, `CursedWare` conserve un validateur portable Python pour verifier le contrat statique des mini-jeux sans lancer LÖVE.
-- Le bootstrap `sudo` conserve la compatibilite d exploitation en executant compilation/lint/tests/docs sous l utilisateur appelant, puis en normalisant ownership/permissions de `build/`, `.venv/`, `logs/` et `.cache/`.
+- Le bootstrap `sudo` conserve la compatibilite d exploitation en executant compilation/lint/tests/docs sous l utilisateur appelant, puis en normalisant ownership/permissions de `build/`, `.venv/`, `logs/`, `.cache/`, `site/`, `scripts/`, `.githooks/` et `borne_arcade/`.
+- Cette normalisation reapplique aussi le bit executable sur tous les scripts `.sh` de `scripts/` et `borne_arcade/`, y compris les lanceurs de jeux, pour rester compatible avec les checkouts Git en mode `100644`.
 - Le bootstrap prepare aussi l execution locale des workflows GitHub en validant `docker info` puis `act -W .github/workflows -l`.
 - Le workflow migration versions reste portable pour la detection/brief IA/tests sur poste non Debian; l execution reelle de l assistant IA depend de `codex` et d un serveur Ollama joignable via `ollama.base_url`; l application reelle des migrations apt reste reservee a Raspberry Pi OS / Debian, avec verification explicite via `/etc/os-release`.
 

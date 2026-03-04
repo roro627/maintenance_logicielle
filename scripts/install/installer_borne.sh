@@ -1143,95 +1143,15 @@ installer_dependances_python() {
 }
 
 #######################################
-# Applique un chmod sur une liste de
-# cibles sans echouer si un element
-# est non modifiable.
-# Arguments:
-#   $1: mode chmod
-#   $2..n: chemins cibles
-# Retour:
-#   0
-#######################################
-appliquer_chmod_si_possible() {
-  local mode="$1"
-  shift
-  local cible
-  for cible in "$@"; do
-    [[ -e "${cible}" ]] || continue
-    [[ -L "${cible}" ]] && continue
-    if ! chmod "${mode}" "${cible}" 2>/dev/null; then
-      journaliser "ATTENTION: impossible d appliquer chmod ${mode} sur ${cible}."
-    fi
-  done
-}
-
-#######################################
-# Configure les permissions d execution des scripts.
+# Configure les permissions partagees
+# et d execution necessaires a la borne.
 # Arguments:
 #   aucun
 # Retour:
 #   0
 #######################################
-configurer_permissions_scripts() {
-  journaliser "Configuration des permissions scripts"
-  appliquer_chmod_si_possible a+rwx \
-    "${RACINE_PROJET}/bootstrap_borne.sh" \
-    "${RACINE_PROJET}/scripts/deploiement/post_pull_update.sh" \
-    "${RACINE_PROJET}/scripts/docs/generer_documentation.sh" \
-    "${RACINE_PROJET}/scripts/lint/lancer_lint.sh" \
-    "${RACINE_PROJET}/.githooks/post-merge"
-
-  local script
-  while IFS= read -r script; do
-    appliquer_chmod_si_possible a+rwx "${script}"
-  done < <(find "${RACINE_PROJET}/scripts" "${REPERTOIRE_BORNE}" -type f -name '*.sh' | sort)
-}
-
-#######################################
-# Applique des droits partages pour
-# eviter les blocages multi-utilisateurs.
-# Arguments:
-#   aucun
-# Retour:
-#   0
-#######################################
-configurer_permissions_partagees() {
-  journaliser "Configuration des droits partages (tout utilisateur)"
-  mkdir -p "${RACINE_PROJET}/logs" "${RACINE_PROJET}/build" "${RACINE_PROJET}/.cache"
-
-  appliquer_chmod_si_possible a+rwx \
-    "${RACINE_PROJET}/logs" \
-    "${RACINE_PROJET}/build" \
-    "${RACINE_PROJET}/.cache" \
-    "${RACINE_PROJET}/.venv" \
-    "${RACINE_PROJET}/site" \
-    "${REPERTOIRE_BORNE}" \
-    "${REPERTOIRE_BORNE}/projet"
-
-  local chemin
-  local cibles_partagees=(
-    "${RACINE_PROJET}/logs"
-    "${RACINE_PROJET}/build"
-    "${RACINE_PROJET}/.cache"
-    "${RACINE_PROJET}/.venv"
-    "${RACINE_PROJET}/site"
-    "${REPERTOIRE_BORNE}/projet"
-  )
-
-  for chemin in "${cibles_partagees[@]}"; do
-    [[ -e "${chemin}" ]] || continue
-    appliquer_chmod_si_possible a+rwX "${chemin}"
-  done
-
-  while IFS= read -r chemin; do
-    appliquer_chmod_si_possible a+rwX "${chemin}"
-  done < <(find "${RACINE_PROJET}/logs" "${RACINE_PROJET}/build" "${RACINE_PROJET}/.cache" \
-    "${RACINE_PROJET}/.venv" "${RACINE_PROJET}/site" "${REPERTOIRE_BORNE}/projet" \
-    -mindepth 1 -print 2>/dev/null | sort)
-
-  while IFS= read -r chemin; do
-    appliquer_chmod_si_possible a+rw "${chemin}"
-  done < <(find "${REPERTOIRE_BORNE}/projet" -type f \( -name 'highscore' -o -name 'bouton.txt' -o -name 'description.txt' \) | sort)
+configurer_permissions_borne() {
+  normaliser_permissions_exploitation_borne
 }
 
 #######################################
@@ -1380,8 +1300,7 @@ main() {
   installer_layout_clavier_borne
   installer_autostart_borne
   initialiser_fichiers_highscore
-  configurer_permissions_scripts
-  configurer_permissions_partagees
+  configurer_permissions_borne
   configurer_hook_git
   journaliser "Installation terminee"
 }

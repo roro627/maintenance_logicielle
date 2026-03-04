@@ -404,21 +404,22 @@ executer_generation_documentation() {
 #######################################
 normaliser_permissions_post_bootstrap() {
   local chemins_cibles=(
+    "${RACINE_PROJET}/bootstrap_borne.sh"
     "${RACINE_PROJET}/build"
     "${RACINE_PROJET}/logs"
     "${RACINE_PROJET}/.cache"
     "${RACINE_PROJET}/.venv"
     "${RACINE_PROJET}/site"
+    "${RACINE_PROJET}/scripts"
+    "${RACINE_PROJET}/.githooks"
+    "${REPERTOIRE_BORNE}"
   )
   local chemin
 
   journaliser "Bootstrap: normalisation permissions finales"
+  normaliser_permissions_exploitation_borne
   for chemin in "${chemins_cibles[@]}"; do
     [[ -e "${chemin}" ]] || continue
-
-    if ! chmod -R a+rwX "${chemin}" 2>/dev/null; then
-      journaliser "ATTENTION: impossible d appliquer chmod a+rwX sur ${chemin}."
-    fi
 
     if [[ "$(id -u)" -eq 0 ]] && [[ "${UTILISATEUR_APPELANT_BOOTSTRAP}" != "root" ]]; then
       if ! chown -R "${UTILISATEUR_APPELANT_BOOTSTRAP}:${GROUPE_APPELANT_BOOTSTRAP}" "${chemin}" 2>/dev/null; then

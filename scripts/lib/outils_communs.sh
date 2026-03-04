@@ -181,6 +181,77 @@ executer_script_shell() {
 }
 
 #######################################
+# Applique un chmod sur une liste de
+# cibles sans echouer si un element
+# est non modifiable.
+# Arguments:
+#   $1: mode chmod
+#   $2..n: chemins cibles
+# Retour:
+#   0
+#######################################
+appliquer_chmod_si_possible() {
+  local mode="$1"
+  shift
+  local cible
+  for cible in "$@"; do
+    [[ -e "${cible}" ]] || continue
+    [[ -L "${cible}" ]] && continue
+    if ! chmod "${mode}" "${cible}" 2>/dev/null; then
+      journaliser "ATTENTION: impossible d appliquer chmod ${mode} sur ${cible}."
+    fi
+  done
+}
+
+#######################################
+# Normalise les permissions partagees
+# et d execution des chemins utiles
+# a l exploitation de la borne.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+normaliser_permissions_exploitation_borne() {
+  local chemins_partages=(
+    "${RACINE_PROJET}/logs"
+    "${RACINE_PROJET}/build"
+    "${RACINE_PROJET}/.cache"
+    "${RACINE_PROJET}/.venv"
+    "${RACINE_PROJET}/site"
+    "${RACINE_PROJET}/scripts"
+    "${RACINE_PROJET}/.githooks"
+    "${REPERTOIRE_BORNE}"
+    "${REPERTOIRE_BORNE}/projet"
+  )
+  local chemin
+  local script
+
+  journaliser "Configuration des permissions partagees et scripts de la borne"
+  mkdir -p "${RACINE_PROJET}/logs" "${RACINE_PROJET}/build" "${RACINE_PROJET}/.cache"
+
+  for chemin in "${chemins_partages[@]}"; do
+    [[ -d "${chemin}" ]] || continue
+    appliquer_chmod_si_possible a+rwx "${chemin}"
+  done
+
+  while IFS= read -r chemin; do
+    appliquer_chmod_si_possible a+rwX "${chemin}"
+  done < <(find "${RACINE_PROJET}/logs" "${RACINE_PROJET}/build" "${RACINE_PROJET}/.cache" \
+    "${RACINE_PROJET}/.venv" "${RACINE_PROJET}/site" "${RACINE_PROJET}/scripts" "${RACINE_PROJET}/.githooks" \
+    "${REPERTOIRE_BORNE}" "${REPERTOIRE_BORNE}/projet" \
+    -mindepth 1 -print 2>/dev/null | sort)
+
+  appliquer_chmod_si_possible a+rwx \
+    "${RACINE_PROJET}/bootstrap_borne.sh" \
+    "${RACINE_PROJET}/.githooks/post-merge"
+
+  while IFS= read -r script; do
+    appliquer_chmod_si_possible a+rwx "${script}"
+  done < <(find "${RACINE_PROJET}/scripts" "${REPERTOIRE_BORNE}" -type f -name '*.sh' -print 2>/dev/null | sort)
+}
+
+#######################################
 # Compare deux versions numeriques.
 # Arguments:
 #   $1: version detectee
