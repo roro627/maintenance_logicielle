@@ -73,8 +73,8 @@ appliquer_clavier_borne() {
 #######################################
 lancer_menu() {
   cd "${SCRIPT_DIR}"
-  ./clean.sh
-  ./compilation.sh
+  bash ./clean.sh
+  bash ./compilation.sh
   preparer_classpath_mg2d_menu
   if [[ ! -f "${DOSSIER_BUILD_CLASSES_MENU}/Main.class" ]]; then
     echo "ERREUR: Menu non compile (Main.class absent dans ${DOSSIER_BUILD_CLASSES_MENU})." >&2
@@ -110,7 +110,7 @@ compte_a_rebours_extinction() {
 main() {
   appliquer_clavier_borne
   lancer_menu
-  ./clean.sh
+  bash ./clean.sh
 
   if [[ "${EXTINCTION_AUTO}" == "1" ]]; then
     compte_a_rebours_extinction

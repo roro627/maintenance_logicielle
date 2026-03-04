@@ -28,7 +28,7 @@ Java Space est un shoot em up Java dans un univers de science fiction ou le joue
 ## Tests et validation
 
 - Test cible du jeu: `./scripts/tests/test_jeux_java_cibles.sh --jeu JavaSpace`.
-- Validation globale de la borne: `TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 ./scripts/tests/lancer_suite.sh`.
+- Validation globale de la borne: `TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 bash ./scripts/tests/lancer_suite.sh`.
 
 ## Maintenance et evolution
 

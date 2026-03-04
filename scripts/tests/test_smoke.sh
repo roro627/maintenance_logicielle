@@ -14,7 +14,7 @@ source "${SCRIPT_DIR}/../lib/outils_communs.sh"
 #   0
 #######################################
 verifier_versions_critiques() {
-  "${SCRIPT_DIR}/test_versions_compatibilite.sh"
+  executer_script_shell "${SCRIPT_DIR}/test_versions_compatibilite.sh"
 }
 
 #######################################
@@ -25,7 +25,7 @@ verifier_versions_critiques() {
 #   0
 #######################################
 verifier_integrite_mg2d() {
-  "${SCRIPT_DIR}/test_integrite_mg2d.sh"
+  executer_script_shell "${SCRIPT_DIR}/test_integrite_mg2d.sh"
 }
 
 #######################################
@@ -37,7 +37,7 @@ verifier_integrite_mg2d() {
 #   0
 #######################################
 verifier_classpath_mg2d() {
-  "${SCRIPT_DIR}/test_classpath_mg2d.sh"
+  executer_script_shell "${SCRIPT_DIR}/test_classpath_mg2d.sh"
 }
 
 #######################################
@@ -49,7 +49,7 @@ verifier_classpath_mg2d() {
 #   0
 #######################################
 verifier_tests_unitaires_java() {
-  "${SCRIPT_DIR}/test_unitaires_java.sh"
+  executer_script_shell "${SCRIPT_DIR}/test_unitaires_java.sh"
 }
 
 #######################################

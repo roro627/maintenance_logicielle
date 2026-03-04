@@ -48,7 +48,7 @@ verifier_execution_root_obligatoire() {
 
   arreter_sur_erreur \
     "Le bootstrap doit etre lance avec sudo (root) pour garantir une installation complete." \
-    "Relancez avec: sudo ./bootstrap_borne.sh"
+    "Relancez avec: sudo bash ./bootstrap_borne.sh"
 }
 
 #######################################
@@ -258,8 +258,8 @@ verifier_scripts_bootstrap() {
   )
   local script_requis
   for script_requis in "${scripts_requis[@]}"; do
-    [[ -x "${script_requis}" ]] \
-      || arreter_sur_erreur "Script requis absent ou non executable: ${script_requis}"
+    [[ -f "${script_requis}" ]] \
+      || arreter_sur_erreur "Script requis absent: ${script_requis}"
   done
 }
 
@@ -342,7 +342,7 @@ executer_installation_initiale() {
 
   DEBIAN_FRONTEND=noninteractive \
   APT_LISTCHANGES_FRONTEND=none \
-  "${RACINE_PROJET}/scripts/install/installer_borne.sh"
+  bash "${RACINE_PROJET}/scripts/install/installer_borne.sh"
 
   if [[ "${BORNE_MODE_TEST:-0}" != "1" ]]; then
     marquer_installation_initiale_prete
@@ -357,7 +357,7 @@ executer_installation_initiale() {
 #   0
 #######################################
 executer_compilation_globale() {
-  executer_comme_utilisateur_appelant "${REPERTOIRE_BORNE}/compilation.sh"
+  executer_comme_utilisateur_appelant bash "${REPERTOIRE_BORNE}/compilation.sh"
 }
 
 #######################################
@@ -368,7 +368,7 @@ executer_compilation_globale() {
 #   0
 #######################################
 executer_lint_global() {
-  executer_comme_utilisateur_appelant "${RACINE_PROJET}/scripts/lint/lancer_lint.sh"
+  executer_comme_utilisateur_appelant bash "${RACINE_PROJET}/scripts/lint/lancer_lint.sh"
 }
 
 #######################################
@@ -379,7 +379,7 @@ executer_lint_global() {
 #   0
 #######################################
 executer_tests_smoke() {
-  executer_comme_utilisateur_appelant "${RACINE_PROJET}/scripts/tests/test_smoke.sh"
+  executer_comme_utilisateur_appelant bash "${RACINE_PROJET}/scripts/tests/test_smoke.sh"
 }
 
 #######################################
@@ -390,7 +390,7 @@ executer_tests_smoke() {
 #   0
 #######################################
 executer_generation_documentation() {
-  executer_comme_utilisateur_appelant "${RACINE_PROJET}/scripts/docs/generer_documentation.sh"
+  executer_comme_utilisateur_appelant bash "${RACINE_PROJET}/scripts/docs/generer_documentation.sh"
 }
 
 #######################################

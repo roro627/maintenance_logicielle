@@ -50,4 +50,4 @@ jobs:
           TEST_INSTALLATION_SIMULATION: "1"
           TEST_DEPLOIEMENT_SIMULATION: "1"
           BORNE_MODE_TEST: "1"
-        run: ./scripts/tests/lancer_suite.sh
+        run: bash ./scripts/tests/lancer_suite.sh

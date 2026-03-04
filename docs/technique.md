@@ -89,6 +89,7 @@ qualite, configuration et contraintes MG2D.
 - Verification Docker locale tolerante au premier bootstrap via `sudo`: l installateur valide Docker avec elevation si le groupe `docker` vient juste d etre applique, puis recommande une reconnexion utilisateur.
 - Environnement conteneurise detecte: la preparation locale `Docker/act` est ignoree pour eviter les faux echecs CI sans daemon Docker.
 - Permissions partagees appliquees par l installateur pour eviter les blocages multi-utilisateurs (`logs/`, `build/`, `.cache/`, `.venv/`, scripts et fichiers de jeu).
+- Execution shell portable: les workflows GitHub Actions, le bootstrap, le pipeline post-pull et les scripts orienteurs de tests lancent les `.sh` via `bash` ou helper partage pour rester robustes meme si le depot est checkout avec des fichiers en mode Git `100644`.
 - Dependance LÖVE obligatoire: installation stricte dans le bootstrap, avec contournement automatique Debian 11 si le paquet `love` casse sa post-installation.
 - Privileges systeme obligatoires au bootstrap (`sudo`/root), avec echec explicite et action recommandee si indisponibles.
 - Bootstrap lance via `sudo`: les etapes non-systeme (compilation/lint/tests/docs) sont executees avec l utilisateur appelant (`SUDO_USER`) pour eviter les artefacts root dans `build/`.
@@ -108,7 +109,7 @@ qualite, configuration et contraintes MG2D.
 - Jeux SDL/Pygame adaptes a la borne: `TronGame`, `OsuTile`, `ball-blast` et `PianoTile`
   reprennent desormais `BORNE_RESOLUTION_X/Y` et `BORNE_MODE_AFFICHAGE`
   pour rester dans `1280x1024` sans barre de titre ou en plein ecran.
-- CI/CD et tests automatisees via `.github/workflows/qualite.yml` et `scripts/tests/lancer_suite.sh`.
+- CI/CD et tests automatisees via `.github/workflows/qualite.yml` et `bash ./scripts/tests/lancer_suite.sh`.
 - Pipeline reel ajoute: `.github/workflows/verification_reelle.yml` (Debian 11 minimal, 2 Go RAM, sans variables de simulation).
 - Garde anti-regression encodage Java: `scripts/tests/test_anti_regressions.sh` refuse toute invocation shell de `javac` hors helper centralise.
 - Cache MG2D durci: les classes compilees en cache sont maintenant revalidees contre la version majeure supportee par le `javac` courant, ce qui evite de reutiliser un cache genere avec une JDK plus recente que l environnement de test.
@@ -142,7 +143,7 @@ Aucune modification locale n est autorisee dans `MG2D/`.
 ```bash
 ./scripts/tests/test_integrite_mg2d.sh
 ./scripts/tests/test_architecture.sh
-./scripts/tests/lancer_suite.sh
+bash ./scripts/tests/lancer_suite.sh
 ```
 
 ## Liens associes

@@ -66,9 +66,9 @@ jobs:
       - name: Bootstrap complet sans mode simulation
         run: |
           cd "${DOSSIER_TRAVAIL}"
-          ./bootstrap_borne.sh
+          bash ./bootstrap_borne.sh
 
       - name: Suite qualite complete sans variables de test
         run: |
           cd "${DOSSIER_TRAVAIL}"
-          ./scripts/tests/lancer_suite.sh
+          bash ./scripts/tests/lancer_suite.sh

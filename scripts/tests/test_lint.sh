@@ -13,7 +13,7 @@ source "${SCRIPT_DIR}/../lib/outils_communs.sh"
 #   0
 #######################################
 executer_lint() {
-  "${RACINE_PROJET}/scripts/lint/lancer_lint.sh"
+  executer_script_shell "${RACINE_PROJET}/scripts/lint/lancer_lint.sh"
 }
 
 #######################################

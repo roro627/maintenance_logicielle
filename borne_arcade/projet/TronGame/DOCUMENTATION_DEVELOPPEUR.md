@@ -14,7 +14,7 @@ Chaque jeu de la borne doit fournir:
 ## Validation technique
 Executer la suite globale:
 ```bash
-./scripts/tests/lancer_suite.sh
+bash ./scripts/tests/lancer_suite.sh
 ```
 
 ## Deploiement

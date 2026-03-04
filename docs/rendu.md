@@ -110,7 +110,7 @@ Documenter le bilan final des travaux avec une verification point par point de `
 
 1. Documentation complete: fournie dans `docs/`.
 2. Scripts automatisation: `bootstrap_borne.sh`, `scripts/install/installer_borne.sh`, `scripts/deploiement/post_pull_update.sh`.
-3. Tests automatises: suite `scripts/tests/lancer_suite.sh` + tests specialistes.
+3. Tests automatises: suite `bash ./scripts/tests/lancer_suite.sh` + tests specialistes.
 4. Nouveau jeu: `NeonSumo`.
 5. Validation terrain: trace dans `docs/validation_materielle.md`.
 6. Suivi des couts: maintenu dans `docs/cost.md` (contenu complet temps/materiel/licences/exploitation).
@@ -121,7 +121,7 @@ Documenter le bilan final des travaux avec une verification point par point de `
 - Messages d erreur clairs et actionnables sur scripts critiques.
 - Configuration centralisee (`borne.env`, `versions_minimales.env`, `config_jeu.json`).
 - Anti-regression appliquee avec ajout/renforcement de tests.
-- CI/CD local equivalent valide via `scripts/tests/lancer_suite.sh`.
+- CI/CD local equivalent valide via `bash ./scripts/tests/lancer_suite.sh`.
 - CI/CD local equivalent GitHub valide via `act` sur `.github/workflows/qualite.yml`.
 - Couverture par jeu explicite et automatique: aucun jeu n est accepte dans la matrice sans `commande_test_cible`.
 - README de jeux homogenes: aucun README local n est accepte hors du generateur et du test `scripts/tests/test_readme_jeux.sh`.
@@ -129,9 +129,9 @@ Documenter le bilan final des travaux avec une verification point par point de `
 ## Validation finale
 
 ```bash
-TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 ./scripts/tests/lancer_suite.sh
+TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 bash ./scripts/tests/lancer_suite.sh
 ~/.local/bin/act -W .github/workflows/qualite.yml -j verification --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:act-latest
-./scripts/docs/generer_documentation.sh
+bash ./scripts/docs/generer_documentation.sh
 ```
 
 ## Liens associes

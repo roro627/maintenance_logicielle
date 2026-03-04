@@ -659,7 +659,7 @@ def construire_section_tests_et_validation(definition: DefinitionTechniqueJeu) -
     lignes = [
         f"- Test cible du jeu: `{commande_test}`.",
         "- Validation globale de la borne: "
-        "`TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 ./scripts/tests/lancer_suite.sh`.",
+        "`TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 bash ./scripts/tests/lancer_suite.sh`.",
     ]
     return "\n".join(lignes)
 

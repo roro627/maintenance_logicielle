@@ -37,7 +37,7 @@ Neon Sumo est un duel arcade 1v1 ou il faut ejecter l adversaire de l arene en e
 ## Tests et validation
 
 - Test cible du jeu: `./scripts/tests/test_jeux_python_cibles.sh --jeu NeonSumo`.
-- Validation globale de la borne: `TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 ./scripts/tests/lancer_suite.sh`.
+- Validation globale de la borne: `TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 bash ./scripts/tests/lancer_suite.sh`.
 
 ## Maintenance et evolution
 

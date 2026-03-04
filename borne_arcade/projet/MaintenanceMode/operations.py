@@ -43,7 +43,7 @@ DOCUMENTS_MIGRATION_IA = [
     "docs/rendu.md",
 ]
 COMMANDES_QUALITE_MIGRATION = [
-    "./scripts/tests/lancer_suite.sh",
+    "bash ./scripts/tests/lancer_suite.sh",
     "~/.local/bin/act -W .github/workflows/qualite.yml -j verification --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:act-latest",
     "~/.local/bin/act -W .github/workflows/verification_reelle.yml -j verification_reelle_debian11 --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:act-latest",
 ]
@@ -744,7 +744,7 @@ def diagnostiquer_pre_requis_borne(journaliser: ConsommateurJournal) -> bool:
         succes_global = False
         journaliser(
             "ATTENTION: prerequis manquant: "
-            f"{paquet}. Action recommandee: lancez sudo ./bootstrap_borne.sh pour installer automatiquement."
+            f"{paquet}. Action recommandee: lancez sudo bash ./bootstrap_borne.sh pour installer automatiquement."
         )
 
     return succes_global
@@ -2030,7 +2030,7 @@ def generer_corps_pr_migration(cible: Dict[str, object], etat_session: Dict[str,
             "- Suite qualite complete relancee et verte avant proposition de merge.",
             "",
             "## Validation",
-            "- Validation locale `./scripts/tests/lancer_suite.sh` verte.",
+            "- Validation locale `bash ./scripts/tests/lancer_suite.sh` verte.",
             "- Validation `act` du workflow `qualite.yml` verte.",
             "- Validation `act` du workflow `verification_reelle.yml` verte.",
             "- Relecture humaine obligatoire avant merge.",
@@ -2283,7 +2283,7 @@ def operation_diagnostic(
             succes_global = False
             journaliser(
                 "ATTENTION: commande diagnostique indisponible: "
-                f"{commande[0]}. Action recommandee: relancez sudo ./bootstrap_borne.sh."
+                f"{commande[0]}. Action recommandee: relancez sudo bash ./bootstrap_borne.sh."
             )
             continue
         journaliser(f"$ {' '.join(commande)}")
@@ -2318,7 +2318,7 @@ def verifier_git_disponible(journaliser: ConsommateurJournal) -> bool:
 
     journaliser(
         "ERREUR: git est introuvable sur ce systeme. "
-        "Action recommandee: relancez sudo ./bootstrap_borne.sh pour installer les pre-requis."
+        "Action recommandee: relancez sudo bash ./bootstrap_borne.sh pour installer les pre-requis."
     )
     return False
 
@@ -2344,7 +2344,7 @@ def operation_git_pull(
     if not verifier_git_disponible(journaliser):
         return (
             False,
-            "Git pull impossible: git introuvable. Relancez sudo ./bootstrap_borne.sh.",
+            "Git pull impossible: git introuvable. Relancez sudo bash ./bootstrap_borne.sh.",
             chemin_journal,
         )
 
@@ -2389,7 +2389,7 @@ def operation_git_retour_precedent(
     if not verifier_git_disponible(journaliser):
         return (
             False,
-            "Retour commit precedent impossible: git introuvable. Relancez sudo ./bootstrap_borne.sh.",
+            "Retour commit precedent impossible: git introuvable. Relancez sudo bash ./bootstrap_borne.sh.",
             chemin_journal,
         )
 
@@ -2483,7 +2483,7 @@ def operation_pipeline_post_pull(
     timeout_secondes = extraire_timeout(configuration, "pipeline_post_pull")
     intervalle_lecture = extraire_intervalle_lecture(configuration)
     script_pipeline = racine_projet / "scripts" / "deploiement" / "post_pull_update.sh"
-    commande = [str(script_pipeline)]
+    commande = ["bash", str(script_pipeline)]
 
     journaliser(f"$ {' '.join(commande)}")
     succes, sortie = executer_commande(
@@ -3160,7 +3160,7 @@ def operation_relancer_qualite_complete(
         return False, message, chemin_journal
 
     commandes = [
-        ("suite_locale_ok", [str(racine_projet / "scripts" / "tests" / "lancer_suite.sh")]),
+        ("suite_locale_ok", ["bash", str(racine_projet / "scripts" / "tests" / "lancer_suite.sh")]),
         (
             "workflow_qualite_ok",
             commande_act
@@ -3293,7 +3293,7 @@ def operation_proposer_pr_migration(
     if not verifier_git_disponible(journaliser):
         return (
             False,
-            "Proposition de PR impossible: git introuvable. Relancez sudo ./bootstrap_borne.sh.",
+            "Proposition de PR impossible: git introuvable. Relancez sudo bash ./bootstrap_borne.sh.",
             chemin_journal,
         )
 

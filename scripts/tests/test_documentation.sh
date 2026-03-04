@@ -13,7 +13,7 @@ source "${SCRIPT_DIR}/../lib/outils_communs.sh"
 #   0
 #######################################
 verifier_generation_documentation() {
-  "${RACINE_PROJET}/scripts/docs/generer_documentation.sh"
+  executer_script_shell "${RACINE_PROJET}/scripts/docs/generer_documentation.sh"
   [[ -d "${RACINE_PROJET}/site" ]] || arreter_sur_erreur "Repertoire site absent"
   [[ -f "${RACINE_PROJET}/site/index.html" ]] || arreter_sur_erreur "Index HTML de documentation absent"
   [[ -f "${RACINE_PROJET}/site/architecture/index.html" ]] || arreter_sur_erreur "Guide architecture non genere"

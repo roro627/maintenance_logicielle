@@ -105,7 +105,7 @@ obtenir_prefixe_elevation_systeme() {
 
   arreter_sur_erreur \
     "Privileges systeme insuffisants pour executer les operations requises." \
-    "Relancez avec sudo ./bootstrap_borne.sh pour autoriser l installation systeme."
+    "Relancez avec sudo bash ./bootstrap_borne.sh pour autoriser l installation systeme."
 }
 
 #######################################
@@ -503,7 +503,7 @@ installer_dependances_systeme() {
   if [[ "${PRIVILEGES_SYSTEME_ACTIFS}" != "1" ]]; then
     arreter_sur_erreur \
       "Dependances systeme manquantes sans privileges root/sudo: ${paquets_obligatoires_manquants[*]}" \
-      "Relancez sudo ./bootstrap_borne.sh pour installer automatiquement ces dependances."
+      "Relancez sudo bash ./bootstrap_borne.sh pour installer automatiquement ces dependances."
   fi
 
   prefixe_elevation="$(obtenir_prefixe_elevation_apt)"
@@ -602,7 +602,7 @@ installer_docker_engine() {
 
     arreter_sur_erreur \
       "Docker Engine est requis pour executer act localement." \
-      "Relancez sudo ./bootstrap_borne.sh pour installer Docker Engine automatiquement."
+      "Relancez sudo bash ./bootstrap_borne.sh pour installer Docker Engine automatiquement."
   fi
 
   prefixe_elevation="$(obtenir_prefixe_elevation_apt)"
@@ -708,7 +708,7 @@ installer_commande_act() {
 
     arreter_sur_erreur \
       "La commande act est requise pour lancer les workflows localement." \
-      "Relancez sudo ./bootstrap_borne.sh pour installer act automatiquement."
+      "Relancez sudo bash ./bootstrap_borne.sh pour installer act automatiquement."
   fi
 
   suffixe_archive="$(obtenir_suffixe_archive_act)"
@@ -864,7 +864,7 @@ garantir_nodejs_compatible_codex() {
     fi
     arreter_sur_erreur \
       "Node.js ${NODE_VERSION_MIN_CODEX}+ est requis pour executer Codex CLI." \
-      "Relancez sudo ./bootstrap_borne.sh pour installer automatiquement Node.js ${VERSION_NODE_SOURCE_MAJEURE}.x."
+      "Relancez sudo bash ./bootstrap_borne.sh pour installer automatiquement Node.js ${VERSION_NODE_SOURCE_MAJEURE}.x."
   fi
 
   if ! command -v apt-get >/dev/null 2>&1; then
@@ -950,7 +950,7 @@ installer_commande_codex() {
   if ! command -v npm >/dev/null 2>&1; then
     arreter_sur_erreur \
       "npm est requis pour installer Codex CLI automatiquement." \
-      "Installez nodejs/npm puis relancez sudo ./bootstrap_borne.sh."
+      "Installez nodejs/npm puis relancez sudo bash ./bootstrap_borne.sh."
   fi
 
   if [[ "${PRIVILEGES_SYSTEME_ACTIFS}" != "1" ]]; then
@@ -961,7 +961,7 @@ installer_commande_codex() {
 
     arreter_sur_erreur \
       "La commande codex est requise pour le workflow de migration assistee." \
-      "Relancez sudo ./bootstrap_borne.sh pour installer Codex CLI automatiquement."
+      "Relancez sudo bash ./bootstrap_borne.sh pour installer Codex CLI automatiquement."
   fi
 
   prefixe_elevation="$(obtenir_prefixe_elevation_systeme)"
@@ -976,7 +976,7 @@ installer_commande_codex() {
   "${prefixe_systeme[@]}" env npm_config_prefix="${prefixe_npm}" npm install -g @openai/codex \
     || arreter_sur_erreur \
       "Impossible d installer Codex CLI via npm." \
-      "Verifiez nodejs/npm, la connectivite reseau, puis relancez sudo ./bootstrap_borne.sh."
+      "Verifiez nodejs/npm, la connectivite reseau, puis relancez sudo bash ./bootstrap_borne.sh."
 
   if ! obtenir_commande_codex >/dev/null 2>&1 && [[ -x "${binaire_codex_attendu}" ]]; then
     "${prefixe_systeme[@]}" install -m 0755 -d /usr/local/bin
@@ -1041,7 +1041,7 @@ verifier_fonctionnement_codex() {
   "${commande_codex}" --version >/dev/null 2>&1 \
     || arreter_sur_erreur \
       "La commande codex ne demarre pas correctement." \
-      "Reinstallez Codex CLI via sudo ./bootstrap_borne.sh puis relancez le bootstrap."
+      "Reinstallez Codex CLI via sudo bash ./bootstrap_borne.sh puis relancez le bootstrap."
 }
 
 #######################################
@@ -1058,7 +1058,7 @@ verifier_fonctionnement_act_local() {
   if ! attendre_docker_operationnel; then
     arreter_sur_erreur \
       "Docker Engine est installe mais ne repond pas correctement." \
-      "Verifiez le service docker, reconnectez l utilisateur si besoin, puis relancez sudo ./bootstrap_borne.sh."
+      "Verifiez le service docker, reconnectez l utilisateur si besoin, puis relancez sudo bash ./bootstrap_borne.sh."
   fi
 
   if [[ "${GROUPE_DOCKER_UTILISATEUR_AJOUTE}" == "1" ]] && ! docker_operationnel; then
@@ -1074,7 +1074,7 @@ verifier_fonctionnement_act_local() {
   "${commande_act}" --version >/dev/null 2>&1 \
     || arreter_sur_erreur \
       "La commande act ne demarre pas correctement." \
-      "Reinstallez act via sudo ./bootstrap_borne.sh puis relancez les workflows."
+      "Reinstallez act via sudo bash ./bootstrap_borne.sh puis relancez les workflows."
 
   "${commande_act}" -W "${RACINE_PROJET}/.github/workflows" -l >/dev/null 2>&1 \
     || arreter_sur_erreur \
@@ -1244,7 +1244,7 @@ configurer_permissions_partagees() {
 configurer_hook_git() {
   if ! command -v git >/dev/null 2>&1; then
     journaliser \
-      "ATTENTION: git introuvable, configuration hook reportee. Action recommandee: relancez sudo ./bootstrap_borne.sh."
+      "ATTENTION: git introuvable, configuration hook reportee. Action recommandee: relancez sudo bash ./bootstrap_borne.sh."
     return 0
   fi
 
@@ -1292,7 +1292,7 @@ installer_layout_clavier_borne() {
     else
       arreter_sur_erreur \
         "Privileges systeme insuffisants pour copier le layout clavier." \
-        "Relancez sudo ./bootstrap_borne.sh pour appliquer le layout systeme."
+        "Relancez sudo bash ./bootstrap_borne.sh pour appliquer le layout systeme."
     fi
   fi
 

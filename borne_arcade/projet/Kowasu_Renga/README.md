@@ -29,7 +29,7 @@ Kowasu Renga est un casse briques classique base sur MG2D, adapte au format born
 ## Tests et validation
 
 - Test cible du jeu: `./scripts/tests/test_jeux_java_cibles.sh --jeu Kowasu_Renga`.
-- Validation globale de la borne: `TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 ./scripts/tests/lancer_suite.sh`.
+- Validation globale de la borne: `TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 bash ./scripts/tests/lancer_suite.sh`.
 
 ## Maintenance et evolution
 

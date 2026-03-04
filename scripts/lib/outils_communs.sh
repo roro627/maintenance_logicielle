@@ -162,6 +162,25 @@ arreter_sur_erreur() {
 }
 
 #######################################
+# Execute un script shell meme sans
+# bit executable versionne dans Git.
+# Arguments:
+#   $1: chemin du script shell
+#   $2...: arguments du script
+# Retour:
+#   code retour du script
+#######################################
+executer_script_shell() {
+  local chemin_script="$1"
+  shift || true
+
+  [[ -f "${chemin_script}" ]] \
+    || arreter_sur_erreur "Script shell introuvable: ${chemin_script}"
+
+  bash "${chemin_script}" "$@"
+}
+
+#######################################
 # Compare deux versions numeriques.
 # Arguments:
 #   $1: version detectee

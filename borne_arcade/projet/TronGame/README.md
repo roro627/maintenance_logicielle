@@ -35,7 +35,7 @@ Tron Game est un duel de motos lumineuses type Tron ou les joueurs doivent survi
 ## Tests et validation
 
 - Test cible du jeu: `./scripts/tests/test_jeux_python_cibles.sh --jeu TronGame`.
-- Validation globale de la borne: `TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 ./scripts/tests/lancer_suite.sh`.
+- Validation globale de la borne: `TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 bash ./scripts/tests/lancer_suite.sh`.
 
 ## Maintenance et evolution
 

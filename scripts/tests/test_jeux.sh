@@ -13,7 +13,7 @@ source "${SCRIPT_DIR}/../lib/outils_communs.sh"
 #   0
 #######################################
 compiler_borne() {
-  "${REPERTOIRE_BORNE}/compilation.sh"
+  executer_script_shell "${REPERTOIRE_BORNE}/compilation.sh"
 }
 
 #######################################
@@ -78,7 +78,7 @@ tester_lancement_tous_les_jeux() {
 #   0
 #######################################
 tester_borne_headless() {
-  "${SCRIPT_DIR}/test_borne_headless.sh"
+  executer_script_shell "${SCRIPT_DIR}/test_borne_headless.sh"
 }
 
 #######################################

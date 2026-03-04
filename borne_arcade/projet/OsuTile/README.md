@@ -31,7 +31,7 @@ OsuTile est un jeu de rythme ou il faut frapper les bonnes colonnes au bon momen
 ## Tests et validation
 
 - Test cible du jeu: `./scripts/tests/test_jeux_python_cibles.sh --jeu OsuTile`.
-- Validation globale de la borne: `TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 ./scripts/tests/lancer_suite.sh`.
+- Validation globale de la borne: `TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 bash ./scripts/tests/lancer_suite.sh`.
 
 ## Maintenance et evolution
 

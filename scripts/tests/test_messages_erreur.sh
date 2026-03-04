@@ -90,7 +90,7 @@ SCRIPT
 #######################################
 verifier_lanceur_java() {
   local sortie
-  sortie="$(executer_commande_en_echec env BORNE_MODE_TEST_JEU=1 "${REPERTOIRE_BORNE}/lancer_jeu_java.sh" "JeuInexistant" "Main")"
+  sortie="$(executer_commande_en_echec env BORNE_MODE_TEST_JEU=1 bash "${REPERTOIRE_BORNE}/lancer_jeu_java.sh" "JeuInexistant" "Main")"
   verifier_structure_message_erreur "${sortie}" "lancer_jeu_java.sh"
 }
 
@@ -104,7 +104,7 @@ verifier_lanceur_java() {
 #######################################
 verifier_lanceur_python() {
   local sortie
-  sortie="$(executer_commande_en_echec env BORNE_MODE_TEST_JEU=1 "${REPERTOIRE_BORNE}/lancer_jeu_python.sh" "JeuInexistant" "main.py")"
+  sortie="$(executer_commande_en_echec env BORNE_MODE_TEST_JEU=1 bash "${REPERTOIRE_BORNE}/lancer_jeu_python.sh" "JeuInexistant" "main.py")"
   verifier_structure_message_erreur "${sortie}" "lancer_jeu_python.sh"
 }
 
@@ -118,7 +118,7 @@ verifier_lanceur_python() {
 #######################################
 verifier_lanceur_love() {
   local sortie
-  sortie="$(executer_commande_en_echec env BORNE_MODE_TEST_JEU=1 "${REPERTOIRE_BORNE}/lancer_jeu_love.sh" "JeuInexistant")"
+  sortie="$(executer_commande_en_echec env BORNE_MODE_TEST_JEU=1 bash "${REPERTOIRE_BORNE}/lancer_jeu_love.sh" "JeuInexistant")"
   verifier_structure_message_erreur "${sortie}" "lancer_jeu_love.sh"
 }
 

@@ -43,10 +43,10 @@ verifier_fichiers_critiques() {
 #######################################
 valider_installation() {
   if [[ "${TEST_INSTALLATION_SIMULATION:-0}" == "1" ]]; then
-    BORNE_MODE_TEST=1 "${RACINE_PROJET}/scripts/install/installer_borne.sh"
+    env BORNE_MODE_TEST=1 bash "${RACINE_PROJET}/scripts/install/installer_borne.sh"
     return 0
   fi
-  "${RACINE_PROJET}/scripts/install/installer_borne.sh"
+  executer_script_shell "${RACINE_PROJET}/scripts/install/installer_borne.sh"
 }
 
 #######################################

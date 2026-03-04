@@ -245,6 +245,37 @@ verifier_detection_npm_nodesource() {
 }
 
 #######################################
+# Verifie que les workflows et scripts
+# critiques lancent les .sh via bash
+# ou helper portable sans exiger 100755.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+verifier_execution_shell_portable() {
+  grep -Fq "run: bash ./scripts/tests/lancer_suite.sh" "${RACINE_PROJET}/.github/workflows/qualite.yml" \
+    || arreter_sur_erreur "Workflow qualite n execute pas lancer_suite.sh via bash"
+  grep -Fq "bash ./bootstrap_borne.sh" "${RACINE_PROJET}/.github/workflows/verification_reelle.yml" \
+    || arreter_sur_erreur "Workflow verification_reelle n execute pas bootstrap_borne.sh via bash"
+  grep -Fq "bash ./scripts/tests/lancer_suite.sh" "${RACINE_PROJET}/.github/workflows/verification_reelle.yml" \
+    || arreter_sur_erreur "Workflow verification_reelle n execute pas lancer_suite.sh via bash"
+
+  grep -Fq "executer_script_shell()" "${RACINE_PROJET}/scripts/lib/outils_communs.sh" \
+    || arreter_sur_erreur "Helper executer_script_shell absent de scripts/lib/outils_communs.sh"
+  grep -Fq "executer_script_shell \"\${SCRIPT_DIR}/\${script_test}\"" "${RACINE_PROJET}/scripts/tests/lancer_suite.sh" \
+    || arreter_sur_erreur "Suite complete n utilise pas le helper shell portable"
+  grep -Fq "executer_script_shell \"\${SCRIPT_DIR}/test_versions_compatibilite.sh\"" "${RACINE_PROJET}/scripts/tests/test_smoke.sh" \
+    || arreter_sur_erreur "Smoke tests n utilisent pas le helper shell portable"
+  grep -Fq "[[ -f \"\${script_requis}\" ]]" "${RACINE_PROJET}/bootstrap_borne.sh" \
+    || arreter_sur_erreur "Bootstrap exige encore le bit executable avant installation"
+  grep -Fq "executer_comme_utilisateur_appelant bash \"\${REPERTOIRE_BORNE}/compilation.sh\"" "${RACINE_PROJET}/bootstrap_borne.sh" \
+    || arreter_sur_erreur "Bootstrap n execute pas compilation.sh via bash"
+  grep -Fq "env EVITER_TEST_DEPLOIEMENT=1 bash \"\${RACINE_PROJET}/scripts/tests/lancer_suite.sh\"" "${RACINE_PROJET}/scripts/deploiement/post_pull_update.sh" \
+    || arreter_sur_erreur "Pipeline post-pull n execute pas lancer_suite.sh via bash"
+}
+
+#######################################
 # Point d entree du test anti regressions.
 # Arguments:
 #   aucun
@@ -265,6 +296,7 @@ main() {
   verifier_encodage_java_explicite
   verifier_invalidation_cache_mg2d_trop_recent
   verifier_detection_npm_nodesource
+  verifier_execution_shell_portable
   journaliser "Test anti regressions: OK"
 }
 

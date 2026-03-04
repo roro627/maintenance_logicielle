@@ -76,9 +76,9 @@ pour Raspberry Pi OS et la borne arcade.
 - Si pygame manque dans la venv: relancer `./scripts/install/installer_borne.sh`.
 - Si librosa manque: relancer `./scripts/install/installer_borne.sh` ou installer via `./.venv/bin/pip install -r borne_arcade/projet/PianoTile/requirements.txt`.
 - Si `love` echoue sur Debian 11 minimal: le bootstrap applique un contournement automatique puis relance `apt -f install`.
-- Si `codex` echoue avec un message de version Node.js: relancer `sudo ./bootstrap_borne.sh` pour forcer l installation de Node.js 22.x via NodeSource.
+- Si `codex` echoue avec un message de version Node.js: relancer `sudo bash ./bootstrap_borne.sh` pour forcer l installation de Node.js 22.x via NodeSource.
 - Si `docker info` echoue apres bootstrap: verifier le service Docker et rouvrir la session utilisateur pour reappliquer le groupe `docker`.
-- Pour repartir de zero: lancer `Reset prerequis` depuis `MaintenanceMode`, puis `sudo ./bootstrap_borne.sh` pour reinstaller.
+- Pour repartir de zero: lancer `Reset prerequis` depuis `MaintenanceMode`, puis `sudo bash ./bootstrap_borne.sh` pour reinstaller.
 
 ## Liens associes
 

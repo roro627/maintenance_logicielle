@@ -10,8 +10,7 @@ idempotent et relancable sans casser l existant.
 ### Installation automatisee recommandee
 
 ```bash
-chmod +x ./bootstrap_borne.sh
-sudo ./bootstrap_borne.sh
+sudo bash ./bootstrap_borne.sh
 ```
 
 Le script `bootstrap_borne.sh` enchaine:
@@ -71,13 +70,13 @@ codex --help
 ### Relance idempotente
 
 ```bash
-sudo ./bootstrap_borne.sh
+sudo bash ./bootstrap_borne.sh
 ```
 
 ### Relance forcee de l etape installation
 
 ```bash
-BOOTSTRAP_FORCER_INSTALLATION=1 sudo ./bootstrap_borne.sh
+BOOTSTRAP_FORCER_INSTALLATION=1 sudo bash ./bootstrap_borne.sh
 ```
 
 ### Reset complet pour retester depuis zero
@@ -87,17 +86,17 @@ et nettoie les artefacts locaux (`.venv`, `build/`, `site/`, etat bootstrap).
 Ensuite relancer:
 
 ```bash
-sudo ./bootstrap_borne.sh
+sudo bash ./bootstrap_borne.sh
 ```
 
 ### Alternative manuelle (si besoin)
 
 ```bash
-sudo ./scripts/install/installer_borne.sh
-./borne_arcade/compilation.sh
-./scripts/lint/lancer_lint.sh
-./scripts/tests/test_smoke.sh
-./scripts/docs/generer_documentation.sh
+sudo bash ./scripts/install/installer_borne.sh
+bash ./borne_arcade/compilation.sh
+bash ./scripts/lint/lancer_lint.sh
+bash ./scripts/tests/test_smoke.sh
+bash ./scripts/docs/generer_documentation.sh
 ```
 
 ### Mode installation sans elevation (post-pull)
@@ -106,11 +105,11 @@ Pour un run automatique apres `git pull` sans bloquer si les dependances systeme
 sont deja installees:
 
 ```bash
-INSTALLATION_SYSTEME_OPTIONNEL=1 ./scripts/install/installer_borne.sh
+INSTALLATION_SYSTEME_OPTIONNEL=1 bash ./scripts/install/installer_borne.sh
 ```
 
 Si une dependance systeme manque, le script echoue avec une action recommandee
-(`sudo ./bootstrap_borne.sh`).
+(`sudo bash ./bootstrap_borne.sh`).
 
 ### Reglage affichage borne
 
@@ -130,18 +129,18 @@ ouvre son interface en `1280x1024` sans barre de titre par defaut.
 ## Validation
 
 ```bash
-./scripts/tests/test_installation.sh
-./scripts/tests/test_smoke.sh
-./scripts/tests/lancer_suite.sh
+bash ./scripts/tests/test_installation.sh
+bash ./scripts/tests/test_smoke.sh
+bash ./scripts/tests/lancer_suite.sh
 ```
 
 Le journal bootstrap est ecrit dans `logs/bootstrap_borne_YYYYMMDD_HHMMSS.log`.
 
 ## Depannage
 
-- Erreur sudo: relancer avec `sudo ./bootstrap_borne.sh`.
+- Erreur sudo: relancer avec `sudo bash ./bootstrap_borne.sh`.
 - Erreur droits journaux (`Permission non accordee` dans `logs/`):
-  relancer `sudo ./bootstrap_borne.sh` pour reappliquer les droits partages.
+  relancer `sudo bash ./bootstrap_borne.sh` pour reappliquer les droits partages.
 - Erreur droits build (`Permission non accordee`): corriger les droits puis relancer.
 
 ```bash
@@ -153,7 +152,7 @@ sudo chown -R "$USER:$USER" ./build ./.venv ./logs ./.cache ./site
 - Emplacement recommande du depot: dossier utilisateur (ex: `~/git/maintenance_logicielle`),
   pas un dossier systeme ou verrouille.
 - Si `love` echoue sur Debian 11 minimal: le script applique automatiquement un contournement, puis corrige l etat `dpkg`.
-- Si `act` reste inutilisable localement: verifier `docker info`, se deconnecter/reconnecter pour reappliquer le groupe `docker`, puis relancer `sudo ./bootstrap_borne.sh`.
+- Si `act` reste inutilisable localement: verifier `docker info`, se deconnecter/reconnecter pour reappliquer le groupe `docker`, puis relancer `sudo bash ./bootstrap_borne.sh`.
 - Si Docker vient juste d etre installe et que `docker info` ne repond qu avec `sudo`: fermer puis rouvrir la session utilisateur pour activer le groupe `docker`.
 - Si `proposer-pr` echoue: verifier que `gh` est installe, authentifie (`gh auth status`) et que la branche de migration n est pas `main`.
 - Si la borne ne demarre pas automatiquement: verifier `~/.config/autostart/borne.desktop`.

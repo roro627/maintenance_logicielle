@@ -11,4 +11,4 @@ A la fin de la partie, le processus se ferme et le menu principal reprend la mai
 
 ## Depannage rapide
 - Si le jeu ne se lance pas, verifier `python3` et `pygame`.
-- Executer `./scripts/tests/lancer_suite.sh` depuis la racine.
+- Executer `bash ./scripts/tests/lancer_suite.sh` depuis la racine.

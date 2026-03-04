@@ -10,7 +10,7 @@ deploiement, documentation et conformite projet.
 ### Suite complete
 
 ```bash
-TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 ./scripts/tests/lancer_suite.sh
+TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 bash ./scripts/tests/lancer_suite.sh
 ```
 
 ### Smoke tests rapides
@@ -161,7 +161,7 @@ Scripts principaux:
 - Si le workflow migration refuse `proposer-pr`, verifier d abord `.cache/maintenance_logicielle/etat_migration.json` puis le dernier `logs/rapport_qualite_migration_*.json`.
 - Si le workflow reel Debian 11 echoue en compilation Java avec `US-ASCII`, verifier d abord `ENCODAGE_SOURCES_JAVA` dans `borne_arcade/config/borne.env` et l usage exclusif du helper `executer_javac`.
 - Consulter `logs/` pour les pipelines post-pull/bootstrap.
-- Corriger la cause puis relancer `./scripts/tests/lancer_suite.sh`.
+- Corriger la cause puis relancer `bash ./scripts/tests/lancer_suite.sh`.
 - En cas d echec CI locale, corriger puis relancer `act` jusqu a statut vert.
 
 ## Liens associes

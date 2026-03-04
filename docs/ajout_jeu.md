@@ -35,11 +35,11 @@ Si vous modifiez le gameplay ou le rendu d un jeu deja integre (ex: menu titre N
 ## Commandes
 
 ```bash
-./scripts/tests/test_ajout_jeu.sh
-./scripts/tests/test_catalogue_jeux_complet.sh
-./scripts/tests/test_jeux.sh
-./scripts/tests/test_readme_jeux.sh
-./scripts/tests/test_anti_regressions.sh
+bash ./scripts/tests/test_ajout_jeu.sh
+bash ./scripts/tests/test_catalogue_jeux_complet.sh
+bash ./scripts/tests/test_jeux.sh
+bash ./scripts/tests/test_readme_jeux.sh
+bash ./scripts/tests/test_anti_regressions.sh
 python3 scripts/docs/generer_readme_jeux.py --verifier
 ```
 
@@ -47,8 +47,8 @@ python3 scripts/docs/generer_readme_jeux.py --verifier
 
 ```bash
 python3 scripts/docs/generer_readme_jeux.py --jeu <nom_jeu>
-./borne_arcade/compilation.sh
-./scripts/tests/lancer_suite.sh
+bash ./borne_arcade/compilation.sh
+bash ./scripts/tests/lancer_suite.sh
 ```
 
 ## Liens associes

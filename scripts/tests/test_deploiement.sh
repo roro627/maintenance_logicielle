@@ -14,9 +14,9 @@ source "${SCRIPT_DIR}/../lib/outils_communs.sh"
 #######################################
 verifier_pipeline_post_pull() {
   if [[ "${TEST_DEPLOIEMENT_SIMULATION:-0}" == "1" ]]; then
-    BORNE_MODE_TEST=1 EVITER_TEST_DEPLOIEMENT=1 "${RACINE_PROJET}/scripts/deploiement/post_pull_update.sh"
+    env BORNE_MODE_TEST=1 EVITER_TEST_DEPLOIEMENT=1 bash "${RACINE_PROJET}/scripts/deploiement/post_pull_update.sh"
   else
-    EVITER_TEST_DEPLOIEMENT=1 "${RACINE_PROJET}/scripts/deploiement/post_pull_update.sh"
+    env EVITER_TEST_DEPLOIEMENT=1 bash "${RACINE_PROJET}/scripts/deploiement/post_pull_update.sh"
   fi
   [[ -f "${RACINE_PROJET}/.etat_derniere_maj" ]] || arreter_sur_erreur "Marqueur .etat_derniere_maj absent"
   [[ ! -f "${RACINE_PROJET}/.post_pull.lock" ]] || arreter_sur_erreur "Verrou .post_pull.lock non libere apres pipeline"
@@ -46,7 +46,7 @@ verifier_permissions_partagees() {
     [[ -w "${dossier}" ]] \
       || arreter_sur_erreur \
         "Dossier non accessible en ecriture: ${dossier}" \
-        "Relancez sudo ./bootstrap_borne.sh pour reappliquer les droits partages."
+        "Relancez sudo bash ./bootstrap_borne.sh pour reappliquer les droits partages."
   done
 
   local sous_dossier_build_non_ecrivable=""
@@ -54,7 +54,7 @@ verifier_permissions_partagees() {
   [[ -z "${sous_dossier_build_non_ecrivable}" ]] \
     || arreter_sur_erreur \
       "Sous-dossier build non accessible en ecriture: ${sous_dossier_build_non_ecrivable}" \
-      "Relancez sudo ./bootstrap_borne.sh pour corriger ownership/permissions puis relancez le test."
+      "Relancez sudo bash ./bootstrap_borne.sh pour corriger ownership/permissions puis relancez le test."
 
   local scripts_critiques=(
     "${RACINE_PROJET}/bootstrap_borne.sh"
@@ -67,7 +67,7 @@ verifier_permissions_partagees() {
     [[ -x "${script}" ]] \
       || arreter_sur_erreur \
         "Script critique non executable: ${script}" \
-        "Relancez sudo ./bootstrap_borne.sh pour restaurer les permissions d execution."
+        "Relancez sudo bash ./bootstrap_borne.sh pour restaurer les permissions d execution."
   done
 }
 

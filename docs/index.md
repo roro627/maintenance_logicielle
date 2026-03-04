@@ -24,11 +24,11 @@ Toutes les pages documentaires suivent la meme trame:
 
 ## Parcours recommande
 
-1. Lire `installation.md` puis executer `sudo ./bootstrap_borne.sh`.
+1. Lire `installation.md` puis executer `sudo bash ./bootstrap_borne.sh`.
 2. Lire `architecture.md` pour la structure du depot.
-3. Executer `./scripts/tests/lancer_suite.sh` pour verifier l etat global.
+3. Executer `bash ./scripts/tests/lancer_suite.sh` pour verifier l etat global.
    Pour diagnostiquer uniquement la borne et les jeux:
-   `./scripts/tests/test_borne_headless.sh` puis `./scripts/tests/test_jeux.sh`.
+   `bash ./scripts/tests/test_borne_headless.sh` puis `bash ./scripts/tests/test_jeux.sh`.
 4. Pour une migration de versions, utiliser `python scripts/migration/workflow_migration.py lister-cibles --format json`
    puis suivre le workflow `appliquer -> preparer-ia -> qualite -> proposer-pr`.
 5. Verifier les README de jeux avec `python3 scripts/docs/generer_readme_jeux.py --verifier`.
@@ -39,8 +39,8 @@ Toutes les pages documentaires suivent la meme trame:
 
 ```bash
 python3 scripts/docs/generer_readme_jeux.py --verifier
-./scripts/tests/test_documentation.sh
-./scripts/docs/generer_documentation.sh
+bash ./scripts/tests/test_documentation.sh
+bash ./scripts/docs/generer_documentation.sh
 ```
 
 ## Liens associes

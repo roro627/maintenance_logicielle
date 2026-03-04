@@ -29,7 +29,7 @@ Columns est un jeu de puzzle arcade ou il faut aligner des gemmes de meme couleu
 ## Tests et validation
 
 - Test cible du jeu: `./scripts/tests/test_jeux_java_cibles.sh --jeu Columns`.
-- Validation globale de la borne: `TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 ./scripts/tests/lancer_suite.sh`.
+- Validation globale de la borne: `TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 bash ./scripts/tests/lancer_suite.sh`.
 
 ## Maintenance et evolution
 

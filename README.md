@@ -121,8 +121,7 @@ arcade-care/
 ### Installation / bootstrap
 
 ```bash
-chmod +x ./bootstrap_borne.sh
-sudo ./bootstrap_borne.sh
+sudo bash ./bootstrap_borne.sh
 ```
 
 > Le bootstrap installe également `codex` automatiquement pour le workflow IA de migration.
@@ -130,8 +129,8 @@ sudo ./bootstrap_borne.sh
 ### Validation locale
 
 ```bash
-./scripts/tests/lancer_suite.sh
-./scripts/docs/generer_documentation.sh
+bash ./scripts/tests/lancer_suite.sh
+bash ./scripts/docs/generer_documentation.sh
 ```
 
 ### Vérification CI/CD locale obligatoire

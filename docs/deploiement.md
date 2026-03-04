@@ -10,7 +10,7 @@ la compilation, le lint, les tests et la regeneration documentation.
 ### Activation
 
 ```bash
-sudo ./bootstrap_borne.sh
+sudo bash ./bootstrap_borne.sh
 git config core.hooksPath .githooks
 chmod +x .githooks/post-merge scripts/deploiement/post_pull_update.sh
 ```
@@ -18,7 +18,7 @@ chmod +x .githooks/post-merge scripts/deploiement/post_pull_update.sh
 ### Execution manuelle
 
 ```bash
-./scripts/deploiement/post_pull_update.sh
+bash ./scripts/deploiement/post_pull_update.sh
 ```
 
 Mecanismes utilises:
@@ -32,13 +32,13 @@ Mecanismes utilises:
 Le pipeline appelle l installateur en mode optionnel:
 
 ```bash
-INSTALLATION_SYSTEME_OPTIONNEL=1 ./scripts/install/installer_borne.sh
+INSTALLATION_SYSTEME_OPTIONNEL=1 bash ./scripts/install/installer_borne.sh
 ```
 
 Resultat:
 
 - si les dependances systeme sont deja presentes, le deploiement continue sans root,
-- si des dependances manquent, echec clair avec action recommandee (`sudo ./bootstrap_borne.sh`).
+- si des dependances manquent, echec clair avec action recommandee (`sudo bash ./bootstrap_borne.sh`).
 - les permissions partagees restent reappliquees (`logs/`, `build/`, `.cache/`, `.venv/`) pour eviter les blocages apres une installation root.
 
 ### Workflow migration et PR
@@ -87,7 +87,7 @@ Execution locale equivalente via `act`:
 ## Validation
 
 ```bash
-./scripts/tests/test_deploiement.sh
+bash ./scripts/tests/test_deploiement.sh
 ```
 
 ## Depannage
@@ -95,7 +95,7 @@ Execution locale equivalente via `act`:
 - Consulter le dernier journal dans `logs/post_pull_update_*.log`.
 - Si le journal est absent dans `logs/`, verifier `~/.cache/maintenance_logicielle/logs/`.
 - Verifier qu aucun verrou stale n est present (`.post_pull.lock`).
-- Relancer `./scripts/deploiement/post_pull_update.sh`.
+- Relancer `bash ./scripts/deploiement/post_pull_update.sh`.
 
 ## Liens associes
 

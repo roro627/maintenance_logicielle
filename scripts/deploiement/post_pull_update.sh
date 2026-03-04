@@ -45,7 +45,7 @@ selectionner_dossier_journaux_accessible() {
 
   arreter_sur_erreur \
     "Aucun dossier de journalisation accessible en ecriture." \
-    "Corrigez les droits du projet puis relancez sudo ./bootstrap_borne.sh."
+    "Corrigez les droits du projet puis relancez sudo bash ./bootstrap_borne.sh."
 }
 
 #######################################
@@ -139,19 +139,19 @@ gerer_echec_pipeline() {
 #######################################
 executer_pipeline_post_pull() {
   journaliser "Pipeline post-pull: installation"
-  INSTALLATION_SYSTEME_OPTIONNEL=1 "${RACINE_PROJET}/scripts/install/installer_borne.sh"
+  env INSTALLATION_SYSTEME_OPTIONNEL=1 bash "${RACINE_PROJET}/scripts/install/installer_borne.sh"
 
   journaliser "Pipeline post-pull: compilation"
-  "${REPERTOIRE_BORNE}/compilation.sh"
+  executer_script_shell "${REPERTOIRE_BORNE}/compilation.sh"
 
   journaliser "Pipeline post-pull: lint"
-  "${RACINE_PROJET}/scripts/lint/lancer_lint.sh"
+  executer_script_shell "${RACINE_PROJET}/scripts/lint/lancer_lint.sh"
 
   journaliser "Pipeline post-pull: tests"
-  EVITER_TEST_DEPLOIEMENT=1 "${RACINE_PROJET}/scripts/tests/lancer_suite.sh"
+  env EVITER_TEST_DEPLOIEMENT=1 bash "${RACINE_PROJET}/scripts/tests/lancer_suite.sh"
 
   journaliser "Pipeline post-pull: documentation"
-  "${RACINE_PROJET}/scripts/docs/generer_documentation.sh"
+  executer_script_shell "${RACINE_PROJET}/scripts/docs/generer_documentation.sh"
 
   date '+%Y-%m-%d %H:%M:%S' > "${RACINE_PROJET}/.etat_derniere_maj"
 }
