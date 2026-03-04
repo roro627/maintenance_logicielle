@@ -79,10 +79,16 @@ sudo bash ./bootstrap_borne.sh
 BOOTSTRAP_FORCER_INSTALLATION=1 sudo bash ./bootstrap_borne.sh
 ```
 
-### Reset complet pour retester depuis zero
+### Reinitialisation locale pour retester depuis zero
 
-Depuis `MaintenanceMode`, l operation `Reset prerequis` purge les paquets prerequis borne
-et nettoie les artefacts locaux (`.venv`, `build/`, `site/`, etat bootstrap).
+Si vous devez repartir d un etat local propre, supprimer les artefacts generees
+puis relancer le bootstrap:
+
+```bash
+rm -rf .venv build site .cache/bootstrap_borne
+rm -f .etat_derniere_maj .post_pull.lock
+```
+
 Ensuite relancer:
 
 ```bash

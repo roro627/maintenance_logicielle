@@ -41,7 +41,7 @@ Neon Sumo est un duel arcade 1v1 ou il faut ejecter l adversaire de l arene en e
 
 ## Maintenance et evolution
 
-- Le jeu propose un mode attract robuste, un HUD lisible et une arene neon qui retrecit au fil de la manche.
+- Le jeu propose un mode attract robuste, un HUD lisible, un rappel complet des commandes sur l ecran titre et une arene neon qui retrecit au fil de la manche.
 - Le lancement borne passe par le wrapper Python commun et doit rester compatible avec `python3`.
 - Les dependances specifiques sont centralisees dans `requirements.txt`.
 - Des tests locaux existent dans `tests/` et doivent etre maintenus a jour.

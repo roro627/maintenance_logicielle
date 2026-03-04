@@ -92,7 +92,6 @@
     "git_retour_precedent": 240,
     "pipeline_post_pull": 600,
     "mise_a_jour_os": 1800,
-    "reset_pre_requis": 1800,
     "actualiser_cibles_migration": 60,
     "appliquer_migration_cible": 3600,
     "preparer_placeholder_ia_migration": 7200,

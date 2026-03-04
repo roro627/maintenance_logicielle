@@ -33,6 +33,7 @@ commandes principales et depannage rapide.
 - Le diagnostic signale explicitement les pre-requis manquants (avec action recommandee) au lieu de planter.
 - Une commande maintenance bloquee ou silencieuse est interrompue au timeout avec un message actionnable au lieu de rester en attente indefinie.
 - Pendant une operation, la sortie est bloquee pour eviter les etats partiels.
+- Le panneau operations se concentre desormais sur le diagnostic, les actions git, le pipeline post-pull et le workflow de migration cible; les anciennes options 10 et 11 ne sont plus exposees.
 - Workflow migration borne:
   1. `Recharger cibles migration`
   2. choisir la cible
@@ -42,7 +43,6 @@ commandes principales et depannage rapide.
   6. `Relancer qualite complete`
   7. `Proposer PR migration`
 - Sur un poste non Debian/Raspberry Pi, la detection reste consultable mais l application reelle d une migration apt est refusee avec un message clair.
-- Option reset disponible: `Reset prerequis` (mode sur: purge des prerequis non-systeme seulement, sans autoremove global, + nettoyage local). Les paquets Python systeme (`python3`, `python3-venv`, `python3-pip`) sont explicitement proteges pour eviter toute casse de la VM/systeme.
 - Option rollback disponible: `Retour commit precedent` (retour `HEAD~1`) uniquement si le depot est propre.
 - Les operations git (`Git pull`, rollback) affichent maintenant un message explicite si `git` est absent.
 - Reverrouillage manuel: dans `MaintenanceMode`, bouton `J1C` (touche `H`).
@@ -58,7 +58,7 @@ Chaque jeu decrit ses commandes dans `borne_arcade/projet/<jeu>/bouton.txt`.
 - But: ejecter l adversaire hors de l arene.
 - Match: BO3.
 - B1 Dash, B2 Frein, B3 Bump, B4 Bouclier, B5 Taunt, B6 Ultime.
-- Menu titre ameliore: theme neon anime, panneau controles lisible et rappel clair de l attract mode.
+- Menu titre ameliore: theme neon anime, panneau controles lisible et rappel explicite de toutes les commandes, y compris `B5 Taunt`.
 - Mode attract robuste: une collision/elimination en mode demo relance automatiquement une nouvelle manche IA sans sortir du mode attract.
 
 ### PianoTile (resume)

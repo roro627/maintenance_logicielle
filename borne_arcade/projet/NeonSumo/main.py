@@ -1025,24 +1025,25 @@ def dessiner_menu_titre_neon(
     )
     surface.blit(calque_carte, (0, 0))
 
+    textes_aide = construire_textes_aide_menu_titre()
     dessiner_texte(
         surface,
         police_info,
-        "B1: Start match   |   B6: Retour menu",
+        textes_aide[0],
         COULEUR_MENU_TITRE_TEXTE,
         (centre_x, rectangle_carte.y + DECALAGE_CARTE_CONTROLES),
     )
     dessiner_texte(
         surface,
         police_info,
-        "B1 Dash   B2 Frein   B3 Bump   B4 Bouclier   B6 Ultime",
+        textes_aide[1],
         COULEUR_MENU_TITRE_TEXTE_SECONDAIRE,
         (centre_x, rectangle_carte.y + DECALAGE_CARTE_CONTROLES + 42),
     )
     dessiner_texte(
         surface,
         police_info,
-        "Mode attract automatique en 30s",
+        textes_aide[2],
         COULEUR_MENU_TITRE_TEXTE_ACCENT,
         (centre_x, rectangle_carte.y + DECALAGE_CARTE_CONTROLES + 84),
     )
@@ -1661,6 +1662,98 @@ def gerer_entree_borne() -> Tuple[EntreeJoueur, EntreeJoueur]:
     return j1, j2
 
 
+def construire_textes_aide_menu_titre() -> Tuple[str, str, str]:
+    """Construit les libelles d aide affiches sur le menu titre.
+
+    Returns:
+        Trois lignes de texte pour l ecran titre.
+    """
+
+    return (
+        "Joystick: Deplacement   |   B1: Start match   |   B6: Retour menu",
+        "B1 Dash   B2 Frein   B3 Bump   B4 Bouclier   B5 Taunt   B6 Ultime",
+        "Mode attract automatique en 30s",
+    )
+
+
+def extraire_actions_entree(entree: EntreeJoueur) -> Dict[str, int]:
+    """Retourne le mapping action vers touche pour un joueur.
+
+    Args:
+        entree: Mapping borne d un joueur.
+
+    Returns:
+        Dictionnaire action -> touche pygame.
+    """
+
+    return {
+        "haut": entree.haut,
+        "bas": entree.bas,
+        "gauche": entree.gauche,
+        "droite": entree.droite,
+        "dash": entree.dash,
+        "frein": entree.frein,
+        "bump": entree.bump,
+        "bouclier": entree.bouclier,
+        "taunt": entree.taunt,
+        "ultime": entree.ultime,
+    }
+
+
+def verifier_coherence_entree_joueur(entree: EntreeJoueur, identifiant_joueur: str) -> None:
+    """Verifie qu un joueur n utilise pas deux fois la meme touche.
+
+    Args:
+        entree: Mapping borne a verifier.
+        identifiant_joueur: Libelle du joueur pour le message d erreur.
+
+    Returns:
+        None.
+
+    Raises:
+        ValueError: Si deux actions partagent la meme touche.
+    """
+
+    actions = extraire_actions_entree(entree)
+    touches_utilisees: Dict[int, str] = {}
+    for action, touche in actions.items():
+        action_existante = touches_utilisees.get(touche)
+        if action_existante is not None:
+            raise ValueError(
+                f"Configuration commandes {identifiant_joueur} incoherente: "
+                f"{action_existante} et {action} partagent la meme touche."
+            )
+        touches_utilisees[touche] = action
+
+
+def verifier_coherence_entrees_borne(j1: EntreeJoueur, j2: EntreeJoueur) -> None:
+    """Verifie l absence de doublon intra-joueur et inter-joueurs.
+
+    Args:
+        j1: Mapping du joueur 1.
+        j2: Mapping du joueur 2.
+
+    Returns:
+        None.
+
+    Raises:
+        ValueError: Si un doublon rend le mapping ambigu.
+    """
+
+    verifier_coherence_entree_joueur(j1, "J1")
+    verifier_coherence_entree_joueur(j2, "J2")
+
+    touches_j1 = extraire_actions_entree(j1)
+    touches_j2 = extraire_actions_entree(j2)
+    for action_j1, touche_j1 in touches_j1.items():
+        for action_j2, touche_j2 in touches_j2.items():
+            if touche_j1 == touche_j2:
+                raise ValueError(
+                    "Configuration commandes borne incoherente: "
+                    f"J1 {action_j1} et J2 {action_j2} utilisent la meme touche."
+                )
+
+
 def calculer_ia_attract(joueur: Joueur, centre_x: float, centre_y: float, rayon: float) -> Tuple[float, float]:
     """Calcule une direction simple d IA pour le mode attract.
 
@@ -1779,6 +1872,7 @@ def boucle_jeu() -> int:
     police_info_menu = pygame.font.SysFont("DejaVu Sans", max(16, parametres_menu_titre.taille_police_info))
 
     j1_controles, j2_controles = gerer_entree_borne()
+    verifier_coherence_entrees_borne(j1_controles, j2_controles)
 
     try:
         pygame.mixer.init()

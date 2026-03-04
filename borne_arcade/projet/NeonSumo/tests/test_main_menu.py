@@ -12,11 +12,38 @@ MODULE_NEON_SUMO = Path(__file__).resolve().parents[1]
 if str(MODULE_NEON_SUMO) not in sys.path:
     sys.path.insert(0, str(MODULE_NEON_SUMO))
 
-if "pygame" not in sys.modules:
-    try:
-        import pygame as _pygame  # noqa: F401
-    except ModuleNotFoundError:
-        sys.modules["pygame"] = types.SimpleNamespace()
+def creer_fausse_impl_pygame():
+    """Construit un module pygame minimal pour les tests sans dependance native.
+
+    Args:
+        Aucun.
+
+    Returns:
+        Espace de noms exposeant les constantes de touches attendues.
+    """
+
+    return types.SimpleNamespace(
+        K_UP=1,
+        K_DOWN=2,
+        K_LEFT=3,
+        K_RIGHT=4,
+        K_f=5,
+        K_g=6,
+        K_h=7,
+        K_r=8,
+        K_t=9,
+        K_y=10,
+        K_o=11,
+        K_l=12,
+        K_k=13,
+        K_m=14,
+        K_q=15,
+        K_s=16,
+        K_d=17,
+        K_a=18,
+        K_z=19,
+        K_e=20,
+    )
 
 CHEMIN_MAIN_NEON_SUMO = MODULE_NEON_SUMO / "main.py"
 SPEC_MAIN_NEON_SUMO = importlib.util.spec_from_file_location("main_neon_sumo", CHEMIN_MAIN_NEON_SUMO)
@@ -25,9 +52,20 @@ if SPEC_MAIN_NEON_SUMO is None or SPEC_MAIN_NEON_SUMO.loader is None:
 MODULE_MAIN_NEON_SUMO = importlib.util.module_from_spec(SPEC_MAIN_NEON_SUMO)
 sys.modules[SPEC_MAIN_NEON_SUMO.name] = MODULE_MAIN_NEON_SUMO
 SPEC_MAIN_NEON_SUMO.loader.exec_module(MODULE_MAIN_NEON_SUMO)
+if MODULE_MAIN_NEON_SUMO.pygame is None:
+    try:
+        MODULE_MAIN_NEON_SUMO.pygame = MODULE_MAIN_NEON_SUMO.importer_pygame()
+    except RuntimeError:
+        MODULE_MAIN_NEON_SUMO.pygame = creer_fausse_impl_pygame()
+if not hasattr(MODULE_MAIN_NEON_SUMO.pygame, "K_UP"):
+    MODULE_MAIN_NEON_SUMO.pygame = creer_fausse_impl_pygame()
 construire_parametres_menu_titre = MODULE_MAIN_NEON_SUMO.construire_parametres_menu_titre
 mode_competitif_actif = MODULE_MAIN_NEON_SUMO.mode_competitif_actif
 doit_reinitialiser_attract = MODULE_MAIN_NEON_SUMO.doit_reinitialiser_attract
+gerer_entree_borne = MODULE_MAIN_NEON_SUMO.gerer_entree_borne
+construire_textes_aide_menu_titre = MODULE_MAIN_NEON_SUMO.construire_textes_aide_menu_titre
+verifier_coherence_entrees_borne = MODULE_MAIN_NEON_SUMO.verifier_coherence_entrees_borne
+EntreeJoueur = MODULE_MAIN_NEON_SUMO.EntreeJoueur
 
 
 class TestConfigurationMenuTitre(unittest.TestCase):
@@ -110,6 +148,89 @@ class TestConfigurationMenuTitre(unittest.TestCase):
         self.assertTrue(doit_reinitialiser_attract("attract", True, True))
         self.assertFalse(doit_reinitialiser_attract("manche", True, False))
         self.assertFalse(doit_reinitialiser_attract("attract", False, False))
+
+    def test_gerer_entree_borne_associe_les_touches_arcade_attendues(self) -> None:
+        """Controle le mapping explicite des boutons borne pour NeonSumo.
+
+        Args:
+            Aucun.
+
+        Returns:
+            Aucun.
+        """
+
+        j1, j2 = gerer_entree_borne()
+
+        self.assertEqual(j1.haut, MODULE_MAIN_NEON_SUMO.pygame.K_UP)
+        self.assertEqual(j1.bas, MODULE_MAIN_NEON_SUMO.pygame.K_DOWN)
+        self.assertEqual(j1.gauche, MODULE_MAIN_NEON_SUMO.pygame.K_LEFT)
+        self.assertEqual(j1.droite, MODULE_MAIN_NEON_SUMO.pygame.K_RIGHT)
+        self.assertEqual(j1.dash, MODULE_MAIN_NEON_SUMO.pygame.K_f)
+        self.assertEqual(j1.frein, MODULE_MAIN_NEON_SUMO.pygame.K_g)
+        self.assertEqual(j1.bump, MODULE_MAIN_NEON_SUMO.pygame.K_h)
+        self.assertEqual(j1.bouclier, MODULE_MAIN_NEON_SUMO.pygame.K_r)
+        self.assertEqual(j1.taunt, MODULE_MAIN_NEON_SUMO.pygame.K_t)
+        self.assertEqual(j1.ultime, MODULE_MAIN_NEON_SUMO.pygame.K_y)
+
+        self.assertEqual(j2.haut, MODULE_MAIN_NEON_SUMO.pygame.K_o)
+        self.assertEqual(j2.bas, MODULE_MAIN_NEON_SUMO.pygame.K_l)
+        self.assertEqual(j2.gauche, MODULE_MAIN_NEON_SUMO.pygame.K_k)
+        self.assertEqual(j2.droite, MODULE_MAIN_NEON_SUMO.pygame.K_m)
+        self.assertEqual(j2.dash, MODULE_MAIN_NEON_SUMO.pygame.K_q)
+        self.assertEqual(j2.frein, MODULE_MAIN_NEON_SUMO.pygame.K_s)
+        self.assertEqual(j2.bump, MODULE_MAIN_NEON_SUMO.pygame.K_d)
+        self.assertEqual(j2.bouclier, MODULE_MAIN_NEON_SUMO.pygame.K_a)
+        self.assertEqual(j2.taunt, MODULE_MAIN_NEON_SUMO.pygame.K_z)
+        self.assertEqual(j2.ultime, MODULE_MAIN_NEON_SUMO.pygame.K_e)
+
+    def test_verifier_coherence_entrees_borne_refuse_un_doublon_joueur(self) -> None:
+        """Controle le refus d un doublon de touche sur un meme joueur.
+
+        Args:
+            Aucun.
+
+        Returns:
+            Aucun.
+        """
+
+        j1 = EntreeJoueur(1, 2, 3, 4, 5, 6, 7, 8, 9, 5)
+        j2 = EntreeJoueur(11, 12, 13, 14, 15, 16, 17, 18, 19, 20)
+
+        with self.assertRaisesRegex(ValueError, "Configuration commandes J1 incoherente"):
+            verifier_coherence_entrees_borne(j1, j2)
+
+    def test_verifier_coherence_entrees_borne_refuse_un_doublon_inter_joueurs(self) -> None:
+        """Controle le refus d une collision de touche entre J1 et J2.
+
+        Args:
+            Aucun.
+
+        Returns:
+            Aucun.
+        """
+
+        j1 = EntreeJoueur(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
+        j2 = EntreeJoueur(11, 12, 13, 14, 15, 16, 17, 18, 19, 5)
+
+        with self.assertRaisesRegex(ValueError, "Configuration commandes borne incoherente"):
+            verifier_coherence_entrees_borne(j1, j2)
+
+    def test_construire_textes_aide_menu_titre_couvre_toutes_les_actions(self) -> None:
+        """Controle que l aide du menu titre rappelle bien tous les boutons utiles.
+
+        Args:
+            Aucun.
+
+        Returns:
+            Aucun.
+        """
+
+        lignes = construire_textes_aide_menu_titre()
+        self.assertEqual(len(lignes), 3)
+        self.assertIn("B1: Start match", lignes[0])
+        self.assertIn("B6: Retour menu", lignes[0])
+        self.assertIn("B5 Taunt", lignes[1])
+        self.assertIn("B6 Ultime", lignes[1])
 
 
 if __name__ == "__main__":

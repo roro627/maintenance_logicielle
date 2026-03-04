@@ -62,23 +62,6 @@ PAQUETS_SYSTEME_BORNE = [
     "libsndfile1",
     "love",
 ]
-PAQUETS_RESET_NON_SYSTEME_BORNE = [
-    "checkstyle",
-    "pylint",
-    "shellcheck",
-    "xdotool",
-    "lua5.4",
-    "love",
-]
-PAQUETS_RESET_SYSTEME_PROTEGES_BORNE = [
-    "git",
-    "curl",
-    "openjdk-17-jdk",
-    "python3",
-    "python3-venv",
-    "python3-pip",
-    "libsndfile1",
-]
 COMMANDES_PRE_REQUIS_BORNE = {
     "git": ["git"],
     "curl": ["curl"],
@@ -94,17 +77,6 @@ COMMANDES_PRE_REQUIS_BORNE = {
     "libsndfile1": [],
     "love": ["love"],
 }
-REPERTOIRES_RESET_RELATIFS = [
-    Path(".venv"),
-    Path("build"),
-    Path("site"),
-    Path(".cache") / "bootstrap_borne",
-]
-FICHIERS_RESET_RELATIFS = [
-    Path(".etat_derniere_maj"),
-    Path(".post_pull.lock"),
-]
-
 CONFIGURATION_PAR_DEFAUT = {
     "fenetre": {
         "largeur": 1280,
@@ -155,7 +127,6 @@ CONFIGURATION_PAR_DEFAUT = {
         "git_retour_precedent": 240,
         "pipeline_post_pull": 600,
         "mise_a_jour_os": 1800,
-        "reset_pre_requis": 1800,
         "actualiser_cibles_migration": 60,
         "appliquer_migration_cible": 3600,
         "preparer_placeholder_ia_migration": 7200,
@@ -614,16 +585,6 @@ def lister_operations() -> List[Dict[str, str]]:
             "id": "pipeline_post_pull",
             "titre": "Pipeline post-pull",
             "description": "Compilation, lint, tests et documentation.",
-        },
-        {
-            "id": "mise_a_jour_os",
-            "titre": "Mise a jour OS",
-            "description": "apt update + apt full-upgrade -y.",
-        },
-        {
-            "id": "reset_pre_requis",
-            "titre": "Reset prerequis",
-            "description": "Mode sur: purge des prerequis non-systeme + nettoyage local pour retest a zero.",
         },
     ]
 
@@ -2160,8 +2121,6 @@ def executer_operation(
             )
         elif operation_id == "mise_a_jour_os":
             succes, message, _ = operation_mise_a_jour_os(configuration, racine_projet, chemin_journal, journaliser)
-        elif operation_id == "reset_pre_requis":
-            succes, message, _ = operation_reset_pre_requis(configuration, racine_projet, chemin_journal, journaliser)
         else:
             message = (
                 f"Operation inconnue: {operation_id}. "
@@ -2549,143 +2508,6 @@ def operation_mise_a_jour_os(
             return False, "Echec de la mise a jour OS (voir journal).", chemin_journal
 
     return True, "Mise a jour OS terminee.", chemin_journal
-
-
-def nettoyer_artefacts_reset(racine_projet: Path, journaliser: ConsommateurJournal) -> Tuple[bool, str]:
-    """Nettoie les artefacts locaux pour retester une installation a zero.
-
-    Args:
-        racine_projet: Racine du depot.
-        journaliser: Fonction de trace vers le journal operation.
-
-    Returns:
-        Tuple (succes, message) pour cette phase locale.
-    """
-
-    for repertoire_relatif in REPERTOIRES_RESET_RELATIFS:
-        repertoire_cible = racine_projet / repertoire_relatif
-        if not repertoire_cible.exists():
-            continue
-        try:
-            shutil.rmtree(repertoire_cible)
-            journaliser(f"Artefact supprime: {repertoire_cible}")
-        except OSError as erreur:
-            message = (
-                f"Impossible de supprimer {repertoire_cible}: {erreur}. "
-                "Action recommandee: corriger les permissions puis relancer le reset."
-            )
-            journaliser(f"ERREUR: {message}")
-            return False, message
-
-    for fichier_relatif in FICHIERS_RESET_RELATIFS:
-        fichier_cible = racine_projet / fichier_relatif
-        if not fichier_cible.exists():
-            continue
-        try:
-            fichier_cible.unlink()
-            journaliser(f"Fichier supprime: {fichier_cible}")
-        except OSError as erreur:
-            message = (
-                f"Impossible de supprimer {fichier_cible}: {erreur}. "
-                "Action recommandee: corriger les permissions puis relancer le reset."
-            )
-            journaliser(f"ERREUR: {message}")
-            return False, message
-
-    return True, "Nettoyage local termine."
-
-
-def lister_paquets_reset_non_systeme_installes() -> List[str]:
-    """Liste les paquets non-systeme effectivement installes et purgables en mode sur.
-
-    Args:
-        Aucun.
-
-    Returns:
-        Liste ordonnee des paquets installes ciblables par le reset sur.
-    """
-
-    paquets_proteges = set(PAQUETS_RESET_SYSTEME_PROTEGES_BORNE)
-    paquets_installes: List[str] = []
-    for paquet in PAQUETS_RESET_NON_SYSTEME_BORNE:
-        if paquet in paquets_proteges:
-            continue
-        if paquet_systeme_installe(paquet):
-            paquets_installes.append(paquet)
-    return paquets_installes
-
-
-def operation_reset_pre_requis(
-    configuration: Dict[str, object],
-    racine_projet: Path,
-    chemin_journal: Path,
-    journaliser: ConsommateurJournal,
-) -> Tuple[bool, str, Path]:
-    """Purge en mode sur les prerequis non-systeme puis nettoie les artefacts locaux.
-
-    Args:
-        configuration: Configuration chargee.
-        racine_projet: Racine du depot.
-        chemin_journal: Journal cible.
-        journaliser: Fonction de trace et diffusion en direct.
-
-    Returns:
-        Resultat (succes, message, chemin journal).
-    """
-
-    timeout_secondes = extraire_timeout(configuration, "reset_pre_requis")
-    intervalle_lecture = extraire_intervalle_lecture(configuration)
-    prefixe_sudo = obtenir_prefixe_privileges_systeme()
-    if prefixe_sudo is None:
-        message = (
-            "Reset prerequis impossible: sudo non disponible en mode non interactif. "
-            "Action recommandee: lancer la borne avec sudo ou executer le reset depuis un terminal admin."
-        )
-        journaliser(f"ERREUR: {message}")
-        return False, message, chemin_journal
-
-    paquets_non_systeme_installes = lister_paquets_reset_non_systeme_installes()
-    if paquets_non_systeme_installes:
-        journaliser(
-            "Mode sur: purge uniquement des prerequis non-systeme installes: "
-            + ", ".join(paquets_non_systeme_installes)
-        )
-    else:
-        journaliser("Mode sur: aucun prerequis non-systeme installe a purger.")
-
-    journaliser(
-        "Paquets systeme proteges (non purges): "
-        + ", ".join(PAQUETS_RESET_SYSTEME_PROTEGES_BORNE)
-    )
-
-    commandes = []
-    if paquets_non_systeme_installes:
-        commandes.append(prefixe_sudo + ["apt-get", "remove", "--purge", "-y"] + paquets_non_systeme_installes)
-    commandes.append(prefixe_sudo + ["apt-get", "clean"])
-
-    for commande in commandes:
-        journaliser(f"$ {' '.join(commande)}")
-        succes, sortie = executer_commande(
-            commande,
-            racine_projet,
-            timeout_secondes=timeout_secondes,
-            consommateur_sortie=journaliser,
-            intervalle_lecture_secondes=intervalle_lecture,
-        )
-        if not succes:
-            journaliser(f"ERREUR: {extraire_premiere_ligne_sortie(sortie)}")
-            return False, "Echec reset prerequis systeme (voir journal).", chemin_journal
-
-    succes_nettoyage, message_nettoyage = nettoyer_artefacts_reset(racine_projet, journaliser)
-    if not succes_nettoyage:
-        return False, message_nettoyage, chemin_journal
-
-    journaliser(message_nettoyage)
-    return (
-        True,
-        "Reset prerequis termine en mode sur. Relancez bootstrap_borne.sh pour reinstaller.",
-        chemin_journal,
-    )
 
 
 def obtenir_cible_migration_contextualisee(

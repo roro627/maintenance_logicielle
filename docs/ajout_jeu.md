@@ -29,8 +29,9 @@ Si vous modifiez le gameplay ou le rendu d un jeu deja integre (ex: menu titre N
 2. Ajouter/mettre a jour des tests unitaires pour la logique ajoutee.
 3. Pour un mode attract/demo, verifier explicitement qu une elimination relance bien la demo sans bloquer l etat attract.
 4. Mettre a jour `config/readme_jeux.json` si le resume, les commandes ou les notes de maintenance changent.
-5. Regenerer le README du jeu avec `python3 scripts/docs/generer_readme_jeux.py --jeu <nom_jeu>`.
-6. Mettre a jour `docs/utilisateur.md`, `docs/tests.md` et `docs/rendu.md` si le comportement visible ou la strategie de tests evolue.
+5. Si le jeu affiche une aide interne, un ecran titre ou une carte de commandes, garder son contenu strictement aligne avec `bouton.txt` et le mapping code.
+6. Regenerer le README du jeu avec `python3 scripts/docs/generer_readme_jeux.py --jeu <nom_jeu>`.
+7. Mettre a jour `docs/utilisateur.md`, `docs/tests.md` et `docs/rendu.md` si le comportement visible ou la strategie de tests evolue.
 
 ## Commandes
 

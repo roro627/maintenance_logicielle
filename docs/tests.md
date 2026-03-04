@@ -51,7 +51,7 @@ TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 b
 - `Kowasu_Renga`: `TestContratKowasuRenga.java` couvre le noyau pur briques/vies/score/acceleration.
 - `MaintenanceMode`: `test_operations.py` et `test_interface.py`.
 - `Minesweeper`: `TestContratMinesweeper.java`.
-- `NeonSumo`: `test_logique.py` et `test_main_menu.py`.
+- `NeonSumo`: `test_logique.py` et `test_main_menu.py` couvrent collisions, etats attract et mapping complet des commandes borne.
 - `OsuTile`: `test_osutile.py`.
 - `PianoTile`: `test_piano.py`.
 - `Pong`: `TestContratPong.java` couvre rebonds, score, reset de manche et retour menu.
@@ -68,13 +68,13 @@ TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 b
 - controleur headless du menu borne (`borne_arcade/tests/unit/TestContratControleurMenuBorne.java`),
 - logique pure de `Columns`, `InitialDrift`, `JavaSpace`, `Pong`, `Kowasu_Renga` et `Snake_Eater`,
 - logique NeonSumo (collisions, sortie arene, cooldowns, ultime),
-- configuration menu NeonSumo + logique d etats attract (`borne_arcade/projet/NeonSumo/tests/test_main_menu.py`),
+- configuration menu NeonSumo + logique d etats attract + coherence du mapping borne (`borne_arcade/projet/NeonSumo/tests/test_main_menu.py`),
 - mode maintenance Python (`borne_arcade/projet/MaintenanceMode/tests/test_operations.py`):
   streaming logs temps reel, timeout actionnable y compris pour une commande silencieuse,
   journalisation des erreurs,
-  fallback de dossier logs, operation `reset_pre_requis`, operation `git_retour_precedent`,
+  fallback de dossier logs, operation `git_retour_precedent`,
   robustesse diagnostic en absence de pre-requis, gestion de l absence de `git`,
-  verification du reset prerequis en mode sur (sans `autoremove --purge`), protection explicite de `python3`,
+  retrait des anciennes options 10/11 du catalogue maintenance,
   capture des exceptions inattendues, persistence de session migration,
   execution IA `Codex/Ollama` avec brief Markdown+JSON, reponse Markdown, trace JSONL,
   rapport qualite migration et gardes avant `proposer-pr`.
@@ -86,6 +86,8 @@ TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 b
 - configuration d affichage SDL/Pygame:
   verification de la reprise des variables `BORNE_*` dans `TronGame`, `OsuTile`,
   `ball-blast` et `PianoTile`.
+- optimisation `ball-blast`:
+  cache du panneau de score sans regeneration a score identique.
 - CLI migration (`borne_arcade/projet/MaintenanceMode/tests/test_workflow_migration_cli.py`):
   contrat `--format json`, propagation de `--cible` et de `--dossier-sortie`.
 - PianoTile (`borne_arcade/projet/PianoTile/tests/test_piano.py`):
@@ -108,7 +110,7 @@ TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 b
 - generation documentation,
 - architecture et couts,
 - mode maintenance cache (presence, verrouillage, integration menu),
-- mode maintenance cache (presence, verrouillage, integration menu, operation reset prerequis, workflow migration cible),
+- mode maintenance cache (presence, verrouillage, integration menu, workflow migration cible),
 - bootstrap robuste apres `sudo` (absence de regression sur normalisation permissions et execution non-systeme sous utilisateur appelant),
 - bootstrap robuste apres `sudo` y compris si les bits executables des lanceurs de jeux ont ete perdus lors d un checkout/pull,
 - bootstrap robuste pour l outillage migration:

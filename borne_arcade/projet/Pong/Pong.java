@@ -23,12 +23,18 @@ import MG2D.audio.*;
 
 
 public class Pong {
+    private static final int LARGEUR_ITEM_MENU = 300;
+    private static final int HAUTEUR_ITEM_MENU = 50;
+    private static final int MARGE_SELECTION_MENU = 10;
+    private static final int POSITION_Y_BOUTON_JOUER = 200;
+    private static final int DECALAGE_VERTICAL_BOUTON_QUITTER = 2 * HAUTEUR_ITEM_MENU;
+    private static final int DECALAGE_VERTICAL_TITRE = 100;
 
     //CONSTANTES
     // private int largeur = 1366;  //PC THEO (HACKED BY RACLETTTT)
     // private int hauteur = 768;	 //PC THEO (HACKED BY RACLETTTT)
-    private int largeur = 1280;
-	private int hauteur = 1024;
+    private int largeur = EtatPong.LARGEUR;
+	private int hauteur = EtatPong.HAUTEUR;
     private final int epaisseurLigne =10;
     private final int rayonBalle = 20;
     private final int vitesseRaquette = 6;
@@ -40,10 +46,10 @@ public class Pong {
     
     private int status;
     
-    private int largeurItem = 300, hauteurItem = 50;;
-    private int margeSelection = 10;
+    private int largeurItem = LARGEUR_ITEM_MENU, hauteurItem = HAUTEUR_ITEM_MENU;
+    private int margeSelection = MARGE_SELECTION_MENU;
     
-    private int yItems = 200;
+    private int yItems = POSITION_Y_BOUTON_JOUER;
     
     private FenetrePleinEcran f;
     
@@ -81,6 +87,36 @@ public class Pong {
 
     private Musique m;
 
+    /**
+     * Retourne le centre du libelle du bouton Play.
+     *
+     * @return centre du texte du bouton Play.
+     */
+    public static Point calculerCentreTexteBoutonJouer() {
+        return new Point(EtatPong.LARGEUR / 2, POSITION_Y_BOUTON_JOUER + HAUTEUR_ITEM_MENU / 2);
+    }
+
+    /**
+     * Retourne le centre du libelle du bouton Exit.
+     *
+     * @return centre du texte du bouton Exit.
+     */
+    public static Point calculerCentreTexteBoutonQuitter() {
+        return new Point(
+            EtatPong.LARGEUR / 2,
+            POSITION_Y_BOUTON_JOUER - DECALAGE_VERTICAL_BOUTON_QUITTER + HAUTEUR_ITEM_MENU / 2
+        );
+    }
+
+    /**
+     * Retourne le centre du titre du menu principal.
+     *
+     * @return centre du titre du menu.
+     */
+    public static Point calculerCentreTitreMenu() {
+        return new Point(EtatPong.LARGEUR / 2, EtatPong.HAUTEUR / 2 + DECALAGE_VERTICAL_TITRE);
+    }
+
     //CONSTRUCTEUR
     public Pong(){
     	f = new FenetrePleinEcran ( "ping ping pong");
@@ -103,16 +139,16 @@ public class Pong {
     	
     	
     	Texte texteJouer=new Texte(Couleur.NOIR,"PLAY",new Font("Calibri", Font.TYPE1_FONT, 40),new Point());
-    	texteJouer.setA(new Point(((largeur-texteJouer.getLargeur())/2),yItems+(hauteurItem-texteJouer.getHauteur())/2));
+    	texteJouer.setA(calculerCentreTexteBoutonJouer());
  	    
     	f.ajouter(texteJouer);
  	    
  	    Texte texteExit=new Texte(Couleur.NOIR,"EXIT",new Font("Calibri", Font.TYPE1_FONT, 40),new Point());
- 	   texteExit.setA(new Point(((largeur-texteExit.getLargeur())/2),(yItems+hauteurItem-texteExit.getHauteur())/2));
+ 	   texteExit.setA(calculerCentreTexteBoutonQuitter());
  	    f.ajouter(texteExit);
  	    
  	    Texte textPong=new Texte(Couleur.BLANC,"PONG",new Font("Arial", Font.TYPE1_FONT, 250),new Point());
- 	   textPong.setA(new Point(((largeur-textPong.getLargeur())/2),(((hauteur-textPong.getHauteur())/2)+100 )));
+ 	   textPong.setA(calculerCentreTitreMenu());
 	    f.ajouter(textPong);
     	
  	  /*  if(clavier.getJoyJ1HautEnfoncee()) {
@@ -152,19 +188,19 @@ public class Pong {
    	
    	Texte texteJouer=new Texte(Couleur.NOIR,"PLAY",new Font("Calibri", Font.TYPE1_FONT, 40),new Point());
 	f.ajouter(texteJouer);
-   	texteJouer.setA(new Point(((largeur-texteJouer.getLargeur())/2),yItems+(hauteurItem-texteJouer.getHauteur())/2));
+   	texteJouer.setA(calculerCentreTexteBoutonJouer());
 	f.supprimer(texteJouer);
    	f.ajouter(texteJouer);
 	    
 	Texte texteExit=new Texte(Couleur.NOIR,"EXIT",new Font("Calibri", Font.TYPE1_FONT, 40),new Point());
 	f.ajouter(texteExit);
-	texteExit.setA(new Point(((largeur-texteExit.getLargeur())/2),(yItems+hauteurItem-texteExit.getHauteur())/2));
+	texteExit.setA(calculerCentreTexteBoutonQuitter());
 	f.supprimer(texteExit);
 	f.ajouter(texteExit);
 	    
 	Texte textPong=new Texte(Couleur.BLANC,"PONG",new Font("Arial", Font.TYPE1_FONT, 250),new Point());
 	f.ajouter(textPong);
-	textPong.setA(new Point(((largeur-textPong.getLargeur())/2),(((hauteur-textPong.getHauteur())/2)+100 )));
+	textPong.setA(calculerCentreTitreMenu());
    f.supprimer(textPong);
 	f.ajouter(textPong);
 	f.rafraichir();

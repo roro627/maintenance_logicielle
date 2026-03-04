@@ -36,7 +36,7 @@ Maintenance Mode est le jeu utilitaire cache de la borne pour le diagnostic, les
 
 ## Maintenance et evolution
 
-- Le mode maintenance integre le diagnostic borne, le git pull, le post pull, le reset des prerequis et l assistant de migration IA.
+- Le mode maintenance integre le diagnostic borne, les operations git, le pipeline post-pull et le workflow de migration IA avec selection de cible.
 - Le lancement borne passe par le wrapper Python commun et doit rester compatible avec `python3`.
 - Des tests locaux existent dans `tests/` et doivent etre maintenus a jour.
 - Surveiller `config_maintenance.json` pour toute evolution de configuration.

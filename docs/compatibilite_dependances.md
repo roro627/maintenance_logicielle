@@ -79,7 +79,7 @@ pour Raspberry Pi OS et la borne arcade.
 - Si `love` echoue sur Debian 11 minimal: le bootstrap applique un contournement automatique puis relance `apt -f install`.
 - Si `codex` echoue avec un message de version Node.js: relancer `sudo bash ./bootstrap_borne.sh` pour forcer l installation de Node.js 22.x via NodeSource.
 - Si `docker info` echoue apres bootstrap: verifier le service Docker et rouvrir la session utilisateur pour reappliquer le groupe `docker`.
-- Pour repartir de zero: lancer `Reset prerequis` depuis `MaintenanceMode`, puis `sudo bash ./bootstrap_borne.sh` pour reinstaller.
+- Pour repartir d un etat local propre: supprimer `.venv`, `build`, `site`, `.cache/bootstrap_borne`, `.etat_derniere_maj` et `.post_pull.lock`, puis relancer `sudo bash ./bootstrap_borne.sh`.
 
 ## Liens associes
 

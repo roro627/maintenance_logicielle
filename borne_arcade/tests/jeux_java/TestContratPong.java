@@ -1,3 +1,5 @@
+import MG2D.geometrie.Point;
+
 /**
  * Verifie les contrats purs de Pong.
  */
@@ -13,6 +15,7 @@ public class TestContratPong {
         testerPointEtReinitialisation();
         testerReductionRaquetteApresRebond();
         testerRetourMenuAuNeuviemePoint();
+        testerCentrageMenu();
     }
 
     /**
@@ -83,6 +86,31 @@ public class TestContratPong {
 
         assertCondition(etat.getScoreGauche() == 9, "Le joueur gauche doit atteindre 9 points");
         assertCondition(etat.isRetourMenu(), "Le moteur doit signaler le retour menu a 9 points");
+    }
+
+    /**
+     * Verifie le recentrage des textes du menu principal.
+     */
+    private static void testerCentrageMenu() {
+        Point centreJouer = Pong.calculerCentreTexteBoutonJouer();
+        Point centreQuitter = Pong.calculerCentreTexteBoutonQuitter();
+        Point centreTitre = Pong.calculerCentreTitreMenu();
+
+        assertCondition(centreJouer.getX() == EtatPong.LARGEUR / 2, "Le libelle Play doit etre centre horizontalement");
+        assertCondition(
+            centreJouer.getY() == 225,
+            "Le libelle Play doit etre centre verticalement dans son bouton"
+        );
+        assertCondition(
+            centreQuitter.getX() == EtatPong.LARGEUR / 2,
+            "Le libelle Exit doit etre centre horizontalement"
+        );
+        assertCondition(
+            centreQuitter.getY() == 125,
+            "Le libelle Exit doit etre centre verticalement dans son bouton"
+        );
+        assertCondition(centreTitre.getX() == EtatPong.LARGEUR / 2, "Le titre doit etre centre horizontalement");
+        assertCondition(centreTitre.getY() == (EtatPong.HAUTEUR / 2) + 100, "Le titre doit garder son decalage vertical");
     }
 
     /**

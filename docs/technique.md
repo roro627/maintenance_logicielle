@@ -79,7 +79,7 @@ qualite, configuration et contraintes MG2D.
   la commande CLI supportee repose sur `codex exec --json --oss --local-provider ollama`.
 - Diagnostic maintenance durci: verification explicite des pre-requis borne et gestion robuste des sorties vides/commandes absentes.
 - Operations git maintenance durcies: `git pull` et `retour commit precedent` verifient d abord la presence de git, puis retournent une erreur actionnable.
-- Reset prerequis integre au mode maintenance en mode sur: purge apt limitee aux paquets non-systeme de la borne, paquets systeme critiques proteges (dont `python3`, `python3-venv`, `python3-pip`), suppression de `autoremove --purge`, puis nettoyage des artefacts locaux (`.venv`, `build`, `site`, etat bootstrap).
+- Catalogue maintenance recentre: les anciennes options 10/11 ne sont plus exposees dans l interface; le panneau operations reste focalise sur diagnostic, git, pipeline et migration cible.
 - Installation systeme idempotente: verification paquet par paquet puis installation des dependances manquantes.
 - Codex CLI est installe automatiquement par le bootstrap via `npm install -g @openai/codex`, puis verifie par `codex --version`.
 - Si Node.js est absent ou trop ancien pour Codex, l installateur prepare d abord Node.js 22.x via le depot officiel NodeSource.
@@ -103,7 +103,10 @@ qualite, configuration et contraintes MG2D.
   selection initiale alignee sur le premier jeu affiche et panneau descriptif
   synchronise avec le meme index logique que le lancement du jeu.
 - Menu NeonSumo ameliore: rendu titre neon anime parametre via `config_jeu.json` (`menu_titre`) sans impacter la boucle gameplay.
+- Mapping NeonSumo verrouille par le code et les tests: toutes les actions borne (B1..B6 + joystick) sont verifiees et l aide de l ecran titre rappelle maintenant aussi `B5 Taunt`.
 - NeonSumo attract durci: les collisions/eliminations en mode attract declenchent une reinitialisation IA sans sortie vers les etats competitifs.
+- `ball-blast` optimise: frames d explosion prechargees et panneau de score mis en cache pour eviter les allocations et chargements repetes pendant la boucle de jeu.
+- Menu Pong recentre: le positionnement des textes repose sur des centres calcules explicitement et verifies par un test Java cible.
 - PianoTile robuste: fallback sans `librosa` si la dependance n est pas disponible.
 - PianoTile durci: lecture audio non bloquante (message actionnable en cas d echec ALSA/PulseAudio), chronometrage de secours sans audio et sortie d urgence `Echap` pendant une partie.
 - Jeux SDL/Pygame adaptes a la borne: `TronGame`, `OsuTile`, `ball-blast` et `PianoTile`

@@ -16,7 +16,7 @@ Documenter le bilan final des travaux avec une verification point par point de `
 8. Maintenance mode modernisee: execution asynchrone des commandes, logs temps reel et interface pygame plus lisible.
 9. Deploiement post-pull durci: permissions partagees, logs robustes et installation systeme optionnelle en non-root.
 10. Bootstrap sudo durci: etapes non-systeme sous utilisateur appelant + normalisation ownership/permissions finales sur tout le depot exploitable (hors `.git/` et `MG2D/`) + bit executable de tous les lanceurs `.sh` pour eviter les blocages `Permission non accordee`, y compris sur `./borne_arcade/lancerBorne.sh`.
-11. Maintenance/gameplay enrichis: journal maintenance scrollable vertical+horizontal (recent en bas) + reset prerequis en mode sur (sans autoremove global, avec protection explicite de `python3`/`python3-venv`/`python3-pip`) + diagnostic prerequis robuste + rollback git au commit precedent (depot propre), et mode attract NeonSumo rendu continu apres collision.
+11. Maintenance/gameplay enrichis: journal maintenance scrollable vertical+horizontal (recent en bas) + retrait des anciennes options 10/11 dans `MaintenanceMode` + diagnostic prerequis robuste + rollback git au commit precedent (depot propre), recentrage du menu Pong, optimisation `ball-blast` en `1280x1024` et mode attract NeonSumo rendu continu apres collision.
 12. Couverture automatique borne + jeux renforcee: contrat global commun, test cible obligatoire par jeu, controleur headless du menu et noyaux purs ajoutes pour les jeux Java legacy les plus couples au rendu.
 13. Workflow migration borne finalise: CLI stable `tsv/json`, selection cible dans `MaintenanceMode`, session persistante hors git, assistant IA `Codex/Ollama` avec brief Markdown+JSON + reponse Markdown + trace JSONL, rapport qualite JSON et garde-fous avant `gh pr create`.
 14. README de jeux industrialises: template unique, metadonnees editoriales centralisees, generation deterministe et verification automatique du nommage/contenu.
@@ -75,8 +75,8 @@ Documenter le bilan final des travaux avec une verification point par point de `
   - ajout de `borne_arcade/projet/NeonSumo/`.
   - ajout du lanceur `borne_arcade/NeonSumo.sh`.
   - tests unitaires du coeur gameplay: `borne_arcade/projet/NeonSumo/tests/test_logique.py`.
-  - ajout de tests unitaires de configuration menu: `borne_arcade/projet/NeonSumo/tests/test_main_menu.py`.
-  - refonte du menu titre NeonSumo (rendu neon anime, panneau controles plus lisible).
+  - ajout de tests unitaires de configuration menu et de mapping borne: `borne_arcade/projet/NeonSumo/tests/test_main_menu.py`.
+  - refonte du menu titre NeonSumo (rendu neon anime, panneau controles plus lisible et rappel complet B1..B6).
 - Pourquoi c est conforme:
   - un nouveau jeu est bien integre dans le catalogue borne.
 - A quoi ca sert:
@@ -85,7 +85,7 @@ Documenter le bilan final des travaux avec une verification point par point de `
 ### 5. Maintenance exploitable en borne
 
 - Ce qui a ete fait:
-  - nouveau module `borne_arcade/projet/MaintenanceMode/` (pygame) avec operations: diagnostic, git pull, pipeline post-pull, mise a jour OS, reset prerequis en mode sur.
+  - nouveau module `borne_arcade/projet/MaintenanceMode/` (pygame) avec operations: diagnostic, git pull, pipeline post-pull et workflow de migration cible.
   - workflow migration complet ajoute au mode maintenance: rechargement des cibles, application migration cible, assistant IA `Codex/Ollama`, qualite complete, proposition PR.
   - relance `qualite` resynchronisee sur le commit courant avant `proposer-pr`.
   - execution des operations en arriere-plan pour eviter le blocage de l interface.
@@ -94,6 +94,7 @@ Documenter le bilan final des travaux avec une verification point par point de `
   - journal temps reel en direct dans l UI et dans `logs/maintenance_mode_*.log`, avec defilement manuel + auto-scroll.
   - affichage `MaintenanceMode` aligne sur la borne: `1280x1024`, mode `fenetre_sans_bordure` par defaut et hauteur journal recalculee dynamiquement.
   - selection cible reellement pilotable au clavier (`Tab`, `Entree`, `Haut/Bas`, `Gauche/Droite`) dans la combobox.
+  - retrait des anciennes options 10/11 et suppression complete de l ancien reset des prerequis dans le code du jeu maintenance.
   - etat de session migration persistant dans `.cache/maintenance_logicielle/etat_migration.json`.
   - rapport qualite de migration structure dans `logs/rapport_qualite_migration_*.json`.
   - deblocage par sequence secrete + bouton d ouverture configurable.
@@ -105,6 +106,17 @@ Documenter le bilan final des travaux avec une verification point par point de `
   - repond au besoin d operations terrain sans toucher au code MG2D.
 - A quoi ca sert:
   - maintenance rapide et actionnable directement depuis la borne.
+
+### 6. Corrections de jeux existants
+
+- Ce qui a ete fait:
+  - recentrage des textes du menu Pong avec un calcul de centres teste automatiquement.
+  - optimisation `ball-blast`: cache du panneau de score, preload des frames d explosion et maintien explicite du format borne `1280x1024`.
+  - verification du mapping borne NeonSumo: toutes les actions sont assignees, sans doublon, avec rappel complet sur l ecran titre.
+- Pourquoi c est conforme:
+  - chaque correction est accompagnee d un test ou d une verification automatique qui couvre la regression corrigee.
+- A quoi ca sert:
+  - moins de regressions visuelles, moins de chargements inutiles et des commandes plus lisibles pour l exploitation en borne.
 
 ### 5. Livrables attendus
 

@@ -40,7 +40,7 @@ Ball Blast est un jeu d action arcade ou le joueur deplace un canon pour detruir
 - Le lancement borne passe par le wrapper Python commun et doit rester compatible avec `python3`.
 - Les dependances specifiques sont centralisees dans `requirements.txt`.
 - Des tests locaux existent dans `tests/` et doivent etre maintenus a jour.
-- Le jeu utilise des ressources audio et graphiques chargees depuis `assets/` et s execute depuis `src/`.
+- Le jeu utilise des ressources audio et graphiques chargees depuis `assets/`, precharge ses frames d explosion et met en cache son panneau de score pour rester fluide en `1280x1024`.
 
 ## Liens associes
 
