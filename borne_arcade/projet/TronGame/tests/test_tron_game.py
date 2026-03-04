@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import importlib
 import os
 import sys
 import unittest
 from pathlib import Path
+from unittest import mock
 
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
@@ -21,6 +23,7 @@ from ai import AI  # pylint: disable=import-error
 from config import BLUE, BLUE_GLOW, ORANGE, ORANGE_GLOW  # pylint: disable=import-error
 from direction import Direction  # pylint: disable=import-error
 from game_main import Game  # pylint: disable=import-error
+import config as module_config  # pylint: disable=import-error
 
 
 class TestTronGame(unittest.TestCase):
@@ -112,6 +115,25 @@ class TestTronGame(unittest.TestCase):
 
         self.assertTrue(fin_de_partie)
         self.assertEqual(jeu.winner, "Joueur 1")
+
+    def test_configuration_affichage_reprend_la_resolution_borne(self) -> None:
+        """Verifie que la configuration Tron suit les variables borne."""
+
+        with mock.patch.dict(
+            os.environ,
+            {
+                "BORNE_RESOLUTION_X": "1280",
+                "BORNE_RESOLUTION_Y": "1024",
+                "BORNE_MODE_AFFICHAGE": "fenetre_sans_bordure",
+            },
+            clear=False,
+        ):
+            config_rechargee = importlib.reload(module_config)
+
+        self.assertEqual(config_rechargee.SCREEN_WIDTH, 1280)
+        self.assertEqual(config_rechargee.SCREEN_HEIGHT, 1024)
+        self.assertEqual(config_rechargee.DISPLAY_FLAGS, pygame.NOFRAME)
+        importlib.reload(module_config)
 
 
 if __name__ == "__main__":

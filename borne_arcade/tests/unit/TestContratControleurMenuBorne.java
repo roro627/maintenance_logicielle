@@ -43,21 +43,30 @@ public class TestContratControleurMenuBorne {
         ControleurMenuBorne controleur = creerControleur(jeux, new EtatModeMaintenance(), new LanceurJeuFactice());
 
         assertCondition(
-            controleur.getEtat().getIndexSelection() == jeux.size() - 1,
-            "La selection initiale doit pointer sur le dernier bouton historique"
+            controleur.getEtat().getIndexSelection() == 0,
+            "La selection initiale doit pointer sur le premier jeu du catalogue"
         );
         assertCondition(
-            controleur.getEtat().getJeuSelectionne().getNom().equals(jeux.get(jeux.size() - 1).getNom()),
-            "Le jeu initial doit correspondre au dernier element du catalogue"
+            controleur.getEtat().getJeuSelectionne().getNom().equals(jeux.get(0).getNom()),
+            "Le jeu initial doit correspondre au premier element du catalogue"
         );
 
+        controleur.deplacerBas();
+        assertCondition(controleur.getEtat().getIndexSelection() == 1, "Le deplacement bas doit avancer dans le catalogue");
+
         controleur.deplacerHaut();
-        assertCondition(controleur.getEtat().getIndexSelection() == 0, "Le deplacement haut doit boucler vers le debut");
+        assertCondition(controleur.getEtat().getIndexSelection() == 0, "Le deplacement haut doit revenir au jeu precedent");
+
+        controleur.deplacerHaut();
+        assertCondition(
+            controleur.getEtat().getIndexSelection() == jeux.size() - 1,
+            "Le deplacement haut depuis le debut doit reboucler vers la fin"
+        );
 
         controleur.deplacerBas();
         assertCondition(
-            controleur.getEtat().getIndexSelection() == jeux.size() - 1,
-            "Le deplacement bas doit reboucler vers la fin"
+            controleur.getEtat().getIndexSelection() == 0,
+            "Le deplacement bas depuis la fin doit reboucler vers le debut"
         );
     }
 

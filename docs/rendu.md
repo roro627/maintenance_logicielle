@@ -20,6 +20,10 @@ Documenter le bilan final des travaux avec une verification point par point de `
 12. Couverture automatique borne + jeux renforcee: contrat global commun, test cible obligatoire par jeu, controleur headless du menu et noyaux purs ajoutes pour les jeux Java legacy les plus couples au rendu.
 13. Workflow migration borne finalise: CLI stable `tsv/json`, selection cible dans `MaintenanceMode`, session persistante hors git, assistant IA `Codex/Ollama` avec brief Markdown+JSON + reponse Markdown + trace JSONL, rapport qualite JSON et garde-fous avant `gh pr create`.
 14. README de jeux industrialises: template unique, metadonnees editoriales centralisees, generation deterministe et verification automatique du nommage/contenu.
+15. Affichage borne unifie: resolution `1280x1024` propagee par les lanceurs, `MaintenanceMode` adapte en mode sans bordure/plein ecran et journal vertical etendu sans zone morte.
+16. Menu borne fiabilise: ordre alphabetique, selection initiale coherente et panneau descriptif aligne sur le jeu lance.
+17. Workflow reel Debian 11 fiabilise: compilations Java shell forcees en `UTF-8` via configuration centralisee et garde anti-regression contre les echecs de locale `US-ASCII`.
+18. Validation locale durcie: le cache MG2D est maintenant invalide automatiquement s il a ete compile avec une version Java plus recente que le `javac` disponible.
 
 ## Conformite `consignes.md` (point par point)
 
@@ -88,6 +92,7 @@ Documenter le bilan final des travaux avec une verification point par point de `
   - selection automatique d un dossier logs ecrivable (`logs/`, `~/.cache/...`, `/tmp/...`) avant chaque operation.
   - capture globale des exceptions d operation avec message actionnable et retour d etat propre a l interface.
   - journal temps reel en direct dans l UI et dans `logs/maintenance_mode_*.log`, avec defilement manuel + auto-scroll.
+  - affichage `MaintenanceMode` aligne sur la borne: `1280x1024`, mode `fenetre_sans_bordure` par defaut et hauteur journal recalculee dynamiquement.
   - selection cible reellement pilotable au clavier (`Tab`, `Entree`, `Haut/Bas`, `Gauche/Droite`) dans la combobox.
   - etat de session migration persistant dans `.cache/maintenance_logicielle/etat_migration.json`.
   - rapport qualite de migration structure dans `logs/rapport_qualite_migration_*.json`.

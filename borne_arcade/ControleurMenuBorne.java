@@ -41,7 +41,7 @@ public final class ControleurMenuBorne {
         this.jeux = jeuxCatalogue;
         this.etatModeMaintenance = etatMaintenance;
         this.lanceurJeu = lanceur;
-        this.etat = new EtatMenuBorne(jeuxCatalogue.size() - 1, jeuxCatalogue.get(jeuxCatalogue.size() - 1));
+        this.etat = new EtatMenuBorne(0, jeuxCatalogue.get(0));
     }
 
     /**
@@ -57,22 +57,22 @@ public final class ControleurMenuBorne {
      * Remonte la selection comme dans le menu historique.
      */
     public void deplacerHaut() {
-        if (etat.getIndexSelection() == jeux.size() - 1) {
-            appliquerSelection(0);
+        if (etat.getIndexSelection() == 0) {
+            appliquerSelection(jeux.size() - 1);
             return;
         }
-        appliquerSelection(etat.getIndexSelection() + 1);
+        appliquerSelection(etat.getIndexSelection() - 1);
     }
 
     /**
      * Descend la selection comme dans le menu historique.
      */
     public void deplacerBas() {
-        if (etat.getIndexSelection() == 0) {
-            appliquerSelection(jeux.size() - 1);
+        if (etat.getIndexSelection() == jeux.size() - 1) {
+            appliquerSelection(0);
             return;
         }
-        appliquerSelection(etat.getIndexSelection() - 1);
+        appliquerSelection(etat.getIndexSelection() + 1);
     }
 
     /**

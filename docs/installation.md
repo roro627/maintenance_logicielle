@@ -29,6 +29,11 @@ Le script `bootstrap_borne.sh` enchaine:
 - normalisation finale ownership/permissions (`build/`, `logs/`, `.cache/`, `.venv/`, `site/`) pour eviter les artefacts root bloquants,
 - compilation, lint, tests smoke, documentation.
 
+Quand `Node.js` provient du depot officiel NodeSource, l installateur considere
+`node` et `npm` comme satisfaits des qu ils sont disponibles en commande,
+meme si le paquet Debian `npm` n est pas installe separement. Cela evite un
+conflit `nodejs` vs `npm` sur Debian 11 lors des relances idempotentes.
+
 Le bootstrap est **obligatoirement lance en sudo/root** (hors mode test).
 Sinon il s arrete avec un message clair et la commande de relance.
 
@@ -106,6 +111,21 @@ INSTALLATION_SYSTEME_OPTIONNEL=1 ./scripts/install/installer_borne.sh
 
 Si une dependance systeme manque, le script echoue avec une action recommandee
 (`sudo ./bootstrap_borne.sh`).
+
+### Reglage affichage borne
+
+Le comportement d affichage des lanceurs est centralise dans
+`borne_arcade/config/borne.env`:
+
+- `RESOLUTION_X=1280`
+- `RESOLUTION_Y=1024`
+- `MODE_AFFICHAGE_BORNE=fenetre_sans_bordure`
+- `POSITION_FENETRE_X=0`
+- `POSITION_FENETRE_Y=0`
+
+Les scripts `lancer_jeu_python.sh`, `lancer_jeu_love.sh` et `lancer_jeu_java.sh`
+propagent ces valeurs au jeu lance. `MaintenanceMode` les consomme directement et
+ouvre son interface en `1280x1024` sans barre de titre par defaut.
 
 ## Validation
 

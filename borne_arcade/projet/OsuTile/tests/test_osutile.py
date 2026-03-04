@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import importlib
 import math
 import os
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 from unittest.mock import Mock
 
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
@@ -22,6 +24,7 @@ from config import FALL_TIME, HIT_BOX_PIXEL, HIT_LINE_Y, SCREEN_HEIGHT, TILE_HEI
 from game import evaluer_frappe_tuile, load_beatmap  # pylint: disable=import-error
 from main import ensure_maps_exported, lister_exports_manquants  # pylint: disable=import-error
 from tile import Tile  # pylint: disable=import-error
+import config as module_config  # pylint: disable=import-error
 
 
 class TestOsuTile(unittest.TestCase):
@@ -75,6 +78,25 @@ class TestOsuTile(unittest.TestCase):
         self.assertEqual(evaluer_frappe_tuile(tuile, temps_perfect), "Perfect")
         self.assertEqual(evaluer_frappe_tuile(tuile, temps_miss), "Miss")
         self.assertTrue(math.isfinite(temps_perfect))
+
+    def test_configuration_affichage_utilise_la_resolution_borne(self) -> None:
+        """Verifie que la configuration d affichage suit les variables borne."""
+
+        with mock.patch.dict(
+            os.environ,
+            {
+                "BORNE_RESOLUTION_X": "1280",
+                "BORNE_RESOLUTION_Y": "1024",
+                "BORNE_MODE_AFFICHAGE": "fenetre_sans_bordure",
+            },
+            clear=False,
+        ):
+            config_rechargee = importlib.reload(module_config)
+
+        self.assertEqual(config_rechargee.SCREEN_WIDTH, 1280)
+        self.assertEqual(config_rechargee.SCREEN_HEIGHT, 1024)
+        self.assertEqual(config_rechargee.DISPLAY_FLAGS, config_rechargee.pygame.NOFRAME)
+        importlib.reload(module_config)
 
 
 if __name__ == "__main__":

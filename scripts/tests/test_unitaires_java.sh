@@ -32,7 +32,7 @@ compiler_tests_unitaires_java() {
 
     rm -rf "${dossier_classes_tests_java}"
     mkdir -p "${dossier_classes_tests_java}"
-    javac -d "${dossier_classes_tests_java}" -cp ".:${classpath_mg2d}" "${fichiers_a_compiler[@]}"
+    executer_javac -d "${dossier_classes_tests_java}" -cp ".:${classpath_mg2d}" "${fichiers_a_compiler[@]}"
   )
 }
 

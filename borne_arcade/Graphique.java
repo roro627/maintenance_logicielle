@@ -407,13 +407,13 @@ public class Graphique {
 
 	reafficherTexteCourantSiNecessaire(ancienIndex);
 	if(ancienIndex == tableau.length - 1 && nouvelIndex == 0){
-	    translaterElementsMenu(ConstantesMenu.ECART_ELEMENTS * (tableau.length - 1));
-	}else if(ancienIndex == 0 && nouvelIndex == tableau.length - 1){
 	    translaterElementsMenu(-ConstantesMenu.ECART_ELEMENTS * (tableau.length - 1));
+	}else if(ancienIndex == 0 && nouvelIndex == tableau.length - 1){
+	    translaterElementsMenu(ConstantesMenu.ECART_ELEMENTS * (tableau.length - 1));
 	}else if(nouvelIndex > ancienIndex){
-	    translaterElementsMenu(-ConstantesMenu.ECART_ELEMENTS);
-	}else{
 	    translaterElementsMenu(ConstantesMenu.ECART_ELEMENTS);
+	}else{
+	    translaterElementsMenu(-ConstantesMenu.ECART_ELEMENTS);
 	}
 	pointeur.setValue(nouvelIndex);
     }

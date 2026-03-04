@@ -1,3 +1,3 @@
 # todo
 
-- [ ] Before i commit, i need to check the code and make sure it works as expected, do it for me and find good message for the commit (don't commit yet, just find the message and check the code)
+- [ ] Dans le jeu de Maintenance la dernière fois que j'ai testé les versions de python ou autre (à part le système) ne se récuperer pas (on ne voyez pas quel versions etaient dispo ou est ce que c'était la derniere deja à jour), vérifie que tout est bien fait et que tout est censé fonctionner

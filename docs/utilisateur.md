@@ -9,6 +9,8 @@ commandes principales et depannage rapide.
 
 ### Navigation menu
 
+- Les jeux sont affiches par ordre alphabetique.
+- Le panneau de droite suit toujours le jeu reellement selectionne et lance.
 - Joystick J1 haut/bas: selection du jeu.
 - Bouton J1A: lancer le jeu.
 - Bouton J1Z: quitter le menu (confirmation).
@@ -19,6 +21,8 @@ commandes principales et depannage rapide.
 - Deblocage: sequence secrete configuree dans `borne_arcade/config/maintenance_mode.properties`.
 - Ouverture apres debloquage: bouton configure (par defaut `J1B`).
 - Une operation maintenance lancee (`F`) tourne en arriere-plan avec journal temps reel visible dans l ecran.
+- `MaintenanceMode` s affiche en `1280x1024` sur la borne, sans barre de titre par defaut
+  (`MODE_AFFICHAGE_BORNE=fenetre_sans_bordure` dans `borne_arcade/config/borne.env`).
 - La cible de migration se choisit dans la combobox en haut de la colonne operations:
   `Tab` pour donner le focus,
   `Entree` pour ouvrir/fermer,
@@ -27,6 +31,7 @@ commandes principales et depannage rapide.
 - Le journal maintenance est scrollable: `PgUp`/`PgDn` (historique/recent), `Gauche`/`Droite` (horizontal), `A` pour activer/desactiver l auto-scroll, `Fin` pour revenir en bas, `Home` pour revenir au debut de ligne.
 - Le journal est affiche de facon coherente: les lignes recentes restent en bas de la zone.
 - Le diagnostic signale explicitement les pre-requis manquants (avec action recommandee) au lieu de planter.
+- Une commande maintenance bloquee ou silencieuse est interrompue au timeout avec un message actionnable au lieu de rester en attente indefinie.
 - Pendant une operation, la sortie est bloquee pour eviter les etats partiels.
 - Workflow migration borne:
   1. `Recharger cibles migration`

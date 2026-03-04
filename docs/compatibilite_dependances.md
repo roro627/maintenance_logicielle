@@ -26,6 +26,9 @@ pour Raspberry Pi OS et la borne arcade.
 - Codex CLI: requiert Node.js 16 minimum pour demarrer correctement.
 - Bootstrap migration: cible Node.js 22.x via le depot officiel NodeSource si la version
   fournie par la distribution est trop ancienne pour Codex.
+- Quand Node.js est fourni par NodeSource, la presence effective des commandes
+  `node` et `npm` fait foi; l installateur n exige pas le paquet Debian `npm`
+  separe si `npm` est deja embarque avec `nodejs`.
 - Ollama distant: acces via `ollama.base_url`, sans obligation d installer le binaire
   `ollama` sur la borne.
 

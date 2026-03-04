@@ -59,12 +59,16 @@ charger_configuration_borne() {
   DOSSIER_BUILD_CLASSES_TESTS="${DOSSIER_BUILD_CLASSES_TESTS:-${DOSSIER_BUILD_RACINE}/classes/tests}"
   DOSSIER_CACHE_MG2D_CLASSES="${DOSSIER_CACHE_MG2D_CLASSES:-${RACINE_PROJET}/.cache/mg2d_classes}"
   COMMANDE_PYTHON="${COMMANDE_PYTHON:-python3}"
+  ENCODAGE_SOURCES_JAVA="${ENCODAGE_SOURCES_JAVA:-UTF-8}"
   UTILISER_VENV_PROJET="${UTILISER_VENV_PROJET:-1}"
   DELAI_EXTINCTION_SECONDES="${DELAI_EXTINCTION_SECONDES:-30}"
   CLAVIER_BORNE="${CLAVIER_BORNE:-borne}"
   JEU_REFERENCE_TEST="${JEU_REFERENCE_TEST:-NeonSumo}"
   RESOLUTION_X="${RESOLUTION_X:-1280}"
   RESOLUTION_Y="${RESOLUTION_Y:-1024}"
+  MODE_AFFICHAGE_BORNE="${MODE_AFFICHAGE_BORNE:-fenetre_sans_bordure}"
+  POSITION_FENETRE_X="${POSITION_FENETRE_X:-0}"
+  POSITION_FENETRE_Y="${POSITION_FENETRE_Y:-0}"
   JAVA_VERSION_MIN="${JAVA_VERSION_MIN:-17}"
   PYTHON_VERSION_MIN="${PYTHON_VERSION_MIN:-3.10}"
   PIP_VERSION_MIN="${PIP_VERSION_MIN:-24.0}"
@@ -87,12 +91,31 @@ charger_configuration_borne() {
   export RACINE_PROJET REPERTOIRE_BORNE FICHIER_CONFIG_BORNE FICHIER_VERSIONS_MINIMALES
   export CHEMIN_MG2D CHEMIN_JAR_MG2D DOSSIER_ARCHIVES DOSSIER_BUILD_RACINE
   export DOSSIER_BUILD_CLASSES_MENU DOSSIER_BUILD_CLASSES_JEUX DOSSIER_BUILD_CLASSES_TESTS
-  export DOSSIER_CACHE_MG2D_CLASSES COMMANDE_PYTHON DELAI_EXTINCTION_SECONDES CLAVIER_BORNE JEU_REFERENCE_TEST
+  export DOSSIER_CACHE_MG2D_CLASSES COMMANDE_PYTHON ENCODAGE_SOURCES_JAVA DELAI_EXTINCTION_SECONDES CLAVIER_BORNE JEU_REFERENCE_TEST
   export RESOLUTION_X RESOLUTION_Y
+  export MODE_AFFICHAGE_BORNE POSITION_FENETRE_X POSITION_FENETRE_Y
   export UTILISER_VENV_PROJET
   export JAVA_VERSION_MIN PYTHON_VERSION_MIN PIP_VERSION_MIN PYTEST_VERSION_MIN
   export MKDOCS_VERSION_MIN PYGAME_VERSION_MIN LUA_VERSION_MIN LOVE_VERSION_MIN NODE_VERSION_MIN_CODEX
   export VERSION_SHELLCHECK_OUTIL VERSION_CHECKSTYLE_OUTIL VERSION_PYLINT_OUTIL VERSION_ACT_OUTIL VERSION_NODE_SOURCE_MAJEURE
+}
+
+#######################################
+# Prepare les variables d affichage
+# partagees pour les jeux SDL/pygame.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+preparer_environnement_affichage_sdl() {
+  export BORNE_RESOLUTION_X="${RESOLUTION_X:-1280}"
+  export BORNE_RESOLUTION_Y="${RESOLUTION_Y:-1024}"
+  export BORNE_MODE_AFFICHAGE="${MODE_AFFICHAGE_BORNE:-fenetre_sans_bordure}"
+  export BORNE_POSITION_FENETRE_X="${POSITION_FENETRE_X:-0}"
+  export BORNE_POSITION_FENETRE_Y="${POSITION_FENETRE_Y:-0}"
+  export SDL_VIDEO_WINDOW_POS="${BORNE_POSITION_FENETRE_X},${BORNE_POSITION_FENETRE_Y}"
+  export SDL_VIDEO_CENTERED=0
 }
 
 #######################################
@@ -229,6 +252,86 @@ verifier_acces_ecriture_build() {
 }
 
 #######################################
+# Execute javac avec un encodage source
+# explicite pour eviter les echecs lies
+# a la locale du systeme hote.
+# Arguments:
+#   $1...: options et sources pour javac
+# Retour:
+#   code retour javac
+#######################################
+executer_javac() {
+  javac -encoding "${ENCODAGE_SOURCES_JAVA}" "$@"
+}
+
+#######################################
+# Retourne la version majeure de classe
+# supportee par le javac courant.
+# Arguments:
+#   aucun
+# Retour:
+#   ecrit la version majeure sur stdout
+#######################################
+obtenir_version_majeure_javac_courant() {
+  local version_javac=""
+  local version_java_majeure=""
+
+  version_javac="$(javac -version 2>&1 | awk '{print $2}')"
+  [[ -n "${version_javac}" ]] || return 1
+
+  if [[ "${version_javac}" == 1.* ]]; then
+    version_java_majeure="${version_javac#1.}"
+    version_java_majeure="${version_java_majeure%%.*}"
+  else
+    version_java_majeure="${version_javac%%.*}"
+  fi
+
+  [[ "${version_java_majeure}" =~ ^[0-9]+$ ]] || return 1
+  printf '%s\n' "$((version_java_majeure + 44))"
+}
+
+#######################################
+# Retourne la version majeure bytecode
+# d un fichier .class Java.
+# Arguments:
+#   $1: chemin du fichier .class
+# Retour:
+#   ecrit la version majeure sur stdout
+#######################################
+obtenir_version_majeure_classfile() {
+  local fichier_classe="$1"
+
+  "${COMMANDE_PYTHON:-python3}" - "${fichier_classe}" <<'PY'
+from pathlib import Path
+import sys
+
+chemin = Path(sys.argv[1])
+donnees = chemin.read_bytes()
+if len(donnees) < 8 or donnees[:4] != b"\xca\xfe\xba\xbe":
+    raise SystemExit(1)
+print(int.from_bytes(donnees[6:8], "big"))
+PY
+}
+
+#######################################
+# Indique si un fichier .class est
+# compatible avec le javac courant.
+# Arguments:
+#   $1: chemin du fichier .class
+# Retour:
+#   0 si compatible, 1 sinon
+#######################################
+classfile_compatible_avec_javac_courant() {
+  local fichier_classe="$1"
+  local version_classe=""
+  local version_supportee=""
+
+  version_classe="$(obtenir_version_majeure_classfile "${fichier_classe}")" || return 1
+  version_supportee="$(obtenir_version_majeure_javac_courant)" || return 1
+  [[ "${version_classe}" -le "${version_supportee}" ]]
+}
+
+#######################################
 # Compile les sources MG2D vers un cache
 # pour eviter de modifier MG2D/.
 # Arguments:
@@ -259,7 +362,7 @@ preparer_classes_mg2d_cache() {
 
   rm -f "${fichier_temoin_cache}"
   find "${DOSSIER_CACHE_MG2D_CLASSES}" -type f -name '*.class' -delete
-  javac -d "${DOSSIER_CACHE_MG2D_CLASSES}" "${sources_mg2d[@]}"
+  executer_javac -d "${DOSSIER_CACHE_MG2D_CLASSES}" "${sources_mg2d[@]}"
   touch "${fichier_temoin_cache}"
 }
 
@@ -282,6 +385,8 @@ jar_mg2d_valide() {
   )
   local index_jar
   local element
+  local repertoire_temporaire=""
+  local classe_reference="MG2D/Fenetre.class"
 
   [[ -f "${CHEMIN_JAR_MG2D}" ]] || return 1
   command -v jar >/dev/null 2>&1 || return 1
@@ -290,6 +395,20 @@ jar_mg2d_valide() {
   for element in "${elements_requis[@]}"; do
     printf '%s\n' "${index_jar}" | grep -Fxq "${element}" || return 1
   done
+
+  repertoire_temporaire="$(mktemp -d)"
+  (
+    cd "${repertoire_temporaire}"
+    jar xf "${CHEMIN_JAR_MG2D}" "${classe_reference}"
+  ) >/dev/null 2>&1 || {
+    rm -rf "${repertoire_temporaire}"
+    return 1
+  }
+  if ! classfile_compatible_avec_javac_courant "${repertoire_temporaire}/${classe_reference}"; then
+    rm -rf "${repertoire_temporaire}"
+    return 1
+  fi
+  rm -rf "${repertoire_temporaire}"
 
   return 0
 }
@@ -320,6 +439,7 @@ cache_mg2d_valide() {
 
   for classe in "${classes_requises[@]}"; do
     [[ -f "${DOSSIER_CACHE_MG2D_CLASSES}/${classe}" ]] || return 1
+    classfile_compatible_avec_javac_courant "${DOSSIER_CACHE_MG2D_CLASSES}/${classe}" || return 1
   done
 
   source_plus_recente="$(find "${repertoire_sources_mg2d}" -type f -name '*.java' -newer "${fichier_temoin_cache}" -print -quit)"

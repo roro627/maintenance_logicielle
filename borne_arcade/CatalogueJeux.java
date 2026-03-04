@@ -71,7 +71,12 @@ public final class CatalogueJeux {
                 exception
             );
         }
-        dossiers.sort(Comparator.comparing(path -> path.getFileName().toString()));
+        dossiers.sort(
+            Comparator.comparing(
+                (Path path) -> path.getFileName().toString(),
+                String.CASE_INSENSITIVE_ORDER
+            ).thenComparing(path -> path.getFileName().toString())
+        );
         return dossiers;
     }
 

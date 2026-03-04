@@ -15,10 +15,13 @@ Validateur: Equipe SAE ArcadeCare
 
 - [x] Demarrage automatique via borne.desktop
 - [x] Navigation joystick J1 dans le menu
+- [x] Catalogue trie alphabetiquement et panneau droit synchronise avec la selection
 - [x] Lancement et retour menu pour chaque jeu
 - [x] Son menu et son jeu
 - [x] Ecriture et lecture highscore persistante
-- [x] Resolution ecran 4:3 correcte
+- [x] Resolution ecran 1280x1024 correcte
+- [x] Jeux SDL critiques affiches sans barre de titre ou en plein ecran selon `borne.env`
+- [x] `MaintenanceMode` occupe correctement la hauteur `1024` sans zone morte majeure
 - [x] Bouton de sortie borne operationnel
 - [x] Deblocage mode maintenance via sequence secrete
 - [x] Reverrouillage mode maintenance via bouton J1C

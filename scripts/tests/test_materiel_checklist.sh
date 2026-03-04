@@ -32,7 +32,7 @@ verifier_preuve_validation_materielle() {
     || arreter_sur_erreur "Checklist audio non validee"
   grep -Eq "^- \\[x\\] Ecriture et lecture highscore persistante$" "${fichier_preuve}" \
     || arreter_sur_erreur "Checklist highscore non validee"
-  grep -Eq "^- \\[x\\] Resolution ecran 4:3 correcte$" "${fichier_preuve}" \
+  grep -Eq "^- \\[x\\] Resolution ecran (4:3|1280x1024) correcte$" "${fichier_preuve}" \
     || arreter_sur_erreur "Checklist resolution non validee"
   grep -Eq "^- \\[x\\] Bouton de sortie borne operationnel$" "${fichier_preuve}" \
     || arreter_sur_erreur "Checklist sortie non validee"

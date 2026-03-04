@@ -11,14 +11,30 @@ if [[ -f "${RACINE_PROJET}/scripts/lib/outils_communs.sh" ]]; then
 else
   CHEMIN_MG2D="${RACINE_PROJET}/MG2D"
   COMMANDE_PYTHON="python3"
+  ENCODAGE_SOURCES_JAVA="UTF-8"
 fi
 
 CHEMIN_MG2D="${CHEMIN_MG2D:-${RACINE_PROJET}/MG2D}"
 COMMANDE_PYTHON="${COMMANDE_PYTHON:-python3}"
+ENCODAGE_SOURCES_JAVA="${ENCODAGE_SOURCES_JAVA:-UTF-8}"
 CLASSPATH_MG2D="${CHEMIN_MG2D}"
 DOSSIER_BUILD_RACINE="${DOSSIER_BUILD_RACINE:-${RACINE_PROJET}/build}"
 DOSSIER_BUILD_CLASSES_MENU="${DOSSIER_BUILD_CLASSES_MENU:-${DOSSIER_BUILD_RACINE}/classes/menu}"
 DOSSIER_BUILD_CLASSES_JEUX="${DOSSIER_BUILD_CLASSES_JEUX:-${DOSSIER_BUILD_RACINE}/classes/jeux}"
+
+if ! declare -F executer_javac >/dev/null 2>&1; then
+  #######################################
+  # Fallback local si la librairie commune
+  # n est pas chargee.
+  # Arguments:
+  #   $1...: options et sources pour javac
+  # Retour:
+  #   code retour javac
+  #######################################
+  executer_javac() {
+    javac -encoding "${ENCODAGE_SOURCES_JAVA}" "$@"
+  }
+fi
 
 #######################################
 # Verifie l acces en ecriture au dossier
@@ -163,7 +179,7 @@ compiler_menu() {
   echo "Compilation du menu de la borne d arcade"
   rm -rf "${DOSSIER_BUILD_CLASSES_MENU}"
   mkdir -p "${DOSSIER_BUILD_CLASSES_MENU}"
-  javac -d "${DOSSIER_BUILD_CLASSES_MENU}" -cp ".:${CLASSPATH_MG2D}" "${fichiers_java[@]}"
+  executer_javac -d "${DOSSIER_BUILD_CLASSES_MENU}" -cp ".:${CLASSPATH_MG2D}" "${fichiers_java[@]}"
 }
 
 #######################################
@@ -203,7 +219,7 @@ compiler_jeux_java() {
       echo "Compilation Java du jeu ${nom_jeu}"
       rm -rf "${dossier_classes_jeu}"
       mkdir -p "${dossier_classes_jeu}"
-      javac -d "${dossier_classes_jeu}" -cp ".:${SCRIPT_DIR}:../..:${CLASSPATH_MG2D}" "${fichiers_java[@]}"
+      executer_javac -d "${dossier_classes_jeu}" -cp ".:${SCRIPT_DIR}:../..:${CLASSPATH_MG2D}" "${fichiers_java[@]}"
     fi
 
     if [[ "${#fichiers_python[@]}" -gt 0 ]]; then

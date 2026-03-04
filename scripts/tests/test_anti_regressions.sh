@@ -165,6 +165,86 @@ verifier_garde_codex_et_nodejs() {
 }
 
 #######################################
+# Verifie que toutes les compilations
+# Java shell passent par un encodage
+# source explicite et centralise.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+verifier_encodage_java_explicite() {
+  local utilisations_javac_directes
+  local motif_helper_javac="javac -encoding \"\${ENCODAGE_SOURCES_JAVA}\" \"\$@\""
+  local recherche_javac=""
+
+  grep -Fq "ENCODAGE_SOURCES_JAVA" "${REPERTOIRE_BORNE}/config/borne.env" \
+    || arreter_sur_erreur "Encodage Java centralise absent de borne.env"
+  grep -Fq "${motif_helper_javac}" "${RACINE_PROJET}/scripts/lib/outils_communs.sh" \
+    || arreter_sur_erreur "Helper javac a encodage explicite absent de scripts/lib/outils_communs.sh"
+
+  if command -v rg >/dev/null 2>&1; then
+    recherche_javac="$(
+      rg -n '^[[:space:]]*(if[[:space:]]+![[:space:]]+)?javac([[:space:]]|$)' "${REPERTOIRE_BORNE}" "${RACINE_PROJET}/scripts" -g '*.sh' \
+        || true
+    )"
+  else
+    recherche_javac="$(
+      grep -RsnE --include='*.sh' '^[[:space:]]*(if[[:space:]]+![[:space:]]+)?javac([[:space:]]|$)' "${REPERTOIRE_BORNE}" "${RACINE_PROJET}/scripts" \
+        || true
+    )"
+  fi
+
+  utilisations_javac_directes="$(
+    printf '%s\n' "${recherche_javac}" | grep -Fv "${motif_helper_javac}" || true
+  )"
+  [[ -z "${utilisations_javac_directes}" ]] \
+    || arreter_sur_erreur \
+      "Compilation Java shell hors helper detectee." \
+      "Remplacez les appels javac directs par executer_javac pour imposer ${ENCODAGE_SOURCES_JAVA}."
+}
+
+#######################################
+# Verifie que le cache MG2D invalide les
+# classes compilees avec un bytecode trop
+# recent pour le javac courant.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+verifier_invalidation_cache_mg2d_trop_recent() {
+  grep -Fq "classfile_compatible_avec_javac_courant" "${RACINE_PROJET}/scripts/lib/outils_communs.sh" \
+    || arreter_sur_erreur "Verification de compatibilite bytecode MG2D absente de scripts/lib/outils_communs.sh"
+  grep -Fq "obtenir_version_majeure_javac_courant" "${RACINE_PROJET}/scripts/lib/outils_communs.sh" \
+    || arreter_sur_erreur "Detection version majeure javac absente de scripts/lib/outils_communs.sh"
+  grep -Fq "verifier_rejet_cache_mg2d_trop_recent" "${RACINE_PROJET}/scripts/tests/test_classpath_mg2d.sh" \
+    || arreter_sur_erreur "Test de rejet cache MG2D trop recent absent de scripts/tests/test_classpath_mg2d.sh"
+}
+
+#######################################
+# Verifie que l installateur reconnait
+# npm/node deja disponibles quand ils
+# viennent du paquet NodeSource nodejs.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+verifier_detection_npm_nodesource() {
+  local motif_boucle_dependances="if dependance_systeme_disponible \"\${paquet}\"; then"
+
+  grep -Fq "dependance_systeme_disponible()" "${RACINE_PROJET}/scripts/install/installer_borne.sh" \
+    || arreter_sur_erreur "Helper de detection dependance systeme absent de installer_borne.sh"
+  grep -Fq "command -v node >/dev/null 2>&1 && return 0" "${RACINE_PROJET}/scripts/install/installer_borne.sh" \
+    || arreter_sur_erreur "Detection nodejs via commande absente de installer_borne.sh"
+  grep -Fq "command -v npm >/dev/null 2>&1 && return 0" "${RACINE_PROJET}/scripts/install/installer_borne.sh" \
+    || arreter_sur_erreur "Detection npm via commande absente de installer_borne.sh"
+  grep -Fq "${motif_boucle_dependances}" "${RACINE_PROJET}/scripts/install/installer_borne.sh" \
+    || arreter_sur_erreur "Boucle dependances systeme n utilise pas le helper de detection portable"
+}
+
+#######################################
 # Point d entree du test anti regressions.
 # Arguments:
 #   aucun
@@ -182,6 +262,9 @@ main() {
   verifier_bootstrap_permissions_apres_sudo
   verifier_elevation_groupe_docker
   verifier_garde_codex_et_nodejs
+  verifier_encodage_java_explicite
+  verifier_invalidation_cache_mg2d_trop_recent
+  verifier_detection_npm_nodesource
   journaliser "Test anti regressions: OK"
 }
 

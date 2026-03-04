@@ -1,7 +1,10 @@
 {
   "fenetre": {
     "largeur": 1280,
-    "hauteur": 720,
+    "hauteur": 1024,
+    "mode_affichage": "fenetre_sans_bordure",
+    "position_x": 0,
+    "position_y": 0,
     "fps": 30
   },
   "interface": {
@@ -14,7 +17,7 @@
     "rayon_bordure": 16,
     "hauteur_ligne_operation": 48,
     "hauteur_ligne_journal": 24,
-    "nombre_lignes_journal": 18,
+    "nombre_lignes_journal": 27,
     "taille_police_titre": 44,
     "taille_police_texte": 24,
     "taille_police_journal": 20,

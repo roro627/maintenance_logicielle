@@ -74,7 +74,7 @@ verifier_compilation_orientee_build() {
     || ajouter_erreur_architecture "Compilation menu non orientee build dans ${script_compilation}"
   grep -Fq "DOSSIER_BUILD_CLASSES_JEUX" "${script_compilation}" \
     || ajouter_erreur_architecture "Compilation jeux non orientee build dans ${script_compilation}"
-  grep -Fq "javac -d" "${script_compilation}" \
+  grep -Fq "executer_javac -d" "${script_compilation}" \
     || ajouter_erreur_architecture "Option -d absente des compilations Java dans ${script_compilation}"
 }
 

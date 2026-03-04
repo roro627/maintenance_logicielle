@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import queue
 import threading
 from dataclasses import dataclass, field
@@ -38,6 +39,14 @@ HAUTEUR_COMBOBOX_CIBLE = 42
 HAUTEUR_LIGNE_COMBOBOX_CIBLE = 34
 ESPACEMENT_BLOC_CIBLE = 12
 MARGE_INTERNE_COMBOBOX = 12
+MODE_AFFICHAGE_FENETRE = "fenetre"
+MODE_AFFICHAGE_FENETRE_SANS_BORDURE = "fenetre_sans_bordure"
+MODE_AFFICHAGE_PLEIN_ECRAN = "plein_ecran"
+MODES_AFFICHAGE_VALIDES = {
+    MODE_AFFICHAGE_FENETRE,
+    MODE_AFFICHAGE_FENETRE_SANS_BORDURE,
+    MODE_AFFICHAGE_PLEIN_ECRAN,
+}
 
 
 TAILLES_PAR_DEFAUT = {
@@ -50,7 +59,7 @@ TAILLES_PAR_DEFAUT = {
     "rayon_bordure": 16,
     "hauteur_ligne_operation": 48,
     "hauteur_ligne_journal": 24,
-    "nombre_lignes_journal": 18,
+    "nombre_lignes_journal": 27,
     "taille_police_titre": 44,
     "taille_police_texte": 24,
     "taille_police_journal": 20,
@@ -449,6 +458,43 @@ def extraire_entier(section: Dict[str, object], cle: str, valeur_par_defaut: int
         return valeur_par_defaut
 
 
+def extraire_chaine(section: Dict[str, object], cle: str, valeur_par_defaut: str) -> str:
+    """Lit une chaine de configuration en appliquant une valeur de secours.
+
+    Args:
+        section: Dictionnaire source.
+        cle: Cle cible.
+        valeur_par_defaut: Valeur de repli.
+
+    Returns:
+        Chaine nettoyee et exploitable.
+    """
+
+    valeur = section.get(cle, valeur_par_defaut)
+    if valeur is None:
+        return valeur_par_defaut
+
+    chaine = str(valeur).strip()
+    return chaine if chaine else valeur_par_defaut
+
+
+def extraire_entier_environnement(nom_variable: str, valeur_par_defaut: int) -> int:
+    """Lit un entier depuis l environnement du processus.
+
+    Args:
+        nom_variable: Nom de variable environnement.
+        valeur_par_defaut: Valeur de secours.
+
+    Returns:
+        Entier valide.
+    """
+
+    try:
+        return int(os.environ.get(nom_variable, valeur_par_defaut))
+    except (TypeError, ValueError):
+        return valeur_par_defaut
+
+
 def extraire_couleur(
     section_theme: Dict[str, object],
     cle: str,
@@ -519,6 +565,69 @@ def charger_theme(configuration: Dict[str, object]) -> Dict[str, tuple[int, int,
     return theme
 
 
+def charger_parametres_affichage(configuration: Dict[str, object]) -> Dict[str, object]:
+    """Construit les parametres d affichage a partir de la config et de la borne.
+
+    Args:
+        configuration: Configuration chargee du mode maintenance.
+
+    Returns:
+        Dictionnaire normalise des parametres d affichage.
+    """
+
+    section_fenetre = configuration.get("fenetre", {})
+    if not isinstance(section_fenetre, dict):
+        section_fenetre = {}
+
+    largeur = extraire_entier_environnement(
+        "BORNE_RESOLUTION_X",
+        extraire_entier(section_fenetre, "largeur", 1280),
+    )
+    hauteur = extraire_entier_environnement(
+        "BORNE_RESOLUTION_Y",
+        extraire_entier(section_fenetre, "hauteur", 1024),
+    )
+    position_x = extraire_entier_environnement(
+        "BORNE_POSITION_FENETRE_X",
+        extraire_entier(section_fenetre, "position_x", 0),
+    )
+    position_y = extraire_entier_environnement(
+        "BORNE_POSITION_FENETRE_Y",
+        extraire_entier(section_fenetre, "position_y", 0),
+    )
+    mode_affichage = os.environ.get(
+        "BORNE_MODE_AFFICHAGE",
+        extraire_chaine(section_fenetre, "mode_affichage", MODE_AFFICHAGE_FENETRE_SANS_BORDURE),
+    )
+    mode_affichage = mode_affichage.strip()
+    if mode_affichage not in MODES_AFFICHAGE_VALIDES:
+        mode_affichage = MODE_AFFICHAGE_FENETRE_SANS_BORDURE
+
+    return {
+        "largeur": max(640, largeur),
+        "hauteur": max(480, hauteur),
+        "position_x": position_x,
+        "position_y": position_y,
+        "mode_affichage": mode_affichage,
+    }
+
+
+def preparer_environnement_affichage(configuration: Dict[str, object]) -> Dict[str, object]:
+    """Prepare les variables SDL avant initialisation de pygame.
+
+    Args:
+        configuration: Configuration chargee du mode maintenance.
+
+    Returns:
+        Parametres d affichage normalises.
+    """
+
+    parametres = charger_parametres_affichage(configuration)
+    os.environ["SDL_VIDEO_WINDOW_POS"] = f"{parametres['position_x']},{parametres['position_y']}"
+    os.environ["SDL_VIDEO_CENTERED"] = "0"
+    return parametres
+
+
 def initialiser_fenetre(configuration: Dict[str, object]) -> pygame.Surface:
     """Initialise la fenetre pygame du mode maintenance.
 
@@ -529,14 +638,19 @@ def initialiser_fenetre(configuration: Dict[str, object]) -> pygame.Surface:
         Surface principale de rendu.
     """
 
-    section_fenetre = configuration.get("fenetre", {})
-    if not isinstance(section_fenetre, dict):
-        section_fenetre = {}
+    parametres_affichage = charger_parametres_affichage(configuration)
+    flags = 0
+    if parametres_affichage["mode_affichage"] == MODE_AFFICHAGE_FENETRE_SANS_BORDURE:
+        flags |= pygame.NOFRAME
+    elif parametres_affichage["mode_affichage"] == MODE_AFFICHAGE_PLEIN_ECRAN:
+        flags |= pygame.FULLSCREEN
 
-    largeur = extraire_entier(section_fenetre, "largeur", 1280)
-    hauteur = extraire_entier(section_fenetre, "hauteur", 720)
-    fenetre = pygame.display.set_mode((largeur, hauteur))
+    fenetre = pygame.display.set_mode(
+        (parametres_affichage["largeur"], parametres_affichage["hauteur"]),
+        flags,
+    )
     pygame.display.set_caption("Mode maintenance borne")
+    pygame.mouse.set_visible(False)
     return fenetre
 
 
@@ -585,6 +699,85 @@ def creer_fond_degrade(
         pygame.draw.line(surface, (rouge, vert, bleu), (0, ordonnee), (largeur, ordonnee))
 
     return surface
+
+
+def calculer_geometrie_interface(
+    dimension: tuple[int, int],
+    tailles: Dict[str, int],
+) -> tuple[pygame.Rect, pygame.Rect, pygame.Rect, pygame.Rect]:
+    """Calcule les quatre zones principales de l interface.
+
+    Args:
+        dimension: Largeur et hauteur de la fenetre.
+        tailles: Parametres de tailles d interface.
+
+    Returns:
+        Rectangles entete, operations, journal et pied.
+    """
+
+    largeur_fenetre, hauteur_fenetre = dimension
+    marge_horizontale = tailles["marge_horizontale"]
+    marge_verticale = tailles["marge_verticale"]
+    hauteur_entete = tailles["hauteur_entete"]
+    hauteur_pied = tailles["hauteur_pied"]
+    espacement_colonnes = tailles["espacement_colonnes"]
+    largeur_colonne_operations = tailles["largeur_colonne_operations"]
+
+    largeur_zone = largeur_fenetre - 2 * marge_horizontale
+    hauteur_zone = hauteur_fenetre - 2 * marge_verticale
+    rectangle_entete = pygame.Rect(marge_horizontale, marge_verticale, largeur_zone, hauteur_entete)
+    y_contenu = marge_verticale + hauteur_entete + espacement_colonnes
+    hauteur_contenu = max(
+        120,
+        hauteur_zone - hauteur_entete - hauteur_pied - 2 * espacement_colonnes,
+    )
+    largeur_colonne_operations = min(largeur_colonne_operations, largeur_zone - 160)
+    largeur_colonne_journal = largeur_zone - largeur_colonne_operations - espacement_colonnes
+
+    rectangle_operations = pygame.Rect(
+        marge_horizontale,
+        y_contenu,
+        largeur_colonne_operations,
+        hauteur_contenu,
+    )
+    rectangle_journal = pygame.Rect(
+        marge_horizontale + largeur_colonne_operations + espacement_colonnes,
+        y_contenu,
+        largeur_colonne_journal,
+        hauteur_contenu,
+    )
+    rectangle_pied = pygame.Rect(
+        marge_horizontale,
+        hauteur_fenetre - marge_verticale - hauteur_pied,
+        largeur_zone,
+        hauteur_pied,
+    )
+    return rectangle_entete, rectangle_operations, rectangle_journal, rectangle_pied
+
+
+def calculer_nombre_lignes_journal_visibles(hauteur_zone_journal: int, tailles: Dict[str, int]) -> int:
+    """Calcule le nombre de lignes journal affichables dans la hauteur courante.
+
+    Args:
+        hauteur_zone_journal: Hauteur totale du panneau journal.
+        tailles: Parametres de tailles d interface.
+
+    Returns:
+        Nombre de lignes pouvant etre rendues sans debordement.
+    """
+
+    hauteur_ligne = max(1, tailles["hauteur_ligne_journal"])
+    nombre_lignes_configure = max(1, tailles["nombre_lignes_journal"])
+    hauteur_disponible = max(
+        hauteur_ligne,
+        hauteur_zone_journal
+        - MARGE_JOURNAL_HAUT
+        - MARGE_JOURNAL_BAS
+        - HAUTEUR_BARRE_DEFILEMENT_JOURNAL_HORIZONTAL
+        - MARGE_BARRE_DEFILEMENT_JOURNAL_HORIZONTAL_BAS,
+    )
+    nombre_lignes_calcule = max(1, hauteur_disponible // hauteur_ligne)
+    return min(nombre_lignes_configure, nombre_lignes_calcule)
 
 
 def dessiner_panneau(
@@ -944,7 +1137,7 @@ def dessiner_zone_journal(
     titre = polices["texte"].render("Journal temps reel", True, theme["accent"])
     fenetre.blit(titre, (rectangle.x + 16, rectangle.y + 12))
 
-    nombre_lignes = max(1, tailles["nombre_lignes_journal"])
+    nombre_lignes = calculer_nombre_lignes_journal_visibles(rectangle.height, tailles)
     nombre_lignes_total = len(etat.journal_visible)
     borner_decalage_journal(etat, nombre_lignes_total, nombre_lignes)
     decalage = 0 if etat.auto_scroll_journal else etat.decalage_lignes_journal
@@ -1123,45 +1316,9 @@ def dessiner_interface(
     """
 
     fenetre.blit(fond, (0, 0))
-    largeur_fenetre, hauteur_fenetre = fenetre.get_size()
-
-    marge_horizontale = tailles["marge_horizontale"]
-    marge_verticale = tailles["marge_verticale"]
-    hauteur_entete = tailles["hauteur_entete"]
-    hauteur_pied = tailles["hauteur_pied"]
-    espacement_colonnes = tailles["espacement_colonnes"]
-    largeur_colonne_operations = tailles["largeur_colonne_operations"]
-
-    largeur_zone = largeur_fenetre - 2 * marge_horizontale
-    hauteur_zone = hauteur_fenetre - 2 * marge_verticale
-
-    rectangle_entete = pygame.Rect(marge_horizontale, marge_verticale, largeur_zone, hauteur_entete)
-    y_contenu = marge_verticale + hauteur_entete + espacement_colonnes
-    hauteur_contenu = max(
-        120,
-        hauteur_zone - hauteur_entete - hauteur_pied - 2 * espacement_colonnes,
-    )
-
-    largeur_colonne_operations = min(largeur_colonne_operations, largeur_zone - 160)
-    largeur_colonne_journal = largeur_zone - largeur_colonne_operations - espacement_colonnes
-
-    rectangle_operations = pygame.Rect(
-        marge_horizontale,
-        y_contenu,
-        largeur_colonne_operations,
-        hauteur_contenu,
-    )
-    rectangle_journal = pygame.Rect(
-        marge_horizontale + largeur_colonne_operations + espacement_colonnes,
-        y_contenu,
-        largeur_colonne_journal,
-        hauteur_contenu,
-    )
-    rectangle_pied = pygame.Rect(
-        marge_horizontale,
-        hauteur_fenetre - marge_verticale - hauteur_pied,
-        largeur_zone,
-        hauteur_pied,
+    rectangle_entete, rectangle_operations, rectangle_journal, rectangle_pied = calculer_geometrie_interface(
+        fenetre.get_size(),
+        tailles,
     )
 
     dessiner_entete(fenetre, rectangle_entete, polices, theme, tailles, etat)
@@ -1556,6 +1713,7 @@ def boucle_principale(configuration: Dict[str, object]) -> int:
         Code de sortie processus (0 si succes).
     """
 
+    preparer_environnement_affichage(configuration)
     pygame.init()
     fenetre = initialiser_fenetre(configuration)
     clock = pygame.time.Clock()
@@ -1575,7 +1733,6 @@ def boucle_principale(configuration: Dict[str, object]) -> int:
         section_journal = {}
     limite_lignes = max(40, extraire_entier(section_journal, "taille_max_lignes_interface", 240))
     pas_scroll_journal = max(1, extraire_entier(section_journal, "pas_scroll_journal", PAS_SCROLL_JOURNAL_PAR_DEFAUT))
-    nombre_lignes_visibles = max(1, tailles["nombre_lignes_journal"])
     pas_scroll_horizontal_journal = max(
         1,
         extraire_entier(
@@ -1587,6 +1744,8 @@ def boucle_principale(configuration: Dict[str, object]) -> int:
 
     operations = lister_operations()
     etat = EtatInterface()
+    _, _, rectangle_journal, _ = calculer_geometrie_interface(fenetre.get_size(), tailles)
+    nombre_lignes_visibles = calculer_nombre_lignes_journal_visibles(rectangle_journal.height, tailles)
     etat.journal_visible = [
         "Pret: F pour executer une operation, H pour reverrouiller.",
         "Journal: PgUp/PgDn (vertical), Gauche/Droite (horizontal), A auto, Fin bas, Home gauche.",
@@ -1601,6 +1760,8 @@ def boucle_principale(configuration: Dict[str, object]) -> int:
 
     en_cours = True
     while en_cours:
+        _, _, rectangle_journal, _ = calculer_geometrie_interface(fenetre.get_size(), tailles)
+        nombre_lignes_visibles = calculer_nombre_lignes_journal_visibles(rectangle_journal.height, tailles)
         for evenement in pygame.event.get():
             if evenement.type == pygame.QUIT:
                 if etat.operation_en_cours:

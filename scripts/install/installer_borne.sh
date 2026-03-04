@@ -126,6 +126,31 @@ paquet_systeme_installe() {
 }
 
 #######################################
+# Indique si une dependance systeme est
+# deja disponible, y compris quand elle
+# est fournie hors paquet Debian natif
+# (ex: node/npm via NodeSource).
+# Arguments:
+#   $1: nom logique de dependance
+# Retour:
+#   0 si disponible, 1 sinon
+#######################################
+dependance_systeme_disponible() {
+  local nom_dependance="$1"
+
+  case "${nom_dependance}" in
+    nodejs)
+      command -v node >/dev/null 2>&1 && return 0
+      ;;
+    npm)
+      command -v npm >/dev/null 2>&1 && return 0
+      ;;
+  esac
+
+  paquet_systeme_installe "${nom_dependance}"
+}
+
+#######################################
 # Determine le prefixe d elevation a
 # utiliser pour apt-get.
 # Arguments:
@@ -462,7 +487,7 @@ installer_dependances_systeme() {
   paquets_obligatoires=(ca-certificates git curl nodejs npm openjdk-17-jdk python3 python3-venv python3-pip checkstyle pylint shellcheck xdotool lua5.4 libsndfile1 love)
 
   for paquet in "${paquets_obligatoires[@]}"; do
-    if paquet_systeme_installe "${paquet}"; then
+    if dependance_systeme_disponible "${paquet}"; then
       journaliser "Dependance systeme deja presente: ${paquet}"
     else
       journaliser "Dependance systeme manquante: ${paquet}"

@@ -127,7 +127,7 @@ compiler_test_java_cible() {
     cd "${REPERTOIRE_BORNE}"
     rm -rf "${DOSSIER_CLASSES_JEUX_CIBLES}"
     mkdir -p "${DOSSIER_CLASSES_JEUX_CIBLES}"
-    javac -d "${DOSSIER_CLASSES_JEUX_CIBLES}" -cp ".:${classpath_mg2d}" \
+    executer_javac -d "${DOSSIER_CLASSES_JEUX_CIBLES}" -cp ".:${classpath_mg2d}" \
       "${fichiers_a_compiler[@]}"
   )
 }

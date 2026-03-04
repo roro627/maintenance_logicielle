@@ -30,7 +30,7 @@ compiler_tests_borne_headless() {
     cd "${REPERTOIRE_BORNE}"
     rm -rf "${DOSSIER_CLASSES_BORNE_HEADLESS}"
     mkdir -p "${DOSSIER_CLASSES_BORNE_HEADLESS}"
-    javac -d "${DOSSIER_CLASSES_BORNE_HEADLESS}" -cp ".:${classpath_mg2d}" \
+    executer_javac -d "${DOSSIER_CLASSES_BORNE_HEADLESS}" -cp ".:${classpath_mg2d}" \
       "${fichiers_menu[@]}" \
       tests/unit/TestUnitaireCatalogueJeux.java \
       tests/unit/TestContratControleurMenuBorne.java

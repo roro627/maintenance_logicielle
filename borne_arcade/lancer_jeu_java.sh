@@ -12,6 +12,9 @@ else
   CHEMIN_MG2D="${RACINE_PROJET}/MG2D"
   RESOLUTION_X=1280
   RESOLUTION_Y=1024
+  MODE_AFFICHAGE_BORNE=fenetre_sans_bordure
+  POSITION_FENETRE_X=0
+  POSITION_FENETRE_Y=0
   DOSSIER_BUILD_RACINE="${RACINE_PROJET}/build"
 fi
 
@@ -71,6 +74,9 @@ main() {
 
   local resolution_x="${RESOLUTION_X:-1280}"
   local resolution_y="${RESOLUTION_Y:-1024}"
+  local mode_affichage="${MODE_AFFICHAGE_BORNE:-fenetre_sans_bordure}"
+  local position_fenetre_x="${POSITION_FENETRE_X:-0}"
+  local position_fenetre_y="${POSITION_FENETRE_Y:-0}"
   dossier_classes_jeu="$(obtenir_dossier_classes_jeu_lancement "${nom_jeu}")"
 
   if [[ "${mode_smoke_test}" == "1" ]]; then
@@ -101,7 +107,15 @@ main() {
 
   cd "${SCRIPT_DIR}/projet/${nom_jeu}"
   touch highscore
-  java "${options_java[@]}" -cp ".:${dossier_classes_jeu}:../..:${classpath_mg2d}" "${classe_principale}"
+  java \
+    "-Dborne.resolution.x=${resolution_x}" \
+    "-Dborne.resolution.y=${resolution_y}" \
+    "-Dborne.mode.affichage=${mode_affichage}" \
+    "-Dborne.position.fenetre.x=${position_fenetre_x}" \
+    "-Dborne.position.fenetre.y=${position_fenetre_y}" \
+    "${options_java[@]}" \
+    -cp ".:${dossier_classes_jeu}:../..:${classpath_mg2d}" \
+    "${classe_principale}"
 }
 
 main "$@"

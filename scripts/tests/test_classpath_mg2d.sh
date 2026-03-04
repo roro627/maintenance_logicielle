@@ -101,7 +101,7 @@ public final class VerificationClasspathMG2D {
 }
 JAVA
 
-  if ! javac -cp "${classpath_mg2d}" "${repertoire_temporaire}/VerificationClasspathMG2D.java"; then
+  if ! executer_javac -cp "${classpath_mg2d}" "${repertoire_temporaire}/VerificationClasspathMG2D.java"; then
     ajouter_erreur "Compilation d une classe de verification MG2D impossible"
     rm -rf "${repertoire_temporaire}"
     return 0
@@ -143,7 +143,7 @@ public final class VerificationRessourcesMG2D {
 }
 JAVA
 
-  if ! javac -cp "${classpath_mg2d}" "${repertoire_temporaire}/VerificationRessourcesMG2D.java"; then
+  if ! executer_javac -cp "${classpath_mg2d}" "${repertoire_temporaire}/VerificationRessourcesMG2D.java"; then
     ajouter_erreur "Compilation d une verification ressources MG2D impossible"
     rm -rf "${repertoire_temporaire}"
     return 0
@@ -154,6 +154,51 @@ JAVA
     || ajouter_erreur "Ressources audio MG2D indisponibles (sfd.ser ou l3reorder.ser)"
 
   rm -rf "${repertoire_temporaire}"
+}
+
+#######################################
+# Verifie qu un cache MG2D contenant une
+# classe compilee avec une version Java
+# trop recente est invalide automatiquement.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+verifier_rejet_cache_mg2d_trop_recent() {
+  local repertoire_temporaire=""
+  local fichier_classe_reference=""
+  local version_supportee=""
+  local sauvegarde_cache=""
+  local cache_invalide=0
+
+  preparer_classes_mg2d_cache
+  repertoire_temporaire="$(mktemp -d)"
+  cp -a "${DOSSIER_CACHE_MG2D_CLASSES}/." "${repertoire_temporaire}/"
+  fichier_classe_reference="${repertoire_temporaire}/MG2D/Fenetre.class"
+  version_supportee="$(obtenir_version_majeure_javac_courant)"
+
+  "${COMMANDE_PYTHON}" - "${fichier_classe_reference}" "${version_supportee}" <<'PY'
+from pathlib import Path
+import sys
+
+chemin = Path(sys.argv[1])
+version_supportee = int(sys.argv[2])
+donnees = bytearray(chemin.read_bytes())
+donnees[6:8] = (version_supportee + 1).to_bytes(2, "big")
+chemin.write_bytes(donnees)
+PY
+
+  sauvegarde_cache="${DOSSIER_CACHE_MG2D_CLASSES}"
+  DOSSIER_CACHE_MG2D_CLASSES="${repertoire_temporaire}"
+  if ! cache_mg2d_valide; then
+    cache_invalide=1
+  fi
+  DOSSIER_CACHE_MG2D_CLASSES="${sauvegarde_cache}"
+  rm -rf "${repertoire_temporaire}"
+
+  [[ "${cache_invalide}" -eq 1 ]] \
+    || ajouter_erreur "Cache MG2D trop recent non invalide automatiquement"
 }
 
 #######################################
@@ -190,6 +235,7 @@ main() {
   classpath_mg2d="$(obtenir_classpath_mg2d)"
 
   verifier_classes_requises "${classpath_mg2d}"
+  verifier_rejet_cache_mg2d_trop_recent
   verifier_import_dessin "${classpath_mg2d}"
   verifier_ressources_audio_decoder "${classpath_mg2d}"
   echouer_si_erreurs_detectees

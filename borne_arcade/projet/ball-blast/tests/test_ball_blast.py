@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import importlib
 import os
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 os.environ.setdefault("SDL_VIDEODRIVER", "dummy")
 os.environ.setdefault("SDL_AUDIODRIVER", "dummy")
@@ -19,6 +21,7 @@ if str(DOSSIER_SOURCE) not in sys.path:
     sys.path.insert(0, str(DOSSIER_SOURCE))
 
 from game import Game, calculer_scissions_balle  # pylint: disable=import-error
+import constantes as module_constantes  # pylint: disable=import-error
 
 
 class TestBallBlast(unittest.TestCase):
@@ -84,6 +87,25 @@ class TestBallBlast(unittest.TestCase):
         self.assertEqual(scissions[0]["decalage"], 10)
         self.assertEqual(scissions[1]["decalage"], -10)
         self.assertEqual(scissions[0]["rayon"], 40)
+
+    def test_constantes_affichage_suivent_la_configuration_borne(self) -> None:
+        """Verifie l application de la resolution et du mode borne."""
+
+        with mock.patch.dict(
+            os.environ,
+            {
+                "BORNE_RESOLUTION_X": "1280",
+                "BORNE_RESOLUTION_Y": "1024",
+                "BORNE_MODE_AFFICHAGE": "fenetre_sans_bordure",
+            },
+            clear=False,
+        ):
+            constantes_rechargees = importlib.reload(module_constantes)
+
+        self.assertEqual(constantes_rechargees.SCREEN_WIDTH, 1280)
+        self.assertEqual(constantes_rechargees.SCREEN_HEIGHT, 1024)
+        self.assertEqual(constantes_rechargees.DISPLAY_FLAGS, pygame.NOFRAME)
+        importlib.reload(module_constantes)
 
 
 if __name__ == "__main__":

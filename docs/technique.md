@@ -32,12 +32,25 @@ qualite, configuration et contraintes MG2D.
 - DRY: mutualisation dans `scripts/lib/outils_communs.sh`.
 - KISS: scripts explicites, idempotents, orientes exploitation.
 - Configuration centralisee dans `borne_arcade/config/borne.env`.
+- Encodage des sources Java centralise dans `borne_arcade/config/borne.env` via `ENCODAGE_SOURCES_JAVA=UTF-8`;
+  toutes les compilations shell passent par `executer_javac` pour rester deterministes meme en conteneur Debian minimal sans locale UTF-8 preconfiguree.
+- Politique d affichage borne centralisee dans `borne_arcade/config/borne.env`:
+  `RESOLUTION_X=1280`, `RESOLUTION_Y=1024`, `MODE_AFFICHAGE_BORNE`,
+  `POSITION_FENETRE_X`, `POSITION_FENETRE_Y`.
 - README de jeux generes depuis `docs/modeles/README_jeu.md` + `config/readme_jeux.json` pour eviter les divergences editoriales entre projets.
 - Mode maintenance cache configure via `borne_arcade/config/maintenance_mode.properties`.
 - Mode maintenance pygame parametre via `borne_arcade/projet/MaintenanceMode/config_maintenance.json` (fenetre, theme, journal, timeouts).
+- Les wrappers `lancer_jeu_python.sh` et `lancer_jeu_love.sh` projettent la politique d affichage borne dans l environnement SDL;
+  `lancer_jeu_java.sh` projette les memes valeurs en proprietes JVM (`-Dborne.*`) pour les jeux Java compatibles.
 - Operations maintenance executees en arriere-plan (thread dedie) avec journal temps reel non bloquant pour eviter le freeze UI.
+- `MaintenanceMode` ouvre maintenant sa fenetre en `1280x1024` et interprete
+  `mode_affichage=fenetre|fenetre_sans_bordure|plein_ecran`, avec priorite donnee aux variables exportees par le lanceur.
 - Runtime subprocess maintenance portable: lecture threadee de `stdout`, encodage `locale.getpreferredencoding(False)` et `errors=\"replace\"` pour eviter les crashes Windows (`select`/decode).
+- Timeout subprocess maintenance durci: un minuteur dedie interrompt aussi les commandes silencieuses sans sortie,
+  ce qui garde les messages `Commande expiree...` fiables sur Debian 11 comme sur les postes de dev.
 - Journal maintenance scrollable en mode manuel (`PgUp`/`PgDn` + `Gauche`/`Droite`) avec auto-scroll pilotable (`A`/`Fin`) et indicateurs visuels vertical/horizontal synchronises.
+- La hauteur visible du journal MaintenanceMode est recalculee depuis la geometrie effective de la fenetre,
+  ce qui supprime la zone morte observee avec l ancienne configuration `1280x720`.
 - Journal maintenance aligne sur les usages console: lignes recentes affichees en bas et barre verticale orientee recent->bas.
 - Journal maintenance resilient: selection automatique d un dossier logs ecrivable (`logs/`, puis `~/.cache/maintenance_logicielle/logs/`, puis `/tmp/maintenance_logicielle/logs/`) et retour d erreur actionnable en cas d exception inattendue.
 - Workflow migration borne complet:
@@ -70,6 +83,7 @@ qualite, configuration et contraintes MG2D.
 - Installation systeme idempotente: verification paquet par paquet puis installation des dependances manquantes.
 - Codex CLI est installe automatiquement par le bootstrap via `npm install -g @openai/codex`, puis verifie par `codex --version`.
 - Si Node.js est absent ou trop ancien pour Codex, l installateur prepare d abord Node.js 22.x via le depot officiel NodeSource.
+- Relance idempotente Debian 11/NodeSource: la detection des dependances systeme considere `node`/`npm` disponibles par la commande, ce qui evite de tenter un `apt install npm` conflictuel apres installation de `nodejs` via NodeSource.
 - En mode `BORNE_MODE_TEST=1`, l installation et la verification de Codex CLI sont ignorees pour garder les validations de simulation deterministes.
 - Preparation `act` integree au bootstrap sur machine locale: installation/reutilisation de Docker Engine, ajout de l utilisateur appelant au groupe `docker`, installation de `act` dans `/usr/local/bin`, lien `~/.local/bin/act`, puis verification `docker info` et `act -W .github/workflows -l`.
 - Verification Docker locale tolerante au premier bootstrap via `sudo`: l installateur valide Docker avec elevation si le groupe `docker` vient juste d etre applique, puis recommande une reconnexion utilisateur.
@@ -84,12 +98,20 @@ qualite, configuration et contraintes MG2D.
 - Protection permissions build: message clair si `build/` n est pas accessible en ecriture.
 - Menu optimise: suppression des chargements repetes police/son en boucle.
 - Menu borne testable hors rendu: navigation, fermeture, verrouillage maintenance et lancement de jeu sont portes par `ControleurMenuBorne`.
+- Catalogue borne durci: tri alphabetique sans casse dans `CatalogueJeux`,
+  selection initiale alignee sur le premier jeu affiche et panneau descriptif
+  synchronise avec le meme index logique que le lancement du jeu.
 - Menu NeonSumo ameliore: rendu titre neon anime parametre via `config_jeu.json` (`menu_titre`) sans impacter la boucle gameplay.
 - NeonSumo attract durci: les collisions/eliminations en mode attract declenchent une reinitialisation IA sans sortie vers les etats competitifs.
 - PianoTile robuste: fallback sans `librosa` si la dependance n est pas disponible.
 - PianoTile durci: lecture audio non bloquante (message actionnable en cas d echec ALSA/PulseAudio), chronometrage de secours sans audio et sortie d urgence `Echap` pendant une partie.
+- Jeux SDL/Pygame adaptes a la borne: `TronGame`, `OsuTile`, `ball-blast` et `PianoTile`
+  reprennent desormais `BORNE_RESOLUTION_X/Y` et `BORNE_MODE_AFFICHAGE`
+  pour rester dans `1280x1024` sans barre de titre ou en plein ecran.
 - CI/CD et tests automatisees via `.github/workflows/qualite.yml` et `scripts/tests/lancer_suite.sh`.
 - Pipeline reel ajoute: `.github/workflows/verification_reelle.yml` (Debian 11 minimal, 2 Go RAM, sans variables de simulation).
+- Garde anti-regression encodage Java: `scripts/tests/test_anti_regressions.sh` refuse toute invocation shell de `javac` hors helper centralise.
+- Cache MG2D durci: les classes compilees en cache sont maintenant revalidees contre la version majeure supportee par le `javac` courant, ce qui evite de reutiliser un cache genere avec une JDK plus recente que l environnement de test.
 - Orchestrateur jeux unique: `scripts/tests/test_contrats_jeux.py` applique contrat global puis test cible declare par jeu.
 - Wrappers specialises: `scripts/tests/test_jeux_java_cibles.sh`, `scripts/tests/test_jeux_python_cibles.sh`, `scripts/tests/test_jeux_lua_cibles.sh`.
 - Garde fou documentaire jeux: `scripts/tests/test_readme_jeux.sh` verifie la regeneration exacte des `README.md` et le nommage normalise.

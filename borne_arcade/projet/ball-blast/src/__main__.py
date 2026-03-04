@@ -1,20 +1,17 @@
-from constantes import SCREEN_WIDTH, SCREEN_HEIGHT
+from constantes import DISPLAY_FLAGS, SCREEN_HEIGHT, SCREEN_WIDTH
 from menu import Menu
 from game import Game
 
 import pygame
 import random
-import os
-
 # Initialize Pygame
 pygame.init()
 pygame.mixer.init()
 
-os.environ['SDL_VIDEO_CENTERED'] = '1'
-
 # Set up the display
 pygame.display.set_caption("Ball Blast")
-screen: pygame.Surface = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+screen: pygame.Surface = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), DISPLAY_FLAGS)
+pygame.mouse.set_visible(False)
 
 # Game loop
 running = True

@@ -18,18 +18,10 @@ pygame.mixer.init()  # Pour les effets sonores et musiques
 
 class TronGame:
     def __init__(self):
-        global SCREEN_WIDTH, SCREEN_HEIGHT
-        
-        # Configuration de l'écran
-        if FULLSCREEN:
-            info = pygame.display.Info()
-            self.screen = pygame.display.set_mode((info.current_w, info.current_h), pygame.FULLSCREEN)
-            SCREEN_WIDTH = info.current_w
-            SCREEN_HEIGHT = info.current_h
-        else:
-            self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-        
+        # Configuration de l ecran
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), DISPLAY_FLAGS)
         pygame.display.set_caption(TITLE)
+        pygame.mouse.set_visible(False)
         self.clock = pygame.time.Clock()
 
         # États du jeu

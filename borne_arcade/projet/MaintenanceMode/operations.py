@@ -106,7 +106,14 @@ FICHIERS_RESET_RELATIFS = [
 ]
 
 CONFIGURATION_PAR_DEFAUT = {
-    "fenetre": {"largeur": 1280, "hauteur": 720, "fps": 30},
+    "fenetre": {
+        "largeur": 1280,
+        "hauteur": 1024,
+        "mode_affichage": "fenetre_sans_bordure",
+        "position_x": 0,
+        "position_y": 0,
+        "fps": 30,
+    },
     "interface": {
         "marge_horizontale": 36,
         "marge_verticale": 28,
@@ -117,7 +124,7 @@ CONFIGURATION_PAR_DEFAUT = {
         "rayon_bordure": 16,
         "hauteur_ligne_operation": 48,
         "hauteur_ligne_journal": 24,
-        "nombre_lignes_journal": 18,
+        "nombre_lignes_journal": 27,
         "taille_police_titre": 44,
         "taille_police_texte": 24,
         "taille_police_journal": 20,
@@ -3505,10 +3512,13 @@ def executer_commande(
 
     lignes_capturees: List[str] = []
     file_sortie: queue.Queue[str | None] = queue.Queue()
-    instant_depart = time.monotonic()
-    limite_temps = instant_depart + max(1, timeout_secondes)
     intervalle_lecture = max(0.02, intervalle_lecture_secondes)
     flux_termine = False
+    timeout_declenche = threading.Event()
+    message_timeout = (
+        f"Commande expiree apres {timeout_secondes} secondes: {' '.join(commande)}. "
+        "Action recommandee: verifier la connectivite puis ajuster le timeout dans config_maintenance.json."
+    )
 
     def lire_flux() -> None:
         """Lit le flux du processus dans un thread dedie.
@@ -3526,30 +3536,36 @@ def executer_commande(
         finally:
             file_sortie.put(None)
 
+    def declencher_timeout() -> None:
+        """Force l arret du processus quand le delai maximal est depasse.
+
+        Args:
+            Aucun.
+
+        Returns:
+            Aucun.
+        """
+
+        if processus.poll() is not None:
+            return
+        timeout_declenche.set()
+        try:
+            processus.kill()
+        except OSError:
+            pass
+
     thread_lecture = threading.Thread(target=lire_flux, daemon=True)
     thread_lecture.start()
+    minuteur_timeout = threading.Timer(max(1, timeout_secondes), declencher_timeout)
+    minuteur_timeout.daemon = True
+    minuteur_timeout.start()
 
     try:
         while True:
-            maintenant = time.monotonic()
-            if maintenant >= limite_temps and processus.poll() is None:
-                processus.kill()
-                try:
-                    processus.wait(timeout=1)
-                except subprocess.TimeoutExpired:
-                    pass
-                message_timeout = (
-                    f"Commande expiree apres {timeout_secondes} secondes: {' '.join(commande)}. "
-                    "Action recommandee: verifier la connectivite puis ajuster le timeout dans config_maintenance.json."
-                )
-                diffuser_ligne(consommateur_sortie, message_timeout)
-                return False, message_timeout
-
             if processus.poll() is not None and flux_termine and file_sortie.empty():
                 break
 
-            temps_restant = max(0.0, limite_temps - maintenant)
-            attente = min(intervalle_lecture, temps_restant) if processus.poll() is None else intervalle_lecture
+            attente = intervalle_lecture if processus.poll() is None else 0.02
             try:
                 ligne = file_sortie.get(timeout=attente)
             except queue.Empty:
@@ -3563,6 +3579,7 @@ def executer_commande(
                 lignes_capturees.append(ligne)
                 diffuser_ligne(consommateur_sortie, ligne)
     finally:
+        minuteur_timeout.cancel()
         try:
             processus.wait(timeout=1)
         except subprocess.TimeoutExpired:
@@ -3585,6 +3602,9 @@ def executer_commande(
 
     sortie_complete = "\n".join(lignes_capturees)
     code_retour = processus.returncode if processus.returncode is not None else 1
+    if timeout_declenche.is_set():
+        diffuser_ligne(consommateur_sortie, message_timeout)
+        return False, message_timeout
     if code_retour == 0:
         return True, sortie_complete
 

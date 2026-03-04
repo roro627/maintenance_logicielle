@@ -6,6 +6,7 @@ import sys
 import types
 import unittest
 from pathlib import Path
+from unittest import mock
 
 MODULE_MAINTENANCE = Path(__file__).resolve().parents[1]
 if str(MODULE_MAINTENANCE) not in sys.path:
@@ -25,8 +26,10 @@ from main import (  # pylint: disable=import-error
     ajuster_decalage_journal,
     basculer_combobox_cibles,
     basculer_focus_cible_migration,
+    calculer_nombre_lignes_journal_visibles,
     calculer_decalage_horizontal_max_journal,
     calculer_decalage_max_journal,
+    charger_parametres_affichage,
     extraire_segment_horizontal,
     recharger_cibles_migration_interface,
 )
@@ -211,11 +214,67 @@ class TestInterfaceMaintenanceMode(unittest.TestCase):
                 {"id": "python3", "titre": "Python"},
             ]
 
-        with unittest.mock.patch("main.collecter_cibles_migration", side_effect=fausse_collecte):
+        with mock.patch("main.collecter_cibles_migration", side_effect=fausse_collecte):
             succes, _ = recharger_cibles_migration_interface(etat)
 
         self.assertTrue(succes)
         self.assertEqual(etat.index_cible_migration, 0)
+
+    def test_charger_parametres_affichage_priorise_configuration_borne(self) -> None:
+        """Controle la priorite des variables de la borne pour l affichage.
+
+        Args:
+            Aucun.
+
+        Returns:
+            Aucun.
+        """
+
+        configuration = {
+            "fenetre": {
+                "largeur": 640,
+                "hauteur": 480,
+                "mode_affichage": "fenetre",
+                "position_x": 12,
+                "position_y": 24,
+            }
+        }
+
+        with mock.patch.dict(
+            "os.environ",
+            {
+                "BORNE_RESOLUTION_X": "1280",
+                "BORNE_RESOLUTION_Y": "1024",
+                "BORNE_MODE_AFFICHAGE": "fenetre_sans_bordure",
+                "BORNE_POSITION_FENETRE_X": "0",
+                "BORNE_POSITION_FENETRE_Y": "0",
+            },
+            clear=False,
+        ):
+            parametres = charger_parametres_affichage(configuration)
+
+        self.assertEqual(parametres["largeur"], 1280)
+        self.assertEqual(parametres["hauteur"], 1024)
+        self.assertEqual(parametres["mode_affichage"], "fenetre_sans_bordure")
+        self.assertEqual(parametres["position_x"], 0)
+        self.assertEqual(parametres["position_y"], 0)
+
+    def test_calculer_nombre_lignes_journal_visibles_pour_hauteur_borne(self) -> None:
+        """Controle le nombre de lignes visibles dans la hauteur cible 1024.
+
+        Args:
+            Aucun.
+
+        Returns:
+            Aucun.
+        """
+
+        tailles = {
+            "hauteur_ligne_journal": 24,
+            "nombre_lignes_journal": 27,
+        }
+
+        self.assertEqual(calculer_nombre_lignes_journal_visibles(744, tailles), 27)
 
 
 if __name__ == "__main__":

@@ -30,6 +30,7 @@ public class TestUnitaireCatalogueJeux {
 
         Set<String> nomsUniques = new HashSet<String>(nomsCatalogue);
         assertCondition(nomsUniques.size() == nomsCatalogue.size(), "Le catalogue contient des doublons de nom de jeu");
+        verifierTriAlphabetiqueSansCasse(nomsCatalogue);
 
         File[] dossiersJeux = new File("projet").listFiles(File::isDirectory);
         assertCondition(dossiersJeux != null, "Impossible de lister le dossier projet/");
@@ -58,6 +59,20 @@ public class TestUnitaireCatalogueJeux {
             }
         }
         return false;
+    }
+
+    /**
+     * Verifie que le catalogue est trie alphabetiquement sans tenir compte de la casse.
+     *
+     * @param nomsCatalogue noms du catalogue dans l ordre de chargement.
+     */
+    private static void verifierTriAlphabetiqueSansCasse(List<String> nomsCatalogue) {
+        List<String> nomsTries = new ArrayList<String>(nomsCatalogue);
+        nomsTries.sort(String.CASE_INSENSITIVE_ORDER.thenComparing(String::compareTo));
+        assertCondition(
+            nomsTries.equals(nomsCatalogue),
+            "Le catalogue doit rester trie alphabetiquement sans tenir compte de la casse"
+        );
     }
 
     /**

@@ -113,14 +113,14 @@ public class BoiteSelection extends Boite {
         reafficherTexteCourantSiNecessaire();
         jouerSonSelection();
 
-        if (pointeur.getValue() == Graphique.tableau.length - 1) {
-            pointeur.setValue(0);
+        if (pointeur.getValue() == 0) {
+            pointeur.setValue(Graphique.tableau.length - 1);
             translaterElementsMenu(ConstantesMenu.ECART_ELEMENTS * (Graphique.tableau.length - 1));
             return;
         }
 
         translaterElementsMenu(-ConstantesMenu.ECART_ELEMENTS);
-        pointeur.setValue(pointeur.getValue() + 1);
+        pointeur.setValue(pointeur.getValue() - 1);
     }
 
     /**
@@ -130,14 +130,14 @@ public class BoiteSelection extends Boite {
         reafficherTexteCourantSiNecessaire();
         jouerSonSelection();
 
-        if (pointeur.getValue() == 0) {
-            pointeur.setValue(Graphique.tableau.length - 1);
+        if (pointeur.getValue() == Graphique.tableau.length - 1) {
+            pointeur.setValue(0);
             translaterElementsMenu(-ConstantesMenu.ECART_ELEMENTS * (Graphique.tableau.length - 1));
             return;
         }
 
         translaterElementsMenu(ConstantesMenu.ECART_ELEMENTS);
-        pointeur.setValue(pointeur.getValue() - 1);
+        pointeur.setValue(pointeur.getValue() + 1);
     }
 
     /**

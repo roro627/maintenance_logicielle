@@ -70,7 +70,8 @@ TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 .
 - logique NeonSumo (collisions, sortie arene, cooldowns, ultime),
 - configuration menu NeonSumo + logique d etats attract (`borne_arcade/projet/NeonSumo/tests/test_main_menu.py`),
 - mode maintenance Python (`borne_arcade/projet/MaintenanceMode/tests/test_operations.py`):
-  streaming logs temps reel, timeout actionnable, journalisation des erreurs,
+  streaming logs temps reel, timeout actionnable y compris pour une commande silencieuse,
+  journalisation des erreurs,
   fallback de dossier logs, operation `reset_pre_requis`, operation `git_retour_precedent`,
   robustesse diagnostic en absence de pre-requis, gestion de l absence de `git`,
   verification du reset prerequis en mode sur (sans `autoremove --purge`), protection explicite de `python3`,
@@ -79,7 +80,12 @@ TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 .
   rapport qualite migration et gardes avant `proposer-pr`.
 - logique d interface maintenance (`borne_arcade/projet/MaintenanceMode/tests/test_interface.py`):
   defilement vertical/horizontal du journal, auto-scroll, bornage de l historique, extraction de segment horizontal,
-  focus combobox cible et preservation de la cible selectionnee apres rechargement.
+  focus combobox cible, preservation de la cible selectionnee apres rechargement,
+  priorite de la configuration borne pour l affichage (`1280x1024`, mode sans bordure)
+  et calcul du nombre de lignes visibles du journal sur la hauteur `1024`.
+- configuration d affichage SDL/Pygame:
+  verification de la reprise des variables `BORNE_*` dans `TronGame`, `OsuTile`,
+  `ball-blast` et `PianoTile`.
 - CLI migration (`borne_arcade/projet/MaintenanceMode/tests/test_workflow_migration_cli.py`):
   contrat `--format json`, propagation de `--cible` et de `--dossier-sortie`.
 - PianoTile (`borne_arcade/projet/PianoTile/tests/test_piano.py`):
@@ -92,6 +98,7 @@ TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 .
   compilation complete des `borne_arcade/*.java`,
   execution de `TestUnitaireCatalogueJeux.java`,
   execution de `TestContratControleurMenuBorne.java`,
+  verification du tri alphabetique du catalogue et de la coherence selection initiale / navigation,
 - compilation Java + verifications syntaxiques Python/Lua,
 - ajout de jeu,
 - deploiement post-pull,
@@ -104,6 +111,11 @@ TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 .
 - bootstrap robuste apres `sudo` (absence de regression sur normalisation permissions et execution non-systeme sous utilisateur appelant),
 - bootstrap robuste pour l outillage migration:
   garde `codex` inactive en mode test et mise a niveau automatique Node.js via NodeSource si la distribution est trop ancienne,
+- compilations Java deterministes:
+  toutes les commandes shell `javac` passent par un encodage source explicite `UTF-8`,
+  ce qui evite les echecs `unmappable character ... for encoding US-ASCII` dans le workflow reel Debian 11 minimal,
+- cache MG2D robuste:
+  `test_classpath_mg2d.sh` verifie aussi qu un cache `.class` compile avec un bytecode Java trop recent est invalide puis recompile automatiquement,
 - robustesse PianoTile en absence de `librosa`,
 - validation materielle (checklist).
 - workflow migration portable:
@@ -147,6 +159,7 @@ Scripts principaux:
 - Si un jeu Java charge mal ses ressources en test cible, verifier que le wrapper l execute bien depuis `borne_arcade/projet/<jeu>/`.
 - Si `CursedWare` echoue sans `lua`, corriger d abord le validateur portable `scripts/tests/test_cursedware_minijeux.py`; si `lua` est disponible, verifier aussi `borne_arcade/projet/CursedWare/tests/test_contrat_minijeux.lua`.
 - Si le workflow migration refuse `proposer-pr`, verifier d abord `.cache/maintenance_logicielle/etat_migration.json` puis le dernier `logs/rapport_qualite_migration_*.json`.
+- Si le workflow reel Debian 11 echoue en compilation Java avec `US-ASCII`, verifier d abord `ENCODAGE_SOURCES_JAVA` dans `borne_arcade/config/borne.env` et l usage exclusif du helper `executer_javac`.
 - Consulter `logs/` pour les pipelines post-pull/bootstrap.
 - Corriger la cause puis relancer `./scripts/tests/lancer_suite.sh`.
 - En cas d echec CI locale, corriger puis relancer `act` jusqu a statut vert.
