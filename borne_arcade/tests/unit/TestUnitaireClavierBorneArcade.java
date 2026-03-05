@@ -29,6 +29,16 @@ public class TestUnitaireClavierBorneArcade {
         assertCondition(clavier.getBoutonJ2AEnfoncee(), "VK_Q doit activer bouton J2A enfonce");
         simulerRelachement(clavier, source, KeyEvent.VK_Q);
         assertCondition(clavier.getBoutonJ2ATape(), "VK_Q doit activer bouton J2A tape");
+
+        simulerAppuiEtRelachement(clavier, source, KeyEvent.VK_1);
+        assertCondition(clavier.getBoutonJ1AEnfoncee(), "VK_1 doit aussi activer bouton J1A enfonce");
+        simulerRelachement(clavier, source, KeyEvent.VK_1);
+        assertCondition(clavier.getBoutonJ1ATape(), "VK_1 doit aussi activer bouton J1A tape");
+
+        simulerAppuiEtRelachement(clavier, source, KeyEvent.VK_3);
+        assertCondition(clavier.getBoutonJ1CEnfoncee(), "VK_3 doit aussi activer bouton J1C (B3) enfonce");
+        simulerRelachement(clavier, source, KeyEvent.VK_3);
+        assertCondition(clavier.getBoutonJ1CTape(), "VK_3 doit aussi activer bouton J1C (B3) tape");
     }
 
     /**

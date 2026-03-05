@@ -1,5 +1,4 @@
 
-
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
@@ -537,31 +536,43 @@ public class ClavierBorneArcade implements KeyListener {
 	switch (key.getKeyCode()) {
 
 	case KeyEvent.VK_F:
+	case KeyEvent.VK_1:
+	case KeyEvent.VK_NUMPAD1:
 	    f = false;
 	    fTape = true;
 	    break;
 
 	case KeyEvent.VK_G:
+	case KeyEvent.VK_2:
+	case KeyEvent.VK_NUMPAD2:
 	    g = false;
 	    gTape = true;
 	    break;
 
 	case KeyEvent.VK_H:
+	case KeyEvent.VK_3:
+	case KeyEvent.VK_NUMPAD3:
 	    h = false;
 	    hTape = true;
 	    break;
 
 	case KeyEvent.VK_R:
+	case KeyEvent.VK_4:
+	case KeyEvent.VK_NUMPAD4:
 	    r = false;
 	    rTape = true;
 	    break;
 
 	case KeyEvent.VK_T:
+	case KeyEvent.VK_5:
+	case KeyEvent.VK_NUMPAD5:
 	    t = false;
 	    tTape = true;
 	    break;
 
 	case KeyEvent.VK_Y:
+	case KeyEvent.VK_6:
+	case KeyEvent.VK_NUMPAD6:
 	    y = false;
 	    yTape = true;
 	    break;
@@ -676,26 +687,38 @@ public class ClavierBorneArcade implements KeyListener {
 	switch (key.getKeyCode()) {
 
 	case KeyEvent.VK_F:
+	case KeyEvent.VK_1:
+	case KeyEvent.VK_NUMPAD1:
 	    f = true;
 	    break;
 
 	case KeyEvent.VK_G:
+	case KeyEvent.VK_2:
+	case KeyEvent.VK_NUMPAD2:
 	    g = true;
 	    break;
 
 	case KeyEvent.VK_H:
+	case KeyEvent.VK_3:
+	case KeyEvent.VK_NUMPAD3:
 	    h = true;
 	    break;
 
 	case KeyEvent.VK_R:
+	case KeyEvent.VK_4:
+	case KeyEvent.VK_NUMPAD4:
 	    r = true;
 	    break;
 
 	case KeyEvent.VK_T:
+	case KeyEvent.VK_5:
+	case KeyEvent.VK_NUMPAD5:
 	    t = true;
 	    break;
 
 	case KeyEvent.VK_Y:
+	case KeyEvent.VK_6:
+	case KeyEvent.VK_NUMPAD6:
 	    y = true;
 	    break;
 

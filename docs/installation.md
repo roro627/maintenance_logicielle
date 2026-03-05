@@ -23,6 +23,8 @@ Le script `bootstrap_borne.sh` enchaine:
 - creation/maintenance de la venv Python avec fallback `piwheels` sur Raspberry Pi OS,
 - installation des dependances par jeu (`requirements.txt`),
 - permissions scripts, autostart, layout clavier,
+- generation dynamique de `~/.config/autostart/borne.desktop` avec `Exec` aligne sur le chemin reel du depot (`.../borne_arcade/lancerBorne.sh`) et sur le compte utilisateur appelant meme en execution via `sudo`,
+- resynchronisation de l autostart a chaque relance de `bootstrap_borne.sh` (meme si l installation initiale est deja marquee prete),
 - droits partages multi-utilisateurs sur tout le depot exploitable (racine du projet, `config/`, `docs/`, `.github/`, `logs/`, `build/`, `.cache/`, `.venv/`, `site/`, `scripts/`, `.githooks/`, `borne_arcade/`), hors `.git/` et `MG2D/`,
 - execution des etapes non-systeme (compilation/lint/tests/docs) sous l utilisateur appelant quand le bootstrap est lance via `sudo`,
 - normalisation finale ownership/permissions du depot exploitable pour eviter les artefacts root bloquants et reappliquer le bit executable sur tous les lanceurs `.sh`, y compris `./borne_arcade/lancerBorne.sh`,
@@ -174,7 +176,9 @@ Le journal bootstrap est ecrit dans `logs/bootstrap_borne_YYYYMMDD_HHMMSS.log`.
 - Si Docker vient juste d etre installe et que `docker info` ne repond qu avec `sudo`: fermer puis rouvrir la session utilisateur pour activer le groupe `docker`.
 - Si `proposer-pr` echoue: verifier que `gh` est installe, authentifie (`gh auth status`) et que la branche de migration n est pas `main`.
 - Si la borne ne demarre pas automatiquement: verifier `~/.config/autostart/borne.desktop`.
+- Si la borne ne demarre pas apres reboot: verifier dans `~/.config/autostart/borne.desktop` la ligne `Exec=/bin/bash -lc "<chemin_reel>/borne_arcade/lancerBorne.sh"`, puis relancer `sudo bash ./bootstrap_borne.sh`.
 - Si le layout clavier ne s applique pas: verifier `~/.xkb/symbols/borne`.
+- Si le layout `borne` est absent au lancement, les boutons J1 restent utilisables via `1..6` (et pavé numerique) comme fallback; corriger quand meme le layout pour garder le mapping nominal `f,g,h,r,t,y`.
 
 ## Liens associes
 

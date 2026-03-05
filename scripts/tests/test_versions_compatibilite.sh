@@ -47,6 +47,37 @@ verifier_version_pygame() {
 }
 
 #######################################
+# Retourne la version Lua detectee en
+# privilegiant les binaires versionnes.
+# Arguments:
+#   aucun
+# Retour:
+#   ecrit la version detectee sur stdout
+#######################################
+obtenir_version_lua_disponible() {
+  local commande_lua
+  local version_lua
+  local commandes_lua=(
+    "lua5.4"
+    "lua5.3"
+    "luac5.4"
+    "luac5.3"
+    "lua"
+    "luac"
+  )
+
+  for commande_lua in "${commandes_lua[@]}"; do
+    command -v "${commande_lua}" >/dev/null 2>&1 || continue
+    version_lua="$("${commande_lua}" -v 2>&1 | sed -E 's/.* ([0-9]+(\.[0-9]+)+).*/\1/')"
+    [[ -n "${version_lua}" ]] || continue
+    printf '%s\n' "${version_lua}"
+    return 0
+  done
+
+  return 1
+}
+
+#######################################
 # Verifie les versions Lua/Love si des jeux Lua sont presents.
 # Arguments:
 #   aucun
@@ -65,12 +96,7 @@ verifier_versions_lua_love() {
   fi
   [[ "${jeu_lua_present}" -eq 1 ]] || return 0
 
-  if command -v lua >/dev/null 2>&1; then
-    version_lua="$(lua -v 2>&1 | sed -E 's/.* ([0-9]+(\.[0-9]+)+).*/\1/')"
-  elif command -v luac >/dev/null 2>&1; then
-    version_lua="$(luac -v 2>&1 | sed -E 's/.* ([0-9]+(\.[0-9]+)+).*/\1/')"
-  fi
-  if [[ -z "${version_lua}" ]]; then
+  if ! version_lua="$(obtenir_version_lua_disponible)"; then
     journaliser "Lua introuvable: verification version Lua ignoree"
     return 0
   fi

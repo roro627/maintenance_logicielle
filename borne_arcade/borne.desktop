@@ -2,7 +2,7 @@
 Type=Application
 Name=Borne
 Comment=
-Exec=/usr/bin/lxterminal -e /home/pi/git/maintenance_logicielle/borne_arcade/lancerBorne.sh
+Exec=/bin/bash -lc "__CHEMIN_LANCEUR_BORNE__"
 Icon=gtk-dialog-authentication
 NotShowIn=GNOME;KDE;
 Hidden=false

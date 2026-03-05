@@ -1472,6 +1472,65 @@ installer_layout_clavier_borne() {
 }
 
 #######################################
+# Retourne le HOME cible pour installer
+# l autostart utilisateur de la borne.
+# Arguments:
+#   aucun
+# Retour:
+#   ecrit le HOME cible sur stdout
+#######################################
+obtenir_home_utilisateur_autostart() {
+  local utilisateur_sudo="${SUDO_USER:-}"
+  local home_utilisateur=""
+
+  if [[ "$(id -u)" -eq 0 ]] && [[ -n "${utilisateur_sudo}" ]] && [[ "${utilisateur_sudo}" != "root" ]]; then
+    if command -v getent >/dev/null 2>&1; then
+      home_utilisateur="$(getent passwd "${utilisateur_sudo}" | cut -d: -f6)"
+      if [[ -n "${home_utilisateur}" ]]; then
+        printf '%s\n' "${home_utilisateur}"
+        return 0
+      fi
+    fi
+  fi
+
+  printf '%s\n' "${HOME}"
+}
+
+#######################################
+# Remplace la ligne Exec d un .desktop
+# par la commande lanceur calculee.
+# Arguments:
+#   $1: chemin du fichier .desktop
+# Retour:
+#   0
+#######################################
+mettre_a_jour_exec_autostart_borne() {
+  local fichier_desktop="$1"
+  local fichier_temporaire="${fichier_desktop}.tmp"
+  local ligne_exec="Exec=/bin/bash -lc \"${REPERTOIRE_BORNE}/lancerBorne.sh\""
+
+  awk -v ligne_exec="${ligne_exec}" '
+    BEGIN {
+      exec_remplace = 0
+    }
+    /^Exec=/ {
+      print ligne_exec
+      exec_remplace = 1
+      next
+    }
+    {
+      print
+    }
+    END {
+      if (exec_remplace == 0) {
+        print ligne_exec
+      }
+    }
+  ' "${fichier_desktop}" > "${fichier_temporaire}"
+  mv "${fichier_temporaire}" "${fichier_desktop}"
+}
+
+#######################################
 # Installe l autostart utilisateur de la borne.
 # Arguments:
 #   aucun
@@ -1480,16 +1539,33 @@ installer_layout_clavier_borne() {
 #######################################
 installer_autostart_borne() {
   local source_desktop="${REPERTOIRE_BORNE}/borne.desktop"
-  local dossier_autostart="${HOME}/.config/autostart"
-  local destination_desktop="${dossier_autostart}/borne.desktop"
+  local home_cible_autostart=""
+  local dossier_autostart=""
+  local destination_desktop=""
+  local utilisateur_sudo="${SUDO_USER:-}"
+  local groupe_sudo=""
 
   if [[ ! -f "${source_desktop}" ]]; then
     journaliser "Fichier borne.desktop absent: autostart ignore"
     return 0
   fi
 
+  home_cible_autostart="$(obtenir_home_utilisateur_autostart)"
+  dossier_autostart="${home_cible_autostart}/.config/autostart"
+  destination_desktop="${dossier_autostart}/borne.desktop"
   mkdir -p "${dossier_autostart}"
   cp "${source_desktop}" "${destination_desktop}"
+  mettre_a_jour_exec_autostart_borne "${destination_desktop}"
+
+  if [[ "$(id -u)" -eq 0 ]] && [[ -n "${utilisateur_sudo}" ]] && [[ "${utilisateur_sudo}" != "root" ]]; then
+    groupe_sudo="$(id -gn "${utilisateur_sudo}" 2>/dev/null || true)"
+    if [[ -n "${groupe_sudo}" ]]; then
+      chown "${utilisateur_sudo}:${groupe_sudo}" "${destination_desktop}" || true
+      chown "${utilisateur_sudo}:${groupe_sudo}" "${dossier_autostart}" || true
+    fi
+  fi
+
+  journaliser "Autostart borne installe: ${destination_desktop}"
 }
 
 #######################################

@@ -514,6 +514,43 @@ class TestOperationsMaintenance(unittest.TestCase):
             self.assertEqual(etat["cible_id"], "java17")
             self.assertEqual(etat["commit_git"], "abc123")
 
+    def test_operation_appliquer_migration_deja_alignee_retourne_succes_info(self) -> None:
+        """Controle le no-op de migration quand la cible est deja alignee.
+
+        Args:
+            Aucun.
+
+        Returns:
+            Aucun.
+        """
+
+        configuration = operations.charger_configuration(Path("config_introuvable.json"))
+        cible = {
+            "id": "python3",
+            "titre": "Python",
+            "version_installee": "Python 3.11.2",
+            "version_candidate": "3.11.2-1",
+            "migration_disponible": False,
+            "supportee_sur_hote": True,
+            "commandes_migration": [["apt-get", "install", "-y", "python3"]],
+        }
+        lignes_capturees: list[str] = []
+
+        with tempfile.TemporaryDirectory() as dossier_temporaire:
+            racine_temporaire = Path(dossier_temporaire)
+            with patch.object(operations, "obtenir_cible_migration_contextualisee", return_value=(cible, [cible])):
+                succes, message, _ = operations.operation_appliquer_migration_cible(
+                    configuration,
+                    racine_temporaire,
+                    racine_temporaire / "journal.log",
+                    lignes_capturees.append,
+                    {"cible_migration_id": "python3"},
+                )
+
+        self.assertTrue(succes)
+        self.assertIn("Aucune migration necessaire", message)
+        self.assertTrue(any(ligne.startswith("INFO:") for ligne in lignes_capturees))
+
     def test_operation_preparer_assistant_ia_genere_brief_reponse_et_trace(self) -> None:
         """Controle la generation du brief, de la reponse et de la trace IA.
 

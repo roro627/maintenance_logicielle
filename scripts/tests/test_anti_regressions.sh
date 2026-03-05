@@ -126,6 +126,10 @@ verifier_bootstrap_permissions_apres_sudo() {
     || arreter_sur_erreur "Normalisation permissions finales absente dans bootstrap_borne.sh"
   grep -Fq "normaliser_permissions_exploitation_borne" "${RACINE_PROJET}/bootstrap_borne.sh" \
     || arreter_sur_erreur "Bootstrap ne reapplique pas la normalisation permissions partagees commune"
+  grep -Fq "HOME_UTILISATEUR_APPELANT_BOOTSTRAP" "${RACINE_PROJET}/bootstrap_borne.sh" \
+    || arreter_sur_erreur "Resolution HOME utilisateur appelant absente dans bootstrap_borne.sh"
+  grep -Fq "executer_etape_bootstrap \"synchronisation autostart borne\" synchroniser_autostart_borne_bootstrap" "${RACINE_PROJET}/bootstrap_borne.sh" \
+    || arreter_sur_erreur "Bootstrap ne resynchronise pas l autostart utilisateur a chaque execution"
   grep -Fq "normaliser_permissions_exploitation_borne()" "${RACINE_PROJET}/scripts/lib/outils_communs.sh" \
     || arreter_sur_erreur "Helper commun de normalisation permissions absent de scripts/lib/outils_communs.sh"
   grep -Fq "lister_chemins_normalisables_borne()" "${RACINE_PROJET}/scripts/lib/outils_communs.sh" \

@@ -1,3 +1,6 @@
+import java.awt.Canvas;
+import java.awt.event.KeyEvent;
+
 /**
  * Verifie les contrats non graphiques critiques de Puissance_X.
  */
@@ -14,6 +17,7 @@ public class TestContratPuissanceX {
         testerAlignementVertical();
         testerAlignementDiagonal();
         testerMatchNul();
+        testerAliasNumeriquesEntreeBorne();
     }
 
     /**
@@ -76,6 +80,60 @@ public class TestContratPuissanceX {
         plateau.ajoutPion(1, 2);
         plateau.ajoutPion(1, 1);
         assertCondition(plateau.gagne() == 0, "Un plateau plein sans alignement doit produire un match nul");
+    }
+
+    /**
+     * Verifie les alias numeriques des boutons J1 pour l entree borne.
+     */
+    private static void testerAliasNumeriquesEntreeBorne() {
+        Entree entree = new Entree();
+        Canvas source = new Canvas();
+
+        simulerAppui(entree, source, KeyEvent.VK_1);
+        assertCondition(entree.entree(0), "VK_1 devait agir comme validation J1");
+        simulerRelachement(entree, source, KeyEvent.VK_1);
+
+        simulerAppui(entree, source, KeyEvent.VK_4);
+        assertCondition(entree.echap(0), "VK_4 devait agir comme retour J1");
+        simulerRelachement(entree, source, KeyEvent.VK_4);
+    }
+
+    /**
+     * Simule un appui de touche.
+     *
+     * @param entree entree clavier Puissance_X.
+     * @param source composant source AWT.
+     * @param codeTouche code de touche simule.
+     */
+    private static void simulerAppui(Entree entree, Canvas source, int codeTouche) {
+        KeyEvent appui = new KeyEvent(
+            source,
+            KeyEvent.KEY_PRESSED,
+            System.currentTimeMillis(),
+            0,
+            codeTouche,
+            KeyEvent.CHAR_UNDEFINED
+        );
+        entree.keyPressed(appui);
+    }
+
+    /**
+     * Simule un relachement de touche.
+     *
+     * @param entree entree clavier Puissance_X.
+     * @param source composant source AWT.
+     * @param codeTouche code de touche simule.
+     */
+    private static void simulerRelachement(Entree entree, Canvas source, int codeTouche) {
+        KeyEvent relachement = new KeyEvent(
+            source,
+            KeyEvent.KEY_RELEASED,
+            System.currentTimeMillis(),
+            0,
+            codeTouche,
+            KeyEvent.CHAR_UNDEFINED
+        );
+        entree.keyReleased(relachement);
     }
 
     /**

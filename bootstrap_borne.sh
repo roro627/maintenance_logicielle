@@ -13,6 +13,7 @@ ETAPE_BOOTSTRAP_COURANTE="initialisation"
 VERROU_BOOTSTRAP_ACTIF=0
 UTILISATEUR_APPELANT_BOOTSTRAP=""
 GROUPE_APPELANT_BOOTSTRAP=""
+HOME_UTILISATEUR_APPELANT_BOOTSTRAP=""
 VERSION_ETAT_INSTALLATION_BOOTSTRAP="2"
 
 #######################################
@@ -52,6 +53,41 @@ verifier_execution_root_obligatoire() {
 }
 
 #######################################
+# Resout le HOME d un utilisateur local.
+# Arguments:
+#   $1: nom utilisateur
+# Retour:
+#   ecrit le HOME trouve sur stdout
+#######################################
+obtenir_home_utilisateur_bootstrap() {
+  local utilisateur="$1"
+  local home_utilisateur=""
+
+  if [[ -z "${utilisateur}" ]]; then
+    printf '%s\n' "${HOME}"
+    return 0
+  fi
+
+  if command -v getent >/dev/null 2>&1; then
+    home_utilisateur="$(getent passwd "${utilisateur}" | cut -d: -f6)"
+    if [[ -n "${home_utilisateur}" ]]; then
+      printf '%s\n' "${home_utilisateur}"
+      return 0
+    fi
+  fi
+
+  home_utilisateur="$(
+    awk -F: -v utilisateur="${utilisateur}" '$1 == utilisateur { print $6; exit }' /etc/passwd 2>/dev/null || true
+  )"
+  if [[ -n "${home_utilisateur}" ]]; then
+    printf '%s\n' "${home_utilisateur}"
+    return 0
+  fi
+
+  printf '%s\n' "${HOME}"
+}
+
+#######################################
 # Initialise l identite de l utilisateur
 # ayant lance sudo pour les etapes
 # non-systeme (build/lint/tests/docs).
@@ -65,12 +101,14 @@ initialiser_identite_appelant_bootstrap() {
     if id "${SUDO_USER}" >/dev/null 2>&1; then
       UTILISATEUR_APPELANT_BOOTSTRAP="${SUDO_USER}"
       GROUPE_APPELANT_BOOTSTRAP="$(id -gn "${SUDO_USER}")"
+      HOME_UTILISATEUR_APPELANT_BOOTSTRAP="$(obtenir_home_utilisateur_bootstrap "${SUDO_USER}")"
       return 0
     fi
   fi
 
   UTILISATEUR_APPELANT_BOOTSTRAP="$(id -un)"
   GROUPE_APPELANT_BOOTSTRAP="$(id -gn)"
+  HOME_UTILISATEUR_APPELANT_BOOTSTRAP="$(obtenir_home_utilisateur_bootstrap "${UTILISATEUR_APPELANT_BOOTSTRAP}")"
 }
 
 #######################################
@@ -88,6 +126,72 @@ executer_comme_utilisateur_appelant() {
     return 0
   fi
   "$@"
+}
+
+#######################################
+# Remplace/ajoute la ligne Exec d un
+# .desktop avec la commande attendue.
+# Arguments:
+#   $1: chemin du .desktop
+#   $2: ligne Exec complete
+# Retour:
+#   0
+#######################################
+mettre_a_jour_exec_autostart_bootstrap() {
+  local fichier_desktop="$1"
+  local ligne_exec="$2"
+  local fichier_temporaire="${fichier_desktop}.tmp"
+
+  awk -v ligne_exec="${ligne_exec}" '
+    BEGIN {
+      exec_remplace = 0
+    }
+    /^Exec=/ {
+      print ligne_exec
+      exec_remplace = 1
+      next
+    }
+    {
+      print
+    }
+    END {
+      if (exec_remplace == 0) {
+        print ligne_exec
+      }
+    }
+  ' "${fichier_desktop}" > "${fichier_temporaire}"
+  mv "${fichier_temporaire}" "${fichier_desktop}"
+}
+
+#######################################
+# Synchronise l autostart utilisateur
+# avec le chemin reel du depot courant.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+synchroniser_autostart_borne_bootstrap() {
+  local source_desktop="${REPERTOIRE_BORNE}/borne.desktop"
+  local home_utilisateur="${HOME_UTILISATEUR_APPELANT_BOOTSTRAP:-${HOME}}"
+  local dossier_autostart="${home_utilisateur}/.config/autostart"
+  local destination_desktop="${dossier_autostart}/borne.desktop"
+  local ligne_exec="Exec=/bin/bash -lc \"${REPERTOIRE_BORNE}/lancerBorne.sh\""
+
+  [[ -f "${source_desktop}" ]] \
+    || arreter_sur_erreur \
+      "Fichier source autostart absent: ${source_desktop}" \
+      "Restaurez borne_arcade/borne.desktop puis relancez sudo bash ./bootstrap_borne.sh."
+
+  mkdir -p "${dossier_autostart}"
+  cp "${source_desktop}" "${destination_desktop}"
+  mettre_a_jour_exec_autostart_bootstrap "${destination_desktop}" "${ligne_exec}"
+
+  if [[ "$(id -u)" -eq 0 ]] && [[ "${UTILISATEUR_APPELANT_BOOTSTRAP}" != "root" ]]; then
+    chown "${UTILISATEUR_APPELANT_BOOTSTRAP}:${GROUPE_APPELANT_BOOTSTRAP}" "${dossier_autostart}" "${destination_desktop}" 2>/dev/null || true
+  fi
+
+  journaliser "Autostart borne synchronise: ${destination_desktop}"
 }
 
 #######################################
@@ -142,6 +246,7 @@ preparer_etat_bootstrap() {
 installation_initiale_deja_preparee() {
   local version_etat=""
   local outils_locaux_valides=0
+  local home_utilisateur="${HOME_UTILISATEUR_APPELANT_BOOTSTRAP:-${HOME}}"
   if [[ -f "${FICHIER_ETAT_INSTALLATION_BOOTSTRAP}" ]]; then
     version_etat="$(sed -n 's/^version=//p' "${FICHIER_ETAT_INSTALLATION_BOOTSTRAP}" | head -n 1)"
   fi
@@ -159,8 +264,8 @@ installation_initiale_deja_preparee() {
     && [[ -x "${RACINE_PROJET}/.venv/bin/python" ]] \
     && "${RACINE_PROJET}/.venv/bin/python" -c 'import pygame, pytest, mkdocs, pylint' >/dev/null 2>&1 \
     && [[ "${outils_locaux_valides}" -eq 1 ]] \
-    && [[ -f "${HOME}/.config/autostart/borne.desktop" ]] \
-    && [[ -f "${HOME}/.xkb/symbols/borne" ]]
+    && [[ -f "${home_utilisateur}/.config/autostart/borne.desktop" ]] \
+    && [[ -f "${home_utilisateur}/.xkb/symbols/borne" ]]
 }
 
 #######################################
@@ -462,6 +567,7 @@ main() {
   verifier_scripts_bootstrap
   verifier_installation_non_interactive_possible
   executer_etape_bootstrap "installation initiale" executer_installation_initiale
+  executer_etape_bootstrap "synchronisation autostart borne" synchroniser_autostart_borne_bootstrap
   executer_etape_bootstrap "compilation globale" executer_compilation_globale
   executer_etape_bootstrap "lint global" executer_lint_global
   executer_etape_bootstrap "tests smoke" executer_tests_smoke

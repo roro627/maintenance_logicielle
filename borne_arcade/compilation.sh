@@ -106,10 +106,6 @@ preparer_dossiers_build_java() {
 #   ecrit la commande detectee sur stdout
 #######################################
 trouver_compilateur_lua() {
-  if command -v luac >/dev/null 2>&1; then
-    echo "luac"
-    return 0
-  fi
   if command -v luac5.4 >/dev/null 2>&1; then
     echo "luac5.4"
     return 0
@@ -120,6 +116,10 @@ trouver_compilateur_lua() {
   fi
   if command -v luac5.2 >/dev/null 2>&1; then
     echo "luac5.2"
+    return 0
+  fi
+  if command -v luac >/dev/null 2>&1; then
+    echo "luac"
     return 0
   fi
   return 1

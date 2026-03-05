@@ -15,6 +15,7 @@ Validateur: Equipe SAE ArcadeCare
 
 - [x] Demarrage automatique via borne.desktop
 - [x] Navigation joystick J1 dans le menu
+- [x] Boutons J1 B1..B6 fonctionnels (mapping nominal et fallback numerique 1..6)
 - [x] Catalogue trie alphabetiquement et panneau droit synchronise avec la selection
 - [x] Lancement et retour menu pour chaque jeu
 - [x] Son menu et son jeu
@@ -35,8 +36,9 @@ Validateur: Equipe SAE ArcadeCare
 
 ## Depannage
 
-- Si autostart absent: relancer `./scripts/install/installer_borne.sh`.
+- Si autostart absent: relancer `sudo bash ./bootstrap_borne.sh` pour resynchroniser `~/.config/autostart/borne.desktop` avec le chemin reel du depot.
 - Si un bouton ne repond plus: verifier le mapping dans `bouton.txt` du jeu et le cablage.
+- Si seuls les boutons J1 ne repondent pas: verifier le layout `borne`; en secours, utiliser `1..6` (ou pavé numerique) pour B1..B6.
 - Si le son est absent: verifier les ressources audio et le volume ALSA.
 
 ## Liens associes

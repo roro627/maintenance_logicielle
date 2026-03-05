@@ -72,6 +72,7 @@ pour Raspberry Pi OS et la borne arcade.
   paquet Debian exact varie entre Debian 11, Bookworm et Trixie.
 - L installation auto met a niveau Node.js via NodeSource quand `codex` ne peut pas tourner avec la version systeme.
 - Les tests cible Lua utilisent `luac`/`lua` si disponibles; en leur absence, `CursedWare` conserve un validateur portable Python pour verifier le contrat statique des mini-jeux sans lancer LÖVE.
+- La resolution des binaires Lua privilegie `lua5.4`/`luac5.4` puis `lua5.3`/`luac5.3` avant les alias generiques `lua`/`luac`, pour eviter un binaire legacy (ex: 5.1) quand une version compatible est deja installee.
 - Le bootstrap `sudo` conserve la compatibilite d exploitation en executant compilation/lint/tests/docs sous l utilisateur appelant, puis en normalisant ownership/permissions sur tout le depot exploitable (`config/`, `docs/`, `.github/`, `build/`, `.venv/`, `logs/`, `.cache/`, `site/`, `scripts/`, `.githooks/`, `borne_arcade/` et la racine du projet), hors `.git/` et `MG2D/`.
 - Cette normalisation reapplique aussi le bit executable sur tous les scripts `.sh` normalisables, y compris `bootstrap_borne.sh`, `./borne_arcade/lancerBorne.sh` et les lanceurs de jeux, pour rester compatible avec les checkouts Git en mode `100644`.
 - Le bootstrap prepare aussi l execution locale des workflows GitHub en validant `docker info` puis `act -W .github/workflows -l`.

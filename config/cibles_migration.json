@@ -69,8 +69,9 @@
       "type": "paquet_apt",
       "paquet_apt": "lua5.4",
       "commande_version_installee": [
-        "lua",
-        "-v"
+        "sh",
+        "-lc",
+        "if command -v lua5.4 >/dev/null 2>&1; then lua5.4 -v; elif command -v lua5.3 >/dev/null 2>&1; then lua5.3 -v; elif command -v lua >/dev/null 2>&1; then lua -v; elif command -v luac5.4 >/dev/null 2>&1; then luac5.4 -v; elif command -v luac5.3 >/dev/null 2>&1; then luac5.3 -v; elif command -v luac >/dev/null 2>&1; then luac -v; else echo \"(indisponible)\"; fi"
       ],
       "commandes_migration": [
         [

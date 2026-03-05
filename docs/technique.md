@@ -98,6 +98,8 @@ qualite, configuration et contraintes MG2D.
 - Bootstrap lance via `sudo`: les etapes non-systeme (compilation/lint/tests/docs) sont executees avec l utilisateur appelant (`SUDO_USER`) pour eviter les artefacts root dans `build/`.
 - Bootstrap finalise par une normalisation ownership/permissions de tout le depot exploitable, hors `.git/` et `MG2D/`, avec reapplication explicite du bit executable sur tous les `.sh` normalisables ainsi que sur les hooks Git versionnes de `.githooks/`, y compris `bootstrap_borne.sh`, `./borne_arcade/lancerBorne.sh` et `.githooks/post-merge`.
 - Pipeline post-pull resilient: installation en mode systeme optionnel et fallback de journalisation vers `~/.cache/maintenance_logicielle/logs/` si `logs/` n est pas accessible.
+- Autostart borne durci: `installer_borne.sh` genere `~/.config/autostart/borne.desktop` avec un `Exec` calcule depuis le chemin reel du depot et cible le HOME du compte appelant (meme en lancement via `sudo`), au lieu d un chemin absolu fige.
+- Bootstrap resilient sur autostart: `bootstrap_borne.sh` resynchronise aussi `borne.desktop` a chaque execution et verifie l etat sur le HOME de l utilisateur appelant (pas sur `/root`), pour rester robuste apres un deplacement du depot ou un lancement `sudo`.
 - Hook `post-merge` durci: controle de la presence de git et messages d erreur explicites si depot/script indisponible.
 - Protection permissions build: message clair si `build/` n est pas accessible en ecriture.
 - Menu optimise: suppression des chargements repetes police/son en boucle.
@@ -106,8 +108,10 @@ qualite, configuration et contraintes MG2D.
   selection initiale alignee sur le premier jeu affiche et panneau descriptif
   synchronise avec le meme index logique que le lancement du jeu.
 - Menu NeonSumo ameliore: rendu titre neon anime parametre via `config_jeu.json` (`menu_titre`) sans impacter la boucle gameplay.
-- Mapping NeonSumo verrouille par le code et les tests: toutes les actions borne (B1..B6 + joystick) sont verifiees et l aide de l ecran titre rappelle maintenant aussi `B5 Taunt`.
+- Mapping NeonSumo verrouille par le code et les tests: toutes les actions borne (B1..B6 + joystick) sont verifiees, avec fallback J1 `1..6` (et pavé numerique) si le layout `borne` n est pas applique, et l aide de l ecran titre rappelle aussi `B5 Taunt`.
+- Mapping clavier Java borne durci: les classes `ClavierBorneArcade` et l entree `Puissance_X` acceptent aussi `1..6`/`NUMPAD1..NUMPAD6` pour les boutons J1 afin de rester jouables sans layout XKB `borne`.
 - NeonSumo attract durci: les collisions/eliminations en mode attract declenchent une reinitialisation IA sans sortie vers les etats competitifs.
+- MaintenanceMode migration durci: `appliquer_migration_cible` ne remonte plus une erreur bloquante quand la cible est deja a jour; l operation retourne un no-op en succes avec message d information actionnable.
 - `ball-blast` optimise: frames d explosion prechargees et panneau de score mis en cache pour eviter les allocations et chargements repetes pendant la boucle de jeu.
 - Menu Pong recentre: le positionnement des textes repose sur des centres calcules explicitement et verifies par un test Java cible.
 - PianoTile robuste: fallback sans `librosa` si la dependance n est pas disponible.

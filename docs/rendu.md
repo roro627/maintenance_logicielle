@@ -135,7 +135,7 @@ Documenter le bilan final des travaux avec une verification point par point de `
 - Configuration centralisee (`borne.env`, `versions_minimales.env`, `config_jeu.json`).
 - Anti-regression appliquee avec ajout/renforcement de tests.
 - CI/CD local equivalent valide via `bash ./scripts/tests/lancer_suite.sh`.
-- CI/CD local equivalent GitHub valide via `act` sur `.github/workflows/qualite.yml`.
+- CI/CD local equivalent GitHub valide via `act` sur `.github/workflows/qualite.yml` et `.github/workflows/verification_reelle.yml`.
 - Couverture par jeu explicite et automatique: aucun jeu n est accepte dans la matrice sans `commande_test_cible`.
 - README de jeux homogenes: aucun README local n est accepte hors du generateur et du test `scripts/tests/test_readme_jeux.sh`.
 
@@ -144,6 +144,7 @@ Documenter le bilan final des travaux avec une verification point par point de `
 ```bash
 TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 bash ./scripts/tests/lancer_suite.sh
 ~/.local/bin/act -W .github/workflows/qualite.yml -j verification --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:act-latest
+~/.local/bin/act -W .github/workflows/verification_reelle.yml -j verification_reelle_debian11 --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:act-latest
 bash ./scripts/docs/generer_documentation.sh
 ```
 

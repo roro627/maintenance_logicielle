@@ -43,6 +43,18 @@ def creer_fausse_impl_pygame():
         K_a=18,
         K_z=19,
         K_e=20,
+        K_1=21,
+        K_2=22,
+        K_3=23,
+        K_4=24,
+        K_5=25,
+        K_6=26,
+        K_KP1=31,
+        K_KP2=32,
+        K_KP3=33,
+        K_KP4=34,
+        K_KP5=35,
+        K_KP6=36,
     )
 
 CHEMIN_MAIN_NEON_SUMO = MODULE_NEON_SUMO / "main.py"
@@ -63,6 +75,8 @@ construire_parametres_menu_titre = MODULE_MAIN_NEON_SUMO.construire_parametres_m
 mode_competitif_actif = MODULE_MAIN_NEON_SUMO.mode_competitif_actif
 doit_reinitialiser_attract = MODULE_MAIN_NEON_SUMO.doit_reinitialiser_attract
 gerer_entree_borne = MODULE_MAIN_NEON_SUMO.gerer_entree_borne
+construire_aliases_boutons_j1 = MODULE_MAIN_NEON_SUMO.construire_aliases_boutons_j1
+touche_juste_appuyee = MODULE_MAIN_NEON_SUMO.touche_juste_appuyee
 construire_textes_aide_menu_titre = MODULE_MAIN_NEON_SUMO.construire_textes_aide_menu_titre
 verifier_coherence_entrees_borne = MODULE_MAIN_NEON_SUMO.verifier_coherence_entrees_borne
 EntreeJoueur = MODULE_MAIN_NEON_SUMO.EntreeJoueur
@@ -182,6 +196,42 @@ class TestConfigurationMenuTitre(unittest.TestCase):
         self.assertEqual(j2.bouclier, MODULE_MAIN_NEON_SUMO.pygame.K_a)
         self.assertEqual(j2.taunt, MODULE_MAIN_NEON_SUMO.pygame.K_z)
         self.assertEqual(j2.ultime, MODULE_MAIN_NEON_SUMO.pygame.K_e)
+
+    def test_construire_aliases_boutons_j1_inclut_les_touches_numeriques(self) -> None:
+        """Controle la presence des alias numeriques pour B1..B6.
+
+        Args:
+            Aucun.
+
+        Returns:
+            Aucun.
+        """
+
+        alias = construire_aliases_boutons_j1()
+
+        self.assertIn(MODULE_MAIN_NEON_SUMO.pygame.K_1, alias["dash"])
+        self.assertIn(MODULE_MAIN_NEON_SUMO.pygame.K_KP1, alias["dash"])
+        self.assertIn(MODULE_MAIN_NEON_SUMO.pygame.K_3, alias["bump"])
+        self.assertIn(MODULE_MAIN_NEON_SUMO.pygame.K_KP3, alias["bump"])
+        self.assertIn(MODULE_MAIN_NEON_SUMO.pygame.K_6, alias["ultime"])
+        self.assertIn(MODULE_MAIN_NEON_SUMO.pygame.K_KP6, alias["ultime"])
+
+    def test_touche_juste_appuyee_accepte_les_aliases(self) -> None:
+        """Controle la detection front montant avec touche alias.
+
+        Args:
+            Aucun.
+
+        Returns:
+            Aucun.
+        """
+
+        resultat = touche_juste_appuyee(
+            {MODULE_MAIN_NEON_SUMO.pygame.K_3},
+            MODULE_MAIN_NEON_SUMO.pygame.K_h,
+            (MODULE_MAIN_NEON_SUMO.pygame.K_3, MODULE_MAIN_NEON_SUMO.pygame.K_KP3),
+        )
+        self.assertTrue(resultat)
 
     def test_verifier_coherence_entrees_borne_refuse_un_doublon_joueur(self) -> None:
         """Controle le refus d un doublon de touche sur un meme joueur.

@@ -211,7 +211,19 @@ CONFIGURATION_CIBLES_MIGRATION_PAR_DEFAUT = {
             "description": "Interpreteur Lua utilise par les jeux Lua et les validateurs headless.",
             "type": "paquet_apt",
             "paquet_apt": "lua5.4",
-            "commande_version_installee": ["lua", "-v"],
+            "commande_version_installee": [
+                "sh",
+                "-lc",
+                (
+                    "if command -v lua5.4 >/dev/null 2>&1; then lua5.4 -v; "
+                    "elif command -v lua5.3 >/dev/null 2>&1; then lua5.3 -v; "
+                    "elif command -v lua >/dev/null 2>&1; then lua -v; "
+                    "elif command -v luac5.4 >/dev/null 2>&1; then luac5.4 -v; "
+                    "elif command -v luac5.3 >/dev/null 2>&1; then luac5.3 -v; "
+                    "elif command -v luac >/dev/null 2>&1; then luac -v; "
+                    "else echo '(indisponible)'; fi"
+                ),
+            ],
             "commandes_migration": [
                 ["apt-get", "install", "-y", "lua5.4"],
             ],
@@ -2591,7 +2603,7 @@ def operation_appliquer_migration_cible(
         Resultat (succes, message, chemin journal).
     """
 
-    cible, _ = obtenir_cible_migration_contextualisee(contexte_operation, racine_projet)
+    cible, cibles = obtenir_cible_migration_contextualisee(contexte_operation, racine_projet)
     if cible is None:
         message = (
             "Aucune cible de migration selectionnee. "
@@ -2606,12 +2618,25 @@ def operation_appliquer_migration_cible(
         return False, message, chemin_journal
 
     if not cible.get("migration_disponible"):
-        message = (
-            f"Aucune migration candidate detectee pour {cible.get('titre')}. "
-            "Action recommandee: rechargez les cibles ou choisissez une autre cible."
-        )
-        journaliser(f"ERREUR: {message}")
-        return False, message, chemin_journal
+        cibles_migrables = [
+            cible_migrable
+            for cible_migrable in cibles
+            if cible_migrable.get("supportee_sur_hote") and cible_migrable.get("migration_disponible")
+        ]
+        if cibles_migrables:
+            titres_migrables = ", ".join(str(cible_migrable.get("titre")) for cible_migrable in cibles_migrables)
+            message = (
+                f"Aucune migration candidate detectee pour {cible.get('titre')}. "
+                f"Cible(s) avec migration disponible: {titres_migrables}. "
+                "Action recommandee: rechargez les cibles puis selectionnez une cible migrable."
+            )
+        else:
+            message = (
+                f"Aucune migration necessaire pour {cible.get('titre')}: composant deja aligne. "
+                "Action recommandee: passez directement a la verification qualite."
+            )
+        journaliser(f"INFO: {message}")
+        return True, message, chemin_journal
 
     prefixe_sudo = obtenir_prefixe_privileges_systeme()
     if prefixe_sudo is None:

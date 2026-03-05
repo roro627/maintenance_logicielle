@@ -58,7 +58,12 @@ valider_installation() {
 #######################################
 verifier_autostart_utilisateur() {
   local fichier_autostart="${HOME}/.config/autostart/borne.desktop"
+  local exec_attendu="Exec=/bin/bash -lc \"${REPERTOIRE_BORNE}/lancerBorne.sh\""
   [[ -f "${fichier_autostart}" ]] || arreter_sur_erreur "Autostart borne.desktop manquant: ${fichier_autostart}"
+  grep -Fxq "${exec_attendu}" "${fichier_autostart}" \
+    || arreter_sur_erreur \
+      "Autostart borne.desktop invalide: Exec attendu '${exec_attendu}'." \
+      "Relancez sudo bash ./bootstrap_borne.sh pour regenerer l autostart."
 }
 
 #######################################

@@ -87,3 +87,119 @@ Automatiser la génération complète de la documentation :
 - **Documentation exhaustive** : Elle doit être suffisamment claire pour qu'une personne tierce puisse reproduire l'installation. **Toute** modification du code doit être accompagnée d'une mise à jour de la documentation correspondante
 - **Suivi des coûts** : Maintenir à jour le fichier `cost.md` avec une estimation des coûts (temps, matériel, licences, etc.)
 - **Organisation et automatisation** : Ces deux principes doivent guider toutes vos décisions techniques
+
+---
+
+## 🤖 Protocole IA Linux de Vérification (sans `act`)
+
+Ce protocole est destiné à une IA exécutée sur Linux pour valider les correctifs récents:
+
+- correction du workflow migration quand la cible est déjà à jour (no-op non bloquant),
+- robustesse du mapping boutons J1 hors joystick (Java + NeonSumo),
+- robustesse de `B3` dans NeonSumo,
+- détection automatique du chemin projet pour l autostart via `bootstrap_borne.sh`.
+
+### Pré-requis
+
+1. Exécuter depuis un compte utilisateur Linux standard (pas directement `root`).
+2. Avoir `sudo` disponible.
+3. Se placer à la racine du dépôt.
+4. Ne pas exécuter `act` dans ce protocole.
+
+### Étape 1 - Préparation
+
+```bash
+set -Eeuo pipefail
+cd "$(git rev-parse --show-toplevel)"
+```
+
+### Étape 2 - Tests ciblés migration no-op
+
+```bash
+python3 -m pytest -q borne_arcade/projet/MaintenanceMode/tests/test_operations.py -k "deja_alignee_retourne_succes_info"
+```
+
+Résultat attendu: `1 passed`.
+
+### Étape 3 - Tests ciblés entrées NeonSumo (dont B3)
+
+```bash
+python3 -m pytest -q borne_arcade/projet/NeonSumo/tests/test_main_menu.py -k "gerer_entree_borne_associe_les_touches_arcade_attendues or construire_aliases_boutons_j1_inclut_les_touches_numeriques or touche_juste_appuyee_accepte_les_aliases"
+```
+
+Résultat attendu:
+
+- mapping nominal présent (`B3 -> K_h`),
+- alias numérique présent (`B3 -> K_3` et `K_KP3`),
+- test en succès.
+
+### Étape 4 - Tests Java ciblés boutons J1 hors joystick
+
+```bash
+bash ./scripts/tests/test_unitaires_java.sh
+bash ./scripts/tests/test_jeux_java_cibles.sh --jeu Puissance_X
+```
+
+Résultat attendu: succès des tests `TestUnitaireClavierBorneArcade` et `TestContratPuissanceX`.
+
+### Étape 5 - Régression Lua (contrat CursedWare)
+
+```bash
+bash ./scripts/tests/test_jeux_lua_cibles.sh --jeu CursedWare
+bash ./scripts/tests/test_versions_compatibilite.sh
+```
+
+Résultat attendu:
+
+- pas d erreur de syntaxe Lua,
+- version Lua détectée compatible (>= minimum configuré),
+- test terminé en succès.
+
+### Étape 6 - Vérification autostart dynamique via bootstrap
+
+Objectif: prouver que `bootstrap_borne.sh` réécrit automatiquement `~/.config/autostart/borne.desktop` avec le chemin réel du dépôt.
+
+```bash
+CHEMIN_REEL="$(pwd)/borne_arcade/lancerBorne.sh"
+AUTOSTART="${HOME}/.config/autostart/borne.desktop"
+
+mkdir -p "$(dirname "${AUTOSTART}")"
+cat > "${AUTOSTART}" <<'EOF'
+[Desktop Entry]
+Type=Application
+Name=BorneArcade
+Exec=/bin/bash -lc "/tmp/chemin_faux/lancerBorne.sh"
+EOF
+
+sudo -E bash ./bootstrap_borne.sh
+grep -Fx "Exec=/bin/bash -lc \"${CHEMIN_REEL}\"" "${AUTOSTART}"
+```
+
+Résultat attendu:
+
+- `grep` retourne 0,
+- la ligne `Exec` pointe exactement vers le chemin courant du dépôt,
+- aucune saisie manuelle de chemin n est nécessaire.
+
+### Étape 7 - Vérification anti-régression globale (statique/scripts)
+
+```bash
+bash ./scripts/tests/test_anti_regressions.sh
+```
+
+Résultat attendu: `Test anti regressions: OK`.
+
+### Étape 8 - Vérification terrain Raspberry Pi (si accès physique)
+
+1. Redémarrer la borne: `sudo reboot`.
+2. Vérifier que le menu borne se lance automatiquement.
+3. Dans NeonSumo, vérifier physiquement:
+   - `B3` via touche nominale (`H`) fonctionne,
+   - `B3` via alias numérique (`3` ou pavé numérique `3`) fonctionne.
+
+### Critères d acceptation finaux
+
+1. Toutes les commandes ci-dessus retournent `0`.
+2. Aucun message bloquant du type `Aucune migration candidate detectee` lors d une cible déjà alignée.
+3. `~/.config/autostart/borne.desktop` contient la ligne `Exec` alignée sur le chemin réel.
+4. Les entrées J1 hors joystick (dont `B3`) sont validées par tests automatiques et, si possible, par validation matérielle.

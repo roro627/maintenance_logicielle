@@ -51,11 +51,11 @@ TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 b
 - `Kowasu_Renga`: `TestContratKowasuRenga.java` couvre le noyau pur briques/vies/score/acceleration.
 - `MaintenanceMode`: `test_operations.py` et `test_interface.py`.
 - `Minesweeper`: `TestContratMinesweeper.java`.
-- `NeonSumo`: `test_logique.py` et `test_main_menu.py` couvrent collisions, etats attract et mapping complet des commandes borne.
+- `NeonSumo`: `test_logique.py` et `test_main_menu.py` couvrent collisions, etats attract, mapping complet des commandes borne et fallback numerique J1 (`1..6` + pavé numerique).
 - `OsuTile`: `test_osutile.py`.
 - `PianoTile`: `test_piano.py`.
 - `Pong`: `TestContratPong.java` couvre rebonds, score, reset de manche et retour menu.
-- `Puissance_X`: `TestContratPuissanceX.java`.
+- `Puissance_X`: `TestContratPuissanceX.java` (alignements + alias numeriques borne sur l entree clavier).
 - `Snake_Eater`: `TestContratSnakeEater.java` couvre persistance/highscore.
 - `TronGame`: `test_tron_game.py`.
 - `ball-blast`: `test_ball_blast.py`.
@@ -68,7 +68,7 @@ TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 b
 - controleur headless du menu borne (`borne_arcade/tests/unit/TestContratControleurMenuBorne.java`),
 - logique pure de `Columns`, `InitialDrift`, `JavaSpace`, `Pong`, `Kowasu_Renga` et `Snake_Eater`,
 - logique NeonSumo (collisions, sortie arene, cooldowns, ultime),
-- configuration menu NeonSumo + logique d etats attract + coherence du mapping borne (`borne_arcade/projet/NeonSumo/tests/test_main_menu.py`),
+- configuration menu NeonSumo + logique d etats attract + coherence du mapping borne principal + fallback numerique J1 (`borne_arcade/projet/NeonSumo/tests/test_main_menu.py`),
 - mode maintenance Python (`borne_arcade/projet/MaintenanceMode/tests/test_operations.py`):
   streaming logs temps reel, timeout actionnable y compris pour une commande silencieuse,
   journalisation des erreurs,
@@ -106,12 +106,15 @@ TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 b
 - deploiement post-pull,
 - deploiement post-pull + verification permissions partagees (`logs/`, `build/`, `.cache/`, `.venv/`, scripts critiques, tous les `borne_arcade/**/*.sh`),
 - installation + verification permissions partagees sur scripts, hooks, dossiers et ressources critiques (`bootstrap_borne.sh`, `scripts/deploiement/post_pull_update.sh`, `.githooks/post-merge`, `./borne_arcade/lancerBorne.sh`, `docs/`, `config/`, `borne.desktop`, images borne),
+- installation + verification autostart utilisateur (`~/.config/autostart/borne.desktop`) avec commande `Exec` generee dynamiquement vers le chemin reel de `lancerBorne.sh`,
 - README de jeux: presence, nommage `README.md`, regeneration deterministe et coherence entre template, matrice technique et metadonnees editoriales,
 - generation documentation,
 - architecture et couts,
 - mode maintenance cache (presence, verrouillage, integration menu),
 - mode maintenance cache (presence, verrouillage, integration menu, workflow migration cible),
+- mode maintenance cache: application de migration en no-op non bloquant quand la cible est deja a jour (message d information actionnable),
 - bootstrap robuste apres `sudo` (absence de regression sur normalisation permissions et execution non-systeme sous utilisateur appelant),
+- bootstrap robuste apres `sudo` avec resynchronisation explicite de l autostart utilisateur (`borne.desktop`) a chaque execution,
 - bootstrap robuste apres `sudo` y compris si les bits executables des lanceurs de jeux ont ete perdus lors d un checkout/pull,
 - bootstrap robuste pour l outillage migration:
   garde `codex` inactive en mode test et mise a niveau automatique Node.js via NodeSource si la distribution est trop ancienne,

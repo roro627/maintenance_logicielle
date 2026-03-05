@@ -34,11 +34,17 @@ class Entree extends KeyAdapter {
     }
 
     public boolean echap(int intervalRepetition) {
-	return this.verifTouche(KeyEvent.VK_R, intervalRepetition) || this.verifTouche(KeyEvent.VK_A, intervalRepetition);
+	return this.verifTouche(KeyEvent.VK_R, intervalRepetition)
+	    || this.verifTouche(KeyEvent.VK_4, intervalRepetition)
+	    || this.verifTouche(KeyEvent.VK_NUMPAD4, intervalRepetition)
+	    || this.verifTouche(KeyEvent.VK_A, intervalRepetition);
 	//return this.verifTouche(KeyEvent.VK_F, intervalRepetition) || this.verifTouche(KeyEvent.VK_Q, intervalRepetition);
     }
     public boolean entree(int intervalRepetition) {
-	return this.verifTouche(KeyEvent.VK_F, intervalRepetition) || this.verifTouche(KeyEvent.VK_Q, intervalRepetition);
+	return this.verifTouche(KeyEvent.VK_F, intervalRepetition)
+	    || this.verifTouche(KeyEvent.VK_1, intervalRepetition)
+	    || this.verifTouche(KeyEvent.VK_NUMPAD1, intervalRepetition)
+	    || this.verifTouche(KeyEvent.VK_Q, intervalRepetition);
 	//return this.verifTouche(KeyEvent.VK_R, intervalRepetition) || this.verifTouche(KeyEvent.VK_A, intervalRepetition);
     }
 

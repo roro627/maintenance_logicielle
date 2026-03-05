@@ -1662,6 +1662,92 @@ def gerer_entree_borne() -> Tuple[EntreeJoueur, EntreeJoueur]:
     return j1, j2
 
 
+def extraire_aliases_touches_pygame(*noms_touches: str) -> Tuple[int, ...]:
+    """Construit une liste ordonnee de touches pygame disponibles.
+
+    Args:
+        noms_touches: Noms d attributs pygame a tester.
+
+    Returns:
+        Tuple des codes de touches resolus sans doublon.
+    """
+
+    alias: list[int] = []
+    for nom_touche in noms_touches:
+        code_touche = getattr(pygame, nom_touche, None)
+        if isinstance(code_touche, int) and code_touche not in alias:
+            alias.append(code_touche)
+    return tuple(alias)
+
+
+def construire_aliases_boutons_j1() -> Dict[str, Tuple[int, ...]]:
+    """Retourne les alias clavier J1 pour mode sans layout borne.
+
+    Args:
+        aucun.
+
+    Returns:
+        Dictionnaire action -> touches alias.
+    """
+
+    return {
+        "dash": extraire_aliases_touches_pygame("K_1", "K_KP1"),
+        "frein": extraire_aliases_touches_pygame("K_2", "K_KP2"),
+        "bump": extraire_aliases_touches_pygame("K_3", "K_KP3"),
+        "bouclier": extraire_aliases_touches_pygame("K_4", "K_KP4"),
+        "taunt": extraire_aliases_touches_pygame("K_5", "K_KP5"),
+        "ultime": extraire_aliases_touches_pygame("K_6", "K_KP6"),
+    }
+
+
+def touche_juste_appuyee(
+    touches_juste_appuyees: set[int],
+    touche_principale: int,
+    touches_aliases: Tuple[int, ...] = (),
+) -> bool:
+    """Indique si une touche (principale ou alias) vient d etre appuyee.
+
+    Args:
+        touches_juste_appuyees: Ensemble des touches recues en KEYDOWN.
+        touche_principale: Touche principale de l action.
+        touches_aliases: Alias optionnels.
+
+    Returns:
+        True si la touche est detectee au front montant, sinon False.
+    """
+
+    if touche_principale in touches_juste_appuyees:
+        return True
+    for touche_alias in touches_aliases:
+        if touche_alias in touches_juste_appuyees:
+            return True
+    return False
+
+
+def touche_enfoncee(
+    touches: pygame.key.ScancodeWrapper,
+    touche_principale: int,
+    touches_aliases: Tuple[int, ...] = (),
+) -> bool:
+    """Indique si une touche (principale ou alias) est maintenue.
+
+    Args:
+        touches: Etat courant des touches pygame.
+        touche_principale: Touche principale de l action.
+        touches_aliases: Alias optionnels.
+
+    Returns:
+        True si la touche est maintenue enfoncee, sinon False.
+    """
+
+    if touches[touche_principale]:
+        return True
+    for touche_alias in touches_aliases:
+        if touches[touche_alias]:
+            return True
+    return False
+
+
 def construire_textes_aide_menu_titre() -> Tuple[str, str, str]:
     """Construit les libelles d aide affiches sur le menu titre.
 
@@ -1873,6 +1959,7 @@ def boucle_jeu() -> int:
 
     j1_controles, j2_controles = gerer_entree_borne()
     verifier_coherence_entrees_borne(j1_controles, j2_controles)
+    alias_boutons_j1 = construire_aliases_boutons_j1()
 
     try:
         pygame.mixer.init()
@@ -1976,8 +2063,16 @@ def boucle_jeu() -> int:
         mettre_a_jour_etat_style(style_j2, delta_temps)
 
         ecran.fill(couleur_fond)
-        appui_dash_global = (j1_controles.dash in touches_juste_appuyees) or (j2_controles.dash in touches_juste_appuyees)
-        appui_ultime_global = (j1_controles.ultime in touches_juste_appuyees) or (j2_controles.ultime in touches_juste_appuyees)
+        appui_dash_global = touche_juste_appuyee(
+            touches_juste_appuyees,
+            j1_controles.dash,
+            alias_boutons_j1["dash"],
+        ) or (j2_controles.dash in touches_juste_appuyees)
+        appui_ultime_global = touche_juste_appuyee(
+            touches_juste_appuyees,
+            j1_controles.ultime,
+            alias_boutons_j1["ultime"],
+        ) or (j2_controles.ultime in touches_juste_appuyees)
 
         if etat == "titre":
             dessiner_menu_titre_neon(
@@ -2089,7 +2184,15 @@ def boucle_jeu() -> int:
                     axe_j1 = calculer_ia_attract(joueur_1, centre_x, centre_y, rayon_arene)
                     axe_j2 = calculer_ia_attract(joueur_2, centre_x, centre_y, rayon_arene)
 
-                frein_j1 = bool(touches[j1_controles.frein]) if en_manche else False
+                frein_j1 = (
+                    touche_enfoncee(
+                        touches,
+                        j1_controles.frein,
+                        alias_boutons_j1["frein"],
+                    )
+                    if en_manche
+                    else False
+                )
                 frein_j2 = bool(touches[j2_controles.frein]) if en_manche else False
 
                 appliquer_deplacement_inertiel(
@@ -2118,15 +2221,35 @@ def boucle_jeu() -> int:
                 charger_ultime(joueur_2, delta_simulation, parametres)
 
                 if en_manche and not simulation_gelee:
-                    j1_dash_presse = j1_controles.dash in touches_juste_appuyees
+                    j1_dash_presse = touche_juste_appuyee(
+                        touches_juste_appuyees,
+                        j1_controles.dash,
+                        alias_boutons_j1["dash"],
+                    )
                     j2_dash_presse = j2_controles.dash in touches_juste_appuyees
-                    j1_bump_presse = j1_controles.bump in touches_juste_appuyees
+                    j1_bump_presse = touche_juste_appuyee(
+                        touches_juste_appuyees,
+                        j1_controles.bump,
+                        alias_boutons_j1["bump"],
+                    )
                     j2_bump_presse = j2_controles.bump in touches_juste_appuyees
-                    j1_bouclier_presse = j1_controles.bouclier in touches_juste_appuyees
+                    j1_bouclier_presse = touche_juste_appuyee(
+                        touches_juste_appuyees,
+                        j1_controles.bouclier,
+                        alias_boutons_j1["bouclier"],
+                    )
                     j2_bouclier_presse = j2_controles.bouclier in touches_juste_appuyees
-                    j1_ultime_presse = j1_controles.ultime in touches_juste_appuyees
+                    j1_ultime_presse = touche_juste_appuyee(
+                        touches_juste_appuyees,
+                        j1_controles.ultime,
+                        alias_boutons_j1["ultime"],
+                    )
                     j2_ultime_presse = j2_controles.ultime in touches_juste_appuyees
-                    j1_taunt_presse = j1_controles.taunt in touches_juste_appuyees
+                    j1_taunt_presse = touche_juste_appuyee(
+                        touches_juste_appuyees,
+                        j1_controles.taunt,
+                        alias_boutons_j1["taunt"],
+                    )
                     j2_taunt_presse = j2_controles.taunt in touches_juste_appuyees
 
                     if j1_dash_presse and activer_dash(joueur_1, parametres):

@@ -40,10 +40,12 @@ local function verifier_fichier(chemin)
 
     local contenu = lire_fichier(chemin)
     for _, definition in ipairs(motifs_requis) do
-        if not contenu:match(definition.motif) then
-            if definition.motif_alternatif and contenu:match(definition.motif_alternatif) then
-                goto suite_definition
-            end
+        local motif_valide = contenu:match(definition.motif)
+        if not motif_valide and definition.motif_alternatif then
+            motif_valide = contenu:match(definition.motif_alternatif)
+        end
+
+        if not motif_valide then
             io.stderr:write(
                 "ERREUR CursedWare: contrat mini-jeu incomplet dans "
                 .. chemin
@@ -53,7 +55,6 @@ local function verifier_fichier(chemin)
             )
             return false
         end
-        ::suite_definition::
     end
 
     return true

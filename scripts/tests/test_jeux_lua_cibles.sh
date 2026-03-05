@@ -46,16 +46,16 @@ lister_jeux_lua_selectionnes() {
 #   ecrit la commande detectee
 #######################################
 trouver_interpreteur_lua() {
-  if command -v lua >/dev/null 2>&1; then
-    echo "lua"
-    return 0
-  fi
   if command -v lua5.4 >/dev/null 2>&1; then
     echo "lua5.4"
     return 0
   fi
   if command -v lua5.3 >/dev/null 2>&1; then
     echo "lua5.3"
+    return 0
+  fi
+  if command -v lua >/dev/null 2>&1; then
+    echo "lua"
     return 0
   fi
   return 1
@@ -70,16 +70,16 @@ trouver_interpreteur_lua() {
 #   ecrit la commande detectee
 #######################################
 trouver_compilateur_lua_cible() {
-  if command -v luac >/dev/null 2>&1; then
-    echo "luac"
-    return 0
-  fi
   if command -v luac5.4 >/dev/null 2>&1; then
     echo "luac5.4"
     return 0
   fi
   if command -v luac5.3 >/dev/null 2>&1; then
     echo "luac5.3"
+    return 0
+  fi
+  if command -v luac >/dev/null 2>&1; then
+    echo "luac"
     return 0
   fi
   return 1

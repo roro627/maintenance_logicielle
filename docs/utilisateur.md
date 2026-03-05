@@ -42,6 +42,7 @@ commandes principales et depannage rapide.
   5. suivre la reponse IA en temps reel, puis laisser l IA/humain finaliser code, tests, docs et scripts
   6. `Relancer qualite complete`
   7. `Proposer PR migration`
+- Si la cible est deja a jour, `Appliquer migration cible` retourne un no-op en succes avec un message d information (pas une panne bloquante).
 - Sur un poste non Debian/Raspberry Pi, la detection reste consultable mais l application reelle d une migration apt est refusee avec un message clair.
 - Option rollback disponible: `Retour commit precedent` (retour `HEAD~1`) uniquement si le depot est propre.
 - Les operations git (`Git pull`, rollback) affichent maintenant un message explicite si `git` est absent.
@@ -52,12 +53,14 @@ commandes principales et depannage rapide.
 ### En jeu
 
 Chaque jeu decrit ses commandes dans `borne_arcade/projet/<jeu>/bouton.txt`.
+En cas de layout `borne` non applique, les boutons J1 restent compatibles via `1..6` (et pavé numerique) sur les jeux Java et NeonSumo.
 
 ### NeonSumo (resume)
 
 - But: ejecter l adversaire hors de l arene.
 - Match: BO3.
 - B1 Dash, B2 Frein, B3 Bump, B4 Bouclier, B5 Taunt, B6 Ultime.
+- Robustesse clavier: J1 accepte aussi `1..6` (et pavé numerique `1..6`) si le layout `borne` n est pas applique.
 - Menu titre ameliore: theme neon anime, panneau controles lisible et rappel explicite de toutes les commandes, y compris `B5 Taunt`.
 - Mode attract robuste: une collision/elimination en mode demo relance automatiquement une nouvelle manche IA sans sortir du mode attract.
 
@@ -78,7 +81,7 @@ Chaque jeu decrit ses commandes dans `borne_arcade/projet/<jeu>/bouton.txt`.
 ## Depannage
 
 - Jeu ne se lance pas: `./borne_arcade/compilation.sh`.
-- Borne non lancee au demarrage: `./scripts/install/installer_borne.sh`.
+- Borne non lancee au demarrage: `sudo bash ./bootstrap_borne.sh` (resynchronise automatiquement `~/.config/autostart/borne.desktop` avec le chemin reel du depot).
 - Son manquant: verifier les ressources audio du jeu.
 
 ## Liens associes
