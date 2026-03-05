@@ -219,6 +219,22 @@ lister_chemins_normalisables_borne() {
 }
 
 #######################################
+# Liste les scripts et hooks qui
+# doivent rester directement executables
+# apres normalisation des permissions.
+# Arguments:
+#   aucun
+# Retour:
+#   ecrit les chemins sur stdout
+#######################################
+lister_scripts_executables_normalisables_borne() {
+  {
+    lister_chemins_normalisables_borne -type f -name '*.sh' -print 2>/dev/null
+    find "${RACINE_PROJET}/.githooks" -mindepth 1 -maxdepth 1 -type f ! -name '*.*' -print 2>/dev/null
+  } | sort -u
+}
+
+#######################################
 # Normalise les permissions partagees
 # et d execution des chemins utiles
 # a l exploitation de la borne.
@@ -260,7 +276,7 @@ normaliser_permissions_exploitation_borne() {
 
   while IFS= read -r script; do
     appliquer_chmod_si_possible a+rwx "${script}"
-  done < <(lister_chemins_normalisables_borne -type f -name '*.sh' -print 2>/dev/null | sort)
+  done < <(lister_scripts_executables_normalisables_borne)
 }
 
 #######################################

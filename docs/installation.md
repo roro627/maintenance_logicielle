@@ -16,11 +16,11 @@ sudo bash ./bootstrap_borne.sh
 Le script `bootstrap_borne.sh` enchaine:
 
 - installation systeme ciblee (paquet par paquet si manquant),
-- installation de `Docker Engine` depuis le depot officiel si absent, puis verification `docker version` + `docker info`,
+- installation de `Docker Engine` depuis le depot officiel si absent, avec mapping automatique Raspberry Pi OS -> depot Docker Debian quand `raspbian` n est plus adapte, puis fallback vers `docker.io`/`docker-cli` si le depot officiel echoue,
 - installation de `act` depuis la release officielle (`/usr/local/bin/act`) avec lien utilisateur `~/.local/bin/act`,
 - ajout de l utilisateur appelant au groupe `docker` pour executer `act` sans `sudo`,
 - installation de l outillage de qualite (dont `curl` pour les telechargements lint),
-- creation/maintenance de la venv Python,
+- creation/maintenance de la venv Python avec fallback `piwheels` sur Raspberry Pi OS,
 - installation des dependances par jeu (`requirements.txt`),
 - permissions scripts, autostart, layout clavier,
 - droits partages multi-utilisateurs sur tout le depot exploitable (racine du projet, `config/`, `docs/`, `.github/`, `logs/`, `build/`, `.cache/`, `.venv/`, `site/`, `scripts/`, `.githooks/`, `borne_arcade/`), hors `.git/` et `MG2D/`,
@@ -32,6 +32,17 @@ Quand `Node.js` provient du depot officiel NodeSource, l installateur considere
 `node` et `npm` comme satisfaits des qu ils sont disponibles en commande,
 meme si le paquet Debian `npm` n est pas installe separement. Cela evite un
 conflit `nodejs` vs `npm` sur Debian 11 lors des relances idempotentes.
+
+Pour Java, le bootstrap exige toujours un JDK **17 minimum**, mais il ne
+fige plus `openjdk-17-jdk` comme unique paquet. Il resout maintenant la
+dependance logique `java-jdk` vers `openjdk-17-jdk` quand ce paquet est
+present dans les depots, sinon vers `default-jdk` si la distribution ne
+publie plus `openjdk-17-jdk` separement.
+
+Pour `pygame`, le bootstrap installe aussi `python3-pygame` au niveau systeme
+afin de recuperer les bibliotheques SDL/audio necessaires meme sur une image
+Raspberry Pi OS minimale, puis conserve l installation Python projet dans la
+venv.
 
 Le bootstrap est **obligatoirement lance en sudo/root** (hors mode test).
 Sinon il s arrete avec un message clair et la commande de relance.
@@ -155,7 +166,10 @@ Le journal bootstrap est ecrit dans `logs/bootstrap_borne_YYYYMMDD_HHMMSS.log`.
 
 - Emplacement recommande du depot: dossier utilisateur (ex: `~/git/maintenance_logicielle`),
   pas un dossier systeme ou verrouille.
-- Si `love` echoue sur Debian 11 minimal: le script applique automatiquement un contournement, puis corrige l etat `dpkg`.
+- Si `love` echoue sur Debian 11 minimal: le script applique automatiquement un contournement uniquement quand le paquet `love` est reellement casse en post-installation, puis corrige l etat `dpkg`.
+- Si `apt` signale `Unable to locate package openjdk-17-jdk` sur Raspberry Pi OS / Debian `trixie`: relancer `sudo bash ./bootstrap_borne.sh`; le bootstrap choisit maintenant automatiquement `default-jdk` sur cette generation de distribution.
+- Si Docker echoue sur Raspberry Pi OS: le bootstrap bascule deja sur le depot Docker Debian, puis tente `docker.io`/`docker-cli` si le depot officiel echoue. Si l erreur persiste, verifier `docker version`, `docker info` et les depots apt actifs.
+- Si `pip install` est lent ou tente de compiler `pygame`/`numba` depuis les sources sur Raspberry Pi OS: verifier la connectivite vers `https://www.piwheels.org`; le bootstrap ajoute maintenant `piwheels` comme index supplementaire de secours.
 - Si `act` reste inutilisable localement: verifier `docker info`, se deconnecter/reconnecter pour reappliquer le groupe `docker`, puis relancer `sudo bash ./bootstrap_borne.sh`.
 - Si Docker vient juste d etre installe et que `docker info` ne repond qu avec `sudo`: fermer puis rouvrir la session utilisateur pour activer le groupe `docker`.
 - Si `proposer-pr` echoue: verifier que `gh` est installe, authentifie (`gh auth status`) et que la branche de migration n est pas `main`.

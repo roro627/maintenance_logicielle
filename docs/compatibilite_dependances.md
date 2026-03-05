@@ -10,6 +10,9 @@ pour Raspberry Pi OS et la borne arcade.
 ### Noyau borne
 
 - Java: OpenJDK 17 minimum.
+- Paquet Java bootstrap: resolution dynamique `openjdk-17-jdk` puis
+  `default-jdk` selon ce que la distribution expose, avec verification
+  finale d un JDK >= 17.
 - Python: 3.9 minimum.
 - Lua: 5.3 minimum (5.4 recommande).
 - LÖVE: 11.0 minimum.
@@ -17,6 +20,9 @@ pour Raspberry Pi OS et la borne arcade.
 - pytest: 8.0 minimum.
 - mkdocs: 1.5 minimum.
 - pygame: 2.5 minimum.
+- Runtime pygame systeme: `python3-pygame` installe par le bootstrap pour
+  garantir les bibliotheques SDL/audio minimales sur image Raspberry Pi OS
+  reduite, meme si le projet utilise ensuite `pygame` dans la venv.
 - librosa: 0.10 minimum (PianoTile), avec fallback runtime si absent.
 - LÖVE est obligatoire et valide automatiquement dans les tests de compatibilite.
 - Le minimum Python est aligne sur Debian 11 (base de la verification CI reelle).
@@ -40,7 +46,7 @@ pour Raspberry Pi OS et la borne arcade.
 - librosa: requis prefere pour l analyse rythme PianoTile (`borne_arcade/projet/PianoTile/requirements.txt`).
 - libsndfile1: dependance systeme audio pour l ecosysteme librosa.
 - curl: dependance systeme requise pour telecharger automatiquement les binaires lint quand necessaire.
-- Docker Engine: requis pour executer `act` localement, installe automatiquement via le depot officiel Docker sur Debian/Raspberry Pi OS/Ubuntu.
+- Docker Engine: requis pour executer `act` localement, installe automatiquement via le depot officiel Docker; sur Raspberry Pi OS, le bootstrap cible d abord le depot Debian officiel, puis retombe sur `docker.io`/`docker-cli` si necessaire.
 - act: version cible `0.2.84`, installee automatiquement depuis la release officielle GitHub.
 - GitHub CLI (`gh`): dependance optionnelle, requise seulement pour l etape `proposer-pr` du workflow migration.
 
@@ -57,6 +63,13 @@ pour Raspberry Pi OS et la borne arcade.
 - Le script `scripts/tests/test_versions_compatibilite.sh` valide Java, Python, pip, pytest, mkdocs, pygame,
   puis Lua et LÖVE (obligatoires des qu un jeu Lua est present).
 - L installation auto verifie et installe les paquets systeme manquants (dont `libsndfile1`) via `scripts/install/installer_borne.sh`.
+- Pour les dependances Python lourdes sur Raspberry Pi OS, l installateur ajoute
+  `https://www.piwheels.org/simple` comme index pip supplementaire de secours
+  afin d eviter autant que possible les compilations locales de `pygame`,
+  `numba` et consorts.
+- La dependance logique `java-jdk` reste idempotente sur les relances: la
+  presence de `java` + `javac` avec une version compatible suffit, meme si le
+  paquet Debian exact varie entre Debian 11, Bookworm et Trixie.
 - L installation auto met a niveau Node.js via NodeSource quand `codex` ne peut pas tourner avec la version systeme.
 - Les tests cible Lua utilisent `luac`/`lua` si disponibles; en leur absence, `CursedWare` conserve un validateur portable Python pour verifier le contrat statique des mini-jeux sans lancer LÖVE.
 - Le bootstrap `sudo` conserve la compatibilite d exploitation en executant compilation/lint/tests/docs sous l utilisateur appelant, puis en normalisant ownership/permissions sur tout le depot exploitable (`config/`, `docs/`, `.github/`, `build/`, `.venv/`, `logs/`, `.cache/`, `site/`, `scripts/`, `.githooks/`, `borne_arcade/` et la racine du projet), hors `.git/` et `MG2D/`.
@@ -75,8 +88,11 @@ pour Raspberry Pi OS et la borne arcade.
 - Si une version est trop ancienne: mettre a jour via `apt` ou `pip` selon l outil.
 - Si LÖVE ou Lua manque: installer `love` et `lua5.4`.
 - Si pygame manque dans la venv: relancer `./scripts/install/installer_borne.sh`.
+- Si `pygame` importe mal sur une image minimale malgre la venv: verifier que `python3-pygame` est bien installe, puis relancer `sudo bash ./bootstrap_borne.sh`.
 - Si librosa manque: relancer `./scripts/install/installer_borne.sh` ou installer via `./.venv/bin/pip install -r borne_arcade/projet/PianoTile/requirements.txt`.
-- Si `love` echoue sur Debian 11 minimal: le bootstrap applique un contournement automatique puis relance `apt -f install`.
+- Si `love` echoue sur Debian 11 minimal: le bootstrap applique un contournement automatique uniquement si `dpkg` montre un `love` non configure, puis relance `apt -f install`.
+- Si `openjdk-17-jdk` est introuvable sur une distribution recente (ex: Raspberry Pi OS / Debian `trixie`): relancer `sudo bash ./bootstrap_borne.sh`; le bootstrap bascule automatiquement sur `default-jdk` puis verifie que Java 17 minimum est bien atteint.
+- Si Docker echoue sur Raspberry Pi OS 32 bits ou `trixie`: relancer `sudo bash ./bootstrap_borne.sh`; le bootstrap reessaie maintenant via le depot Docker Debian, puis via `docker.io`/`docker-cli` si le depot officiel n expose pas les paquets attendus.
 - Si `codex` echoue avec un message de version Node.js: relancer `sudo bash ./bootstrap_borne.sh` pour forcer l installation de Node.js 22.x via NodeSource.
 - Si `docker info` echoue apres bootstrap: verifier le service Docker et rouvrir la session utilisateur pour reappliquer le groupe `docker`.
 - Pour repartir d un etat local propre: supprimer `.venv`, `build`, `site`, `.cache/bootstrap_borne`, `.etat_derniere_maj` et `.post_pull.lock`, puis relancer `sudo bash ./bootstrap_borne.sh`.

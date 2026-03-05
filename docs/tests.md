@@ -105,7 +105,7 @@ TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 b
 - ajout de jeu,
 - deploiement post-pull,
 - deploiement post-pull + verification permissions partagees (`logs/`, `build/`, `.cache/`, `.venv/`, scripts critiques, tous les `borne_arcade/**/*.sh`),
-- installation + verification permissions partagees sur scripts, dossiers et ressources critiques (`bootstrap_borne.sh`, `./borne_arcade/lancerBorne.sh`, `docs/`, `config/`, `borne.desktop`, images borne),
+- installation + verification permissions partagees sur scripts, hooks, dossiers et ressources critiques (`bootstrap_borne.sh`, `scripts/deploiement/post_pull_update.sh`, `.githooks/post-merge`, `./borne_arcade/lancerBorne.sh`, `docs/`, `config/`, `borne.desktop`, images borne),
 - README de jeux: presence, nommage `README.md`, regeneration deterministe et coherence entre template, matrice technique et metadonnees editoriales,
 - generation documentation,
 - architecture et couts,
@@ -115,6 +115,8 @@ TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 b
 - bootstrap robuste apres `sudo` y compris si les bits executables des lanceurs de jeux ont ete perdus lors d un checkout/pull,
 - bootstrap robuste pour l outillage migration:
   garde `codex` inactive en mode test et mise a niveau automatique Node.js via NodeSource si la distribution est trop ancienne,
+- bootstrap robuste pour Raspberry Pi OS:
+  mapping `raspbian` vers le depot Docker Debian quand necessaire, fallback `docker.io`/`docker-cli` et fallback `piwheels` pour les installations Python lourdes,
 - compilations Java deterministes:
   toutes les commandes shell `javac` passent par un encodage source explicite `UTF-8`,
   ce qui evite les echecs `unmappable character ... for encoding US-ASCII` dans le workflow reel Debian 11 minimal,

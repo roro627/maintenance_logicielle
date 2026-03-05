@@ -40,6 +40,7 @@ Resultat:
 - si les dependances systeme sont deja presentes, le deploiement continue sans root,
 - si des dependances manquent, echec clair avec action recommandee (`sudo bash ./bootstrap_borne.sh`).
 - les permissions partagees restent reappliquees (`logs/`, `build/`, `.cache/`, `.venv/`) pour eviter les blocages apres une installation root.
+- la normalisation finale reapplique aussi le bit executable des hooks Git versionnes dans `.githooks/` (notamment `post-merge`) pour rester fiable sous `act` et apres un checkout/pull qui perd les metadonnees Unix.
 
 ### Workflow migration et PR
 

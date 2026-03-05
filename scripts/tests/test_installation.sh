@@ -106,6 +106,7 @@ verifier_permissions_post_installation() {
   local scripts_executables=(
     "${RACINE_PROJET}/bootstrap_borne.sh"
     "${RACINE_PROJET}/scripts/deploiement/post_pull_update.sh"
+    "${RACINE_PROJET}/.githooks/post-merge"
     "${REPERTOIRE_BORNE}/lancerBorne.sh"
     "${REPERTOIRE_BORNE}/compilation.sh"
     "${REPERTOIRE_BORNE}/ball-blast.sh"

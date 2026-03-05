@@ -126,6 +126,95 @@ paquet_systeme_installe() {
 }
 
 #######################################
+# Retourne la version Java detectee
+# via la commande java.
+# Arguments:
+#   aucun
+# Retour:
+#   ecrit la version sur stdout
+#######################################
+obtenir_version_java_detectee() {
+  java -version 2>&1 | head -n 1 | sed -E 's/.*"([0-9]+(\.[0-9]+){0,2}).*/\1/'
+}
+
+#######################################
+# Indique si un JDK Java compatible
+# avec la borne est deja disponible.
+# Arguments:
+#   aucun
+# Retour:
+#   0 si un JDK compatible est present
+#######################################
+java_jdk_compatible_disponible() {
+  local version_java=""
+
+  command -v java >/dev/null 2>&1 || return 1
+  command -v javac >/dev/null 2>&1 || return 1
+
+  version_java="$(obtenir_version_java_detectee)"
+  [[ -n "${version_java}" ]] || return 1
+
+  version_minimale_respectee "${version_java}" "${JAVA_VERSION_MIN}"
+}
+
+#######################################
+# Indique si un paquet apt dispose
+# d une version candidate installable.
+# Arguments:
+#   $1: nom du paquet
+# Retour:
+#   0 si une candidate existe
+#######################################
+paquet_apt_candidat_disponible() {
+  local nom_paquet="$1"
+  local version_candidate=""
+
+  if ! command -v apt-cache >/dev/null 2>&1; then
+    return 1
+  fi
+
+  version_candidate="$(
+    apt-cache policy "${nom_paquet}" 2>/dev/null \
+      | sed -n 's/^[[:space:]]*Candidate:[[:space:]]*//p' \
+      | head -n 1
+  )"
+  [[ -n "${version_candidate}" ]] && [[ "${version_candidate}" != "(none)" ]]
+}
+
+#######################################
+# Resout le paquet apt a installer pour
+# une dependance logique de la borne.
+# Arguments:
+#   $1: nom logique de dependance
+# Retour:
+#   ecrit le paquet apt choisi
+#######################################
+resoudre_paquet_apt_dependance() {
+  local nom_dependance="$1"
+  local candidats=()
+  local candidat=""
+
+  case "${nom_dependance}" in
+    java-jdk)
+      candidats=(openjdk-17-jdk default-jdk)
+      ;;
+    *)
+      printf '%s\n' "${nom_dependance}"
+      return 0
+      ;;
+  esac
+
+  for candidat in "${candidats[@]}"; do
+    if paquet_systeme_installe "${candidat}" || paquet_apt_candidat_disponible "${candidat}"; then
+      printf '%s\n' "${candidat}"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+#######################################
 # Indique si une dependance systeme est
 # deja disponible, y compris quand elle
 # est fournie hors paquet Debian natif
@@ -144,6 +233,9 @@ dependance_systeme_disponible() {
       ;;
     npm)
       command -v npm >/dev/null 2>&1 && return 0
+      ;;
+    java-jdk)
+      java_jdk_compatible_disponible && return 0
       ;;
   esac
 
@@ -356,6 +448,66 @@ installation_act_locale_requise() {
 }
 
 #######################################
+# Retourne l identifiant distribution
+# expose par /etc/os-release.
+# Arguments:
+#   aucun
+# Retour:
+#   ecrit l identifiant sur stdout
+#######################################
+obtenir_identifiant_distribution() {
+  local identifiant=""
+  identifiant="$(. /etc/os-release && printf '%s' "${ID:-}")"
+  [[ -n "${identifiant}" ]] || return 1
+  printf '%s\n' "${identifiant}"
+}
+
+#######################################
+# Retourne le nom lisible de la
+# distribution expose par /etc/os-release.
+# Arguments:
+#   aucun
+# Retour:
+#   ecrit le nom sur stdout
+#######################################
+obtenir_nom_distribution() {
+  local nom_distribution=""
+  nom_distribution="$(. /etc/os-release && printf '%s' "${PRETTY_NAME:-}")"
+  [[ -n "${nom_distribution}" ]] || return 1
+  printf '%s\n' "${nom_distribution}"
+}
+
+#######################################
+# Retourne l architecture dpkg courante.
+# Arguments:
+#   aucun
+# Retour:
+#   ecrit l architecture sur stdout
+#######################################
+obtenir_architecture_dpkg_courante() {
+  dpkg --print-architecture
+}
+
+#######################################
+# Indique si l hote courant est un
+# Raspberry Pi OS / Raspbian.
+# Arguments:
+#   aucun
+# Retour:
+#   0 si Raspberry Pi OS detecte
+#######################################
+systeme_raspberry_pi_os() {
+  local identifiant=""
+  local nom_distribution=""
+
+  identifiant="$(obtenir_identifiant_distribution 2>/dev/null || true)"
+  nom_distribution="$(obtenir_nom_distribution 2>/dev/null || true)"
+
+  [[ "${identifiant}" == "raspbian" ]] \
+    || [[ "${nom_distribution,,}" == *"raspberry pi os"* ]]
+}
+
+#######################################
 # Retourne la distribution officielle
 # attendue par le depot Docker.
 # Arguments:
@@ -365,10 +517,13 @@ installation_act_locale_requise() {
 #######################################
 obtenir_distribution_docker() {
   local identifiant=""
-  identifiant="$(. /etc/os-release && printf '%s' "${ID:-}")"
+  identifiant="$(obtenir_identifiant_distribution 2>/dev/null || true)"
 
   case "${identifiant}" in
-    debian|raspbian|ubuntu)
+    raspbian)
+      printf '%s\n' "debian"
+      ;;
+    debian|ubuntu)
       printf '%s\n' "${identifiant}"
       ;;
     *)
@@ -400,6 +555,22 @@ obtenir_codename_distribution() {
 }
 
 #######################################
+# Retourne les arguments supplementaires
+# pip a appliquer sur la plateforme
+# courante.
+# Arguments:
+#   aucun
+# Retour:
+#   ecrit un argument par ligne
+#######################################
+obtenir_arguments_pip_plateforme() {
+  if systeme_raspberry_pi_os; then
+    printf '%s\n' "--extra-index-url"
+    printf '%s\n' "https://www.piwheels.org/simple"
+  fi
+}
+
+#######################################
 # Prepare un environnement virtuel Python dedie au projet.
 # Arguments:
 #   aucun
@@ -417,6 +588,22 @@ preparer_venv_python_projet() {
 
   COMMANDE_PYTHON_VENV="${dossier_venv}/bin/python"
   [[ -x "${COMMANDE_PYTHON_VENV}" ]] || arreter_sur_erreur "Python venv introuvable: ${COMMANDE_PYTHON_VENV}"
+}
+
+#######################################
+# Indique si le paquet love est dans
+# un etat casse apres unpack apt.
+# Arguments:
+#   aucun
+# Retour:
+#   0 si love est present mais non configure
+#######################################
+love_postinstall_casse_detecte() {
+  if dpkg-query -W -f='${Status}' love 2>/dev/null | grep -q "install ok installed"; then
+    return 1
+  fi
+
+  dpkg -s love >/dev/null 2>&1
 }
 
 #######################################
@@ -479,30 +666,32 @@ installer_dependances_systeme() {
     return 0
   fi
 
-  local paquets_obligatoires
-  local paquets_obligatoires_manquants=()
+  local dependances_obligatoires
+  local dependances_obligatoires_manquantes=()
+  local paquets_apt_a_installer=()
   local prefixe_elevation=""
   local -a commande_apt=()
-  local paquet
-  paquets_obligatoires=(ca-certificates git curl nodejs npm openjdk-17-jdk python3 python3-venv python3-pip checkstyle pylint shellcheck xdotool lua5.4 libsndfile1 love)
+  local dependance=""
+  local paquet_resolu=""
+  dependances_obligatoires=(ca-certificates git curl nodejs npm java-jdk python3 python3-venv python3-pip python3-pygame checkstyle pylint shellcheck xdotool lua5.4 libsndfile1 love)
 
-  for paquet in "${paquets_obligatoires[@]}"; do
-    if dependance_systeme_disponible "${paquet}"; then
-      journaliser "Dependance systeme deja presente: ${paquet}"
+  for dependance in "${dependances_obligatoires[@]}"; do
+    if dependance_systeme_disponible "${dependance}"; then
+      journaliser "Dependance systeme deja presente: ${dependance}"
     else
-      journaliser "Dependance systeme manquante: ${paquet}"
-      paquets_obligatoires_manquants+=("${paquet}")
+      journaliser "Dependance systeme manquante: ${dependance}"
+      dependances_obligatoires_manquantes+=("${dependance}")
     fi
   done
 
-  if [[ "${#paquets_obligatoires_manquants[@]}" -eq 0 ]]; then
+  if [[ "${#dependances_obligatoires_manquantes[@]}" -eq 0 ]]; then
     journaliser "Toutes les dependances systeme ciblees sont deja installees"
     return 0
   fi
 
   if [[ "${PRIVILEGES_SYSTEME_ACTIFS}" != "1" ]]; then
     arreter_sur_erreur \
-      "Dependances systeme manquantes sans privileges root/sudo: ${paquets_obligatoires_manquants[*]}" \
+      "Dependances systeme manquantes sans privileges root/sudo: ${dependances_obligatoires_manquantes[*]}" \
       "Relancez sudo bash ./bootstrap_borne.sh pour installer automatiquement ces dependances."
   fi
 
@@ -517,30 +706,44 @@ installer_dependances_systeme() {
   journaliser "Mise a jour index apt"
   "${commande_apt[@]}" update
 
-  journaliser "Installation dependances systeme obligatoires: ${paquets_obligatoires_manquants[*]}"
-  if ! "${commande_apt[@]}" install -y "${paquets_obligatoires_manquants[@]}"; then
-    if printf '%s\n' "${paquets_obligatoires_manquants[@]}" | grep -qx "love"; then
-      journaliser "Echec installation love detecte: tentative de contournement automatique."
-      appliquer_contournement_postinstall_love "${commande_apt[@]}" \
-        || arreter_sur_erreur \
-          "Echec installation obligatoire de love, meme apres contournement automatique." \
-          "Verifiez la connectivite apt, puis relancez scripts/install/installer_borne.sh."
+  for dependance in "${dependances_obligatoires_manquantes[@]}"; do
+    paquet_resolu="$(resoudre_paquet_apt_dependance "${dependance}")" \
+      || arreter_sur_erreur \
+        "Aucun paquet apt compatible trouve pour la dependance obligatoire ${dependance}." \
+        "Verifiez les depots apt de la distribution puis relancez scripts/install/installer_borne.sh."
+
+    if [[ "${paquet_resolu}" != "${dependance}" ]]; then
+      journaliser "Resolution dependance ${dependance} -> paquet apt ${paquet_resolu}"
+    fi
+
+    if ! printf '%s\n' "${paquets_apt_a_installer[@]}" | grep -qxF "${paquet_resolu}"; then
+      paquets_apt_a_installer+=("${paquet_resolu}")
+    fi
+  done
+
+  journaliser "Installation dependances systeme obligatoires: ${paquets_apt_a_installer[*]}"
+  if ! "${commande_apt[@]}" install -y "${paquets_apt_a_installer[@]}"; then
+    journaliser "Echec installation apt detecte: verification d un eventuel post-install love casse."
+    if love_postinstall_casse_detecte && appliquer_contournement_postinstall_love "${commande_apt[@]}"; then
+      journaliser "Contournement post-install love applique avec succes."
     else
       arreter_sur_erreur \
-        "Echec installation des dependances systeme obligatoires." \
-        "Verifiez la connectivite apt et les droits root, puis relancez scripts/install/installer_borne.sh."
+        "Echec installation des dependances systeme obligatoires: ${paquets_apt_a_installer[*]}." \
+        "Verifiez la connectivite apt, les depots actifs et les droits root, puis relancez scripts/install/installer_borne.sh."
     fi
   fi
 
-  paquet_systeme_installe love \
-    || arreter_sur_erreur \
-      "Le paquet love reste indisponible alors qu il est obligatoire." \
-      "Corrigez l etat apt/dpkg, puis relancez scripts/install/installer_borne.sh."
+  for dependance in "${dependances_obligatoires_manquantes[@]}"; do
+    dependance_systeme_disponible "${dependance}" \
+      || arreter_sur_erreur \
+        "La dependance obligatoire ${dependance} reste indisponible apres installation." \
+        "Corrigez l etat apt/dpkg ou la version installee, puis relancez scripts/install/installer_borne.sh."
+  done
 }
 
 #######################################
-# Supprime les paquets Docker en conflit
-# avant installation du depot officiel.
+# Supprime les paquets Docker pouvant
+# entrer en conflit avant reinstallation.
 # Arguments:
 #   $1...: commande apt complete
 # Retour:
@@ -550,11 +753,17 @@ supprimer_paquets_docker_conflits() {
   local -a commande_apt=("$@")
   local paquets_conflits=(
     docker.io
+    docker-cli
+    docker-ce
+    docker-ce-cli
     docker-doc
     docker-compose
+    docker-buildx-plugin
+    docker-compose-plugin
     podman-docker
     containerd
     runc
+    containerd.io
   )
   local paquets_presents=()
   local paquet
@@ -574,6 +783,31 @@ supprimer_paquets_docker_conflits() {
 }
 
 #######################################
+# Installe Docker via les paquets de la
+# distribution courante.
+# Arguments:
+#   $1...: commande apt complete
+# Retour:
+#   0 si installation reussie
+#######################################
+installer_docker_engine_paquets_distribution() {
+  local -a commande_apt=("$@")
+  local paquets_docker=(docker.io)
+
+  if paquet_apt_candidat_disponible docker-cli; then
+    paquets_docker+=(docker-cli)
+  fi
+
+  if ! paquet_apt_candidat_disponible docker.io; then
+    return 1
+  fi
+
+  journaliser "Fallback Docker: installation via paquets distribution (${paquets_docker[*]})"
+  "${commande_apt[@]}" update
+  "${commande_apt[@]}" install -y "${paquets_docker[@]}"
+}
+
+#######################################
 # Installe Docker Engine depuis le depot
 # officiel Docker.
 # Arguments:
@@ -588,6 +822,7 @@ installer_docker_engine() {
   local architecture_dpkg=""
   local -a commande_apt=()
   local -a prefixe_systeme=()
+  local installation_officielle_reussie=0
 
   if docker_operationnel; then
     journaliser "Docker Engine deja operationnel"
@@ -613,28 +848,38 @@ installer_docker_engine() {
     commande_apt=(apt-get)
   fi
 
+  architecture_dpkg="$(obtenir_architecture_dpkg_courante)"
   distribution_docker="$(obtenir_distribution_docker)"
   codename_distribution="$(obtenir_codename_distribution)"
-  architecture_dpkg="$(dpkg --print-architecture)"
+
+  if systeme_raspberry_pi_os; then
+    journaliser "Raspberry Pi OS detecte: utilisation du depot officiel Docker Debian pour compatibilite derive Debian."
+  fi
 
   supprimer_paquets_docker_conflits "${commande_apt[@]}"
 
   journaliser "Preparation depot officiel Docker (${distribution_docker} ${codename_distribution})"
-  "${commande_apt[@]}" update
-  "${commande_apt[@]}" install -y ca-certificates curl
+  if "${commande_apt[@]}" update \
+    && "${commande_apt[@]}" install -y ca-certificates curl \
+    && "${prefixe_systeme[@]}" install -m 0755 -d /etc/apt/keyrings \
+    && "${prefixe_systeme[@]}" curl -fsSL "https://download.docker.com/linux/${distribution_docker}/gpg" -o /etc/apt/keyrings/docker.asc \
+    && "${prefixe_systeme[@]}" chmod a+r /etc/apt/keyrings/docker.asc \
+    && { printf 'deb [arch=%s signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/%s %s stable\n' \
+      "${architecture_dpkg}" "${distribution_docker}" "${codename_distribution}" \
+      | "${prefixe_systeme[@]}" tee /etc/apt/sources.list.d/docker.list >/dev/null; } \
+    && "${commande_apt[@]}" update \
+    && "${commande_apt[@]}" install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin; then
+    installation_officielle_reussie=1
+  fi
 
-  "${prefixe_systeme[@]}" install -m 0755 -d /etc/apt/keyrings
-  "${prefixe_systeme[@]}" curl -fsSL "https://download.docker.com/linux/${distribution_docker}/gpg" \
-    -o /etc/apt/keyrings/docker.asc
-  "${prefixe_systeme[@]}" chmod a+r /etc/apt/keyrings/docker.asc
-
-  printf 'deb [arch=%s signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/%s %s stable\n' \
-    "${architecture_dpkg}" "${distribution_docker}" "${codename_distribution}" \
-    | "${prefixe_systeme[@]}" tee /etc/apt/sources.list.d/docker.list >/dev/null
-
-  "${commande_apt[@]}" update
-  journaliser "Installation Docker Engine"
-  "${commande_apt[@]}" install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+  if [[ "${installation_officielle_reussie}" -ne 1 ]]; then
+    journaliser "Echec installation Docker via depot officiel: tentative de fallback vers les paquets distribution."
+    supprimer_paquets_docker_conflits "${commande_apt[@]}"
+    installer_docker_engine_paquets_distribution "${commande_apt[@]}" \
+      || arreter_sur_erreur \
+        "Impossible d installer Docker Engine ni via le depot officiel ni via les paquets de la distribution." \
+        "Verifiez la distribution cible, les depots apt et la connectivite reseau, puis relancez scripts/install/installer_borne.sh."
+  fi
 
   if command -v systemctl >/dev/null 2>&1; then
     "${prefixe_systeme[@]}" systemctl enable --now docker >/dev/null 2>&1 || true
@@ -1121,11 +1366,13 @@ preparer_execution_locale_act() {
 #   0
 #######################################
 installer_dependances_python() {
+  local -a arguments_pip_plateforme=()
   if ! command -v "${COMMANDE_PYTHON}" >/dev/null 2>&1; then
     arreter_sur_erreur "${COMMANDE_PYTHON} introuvable"
   fi
 
   preparer_venv_python_projet
+  mapfile -t arguments_pip_plateforme < <(obtenir_arguments_pip_plateforme)
 
   if [[ "${BORNE_MODE_TEST:-0}" == "1" ]]; then
     journaliser "Mode test actif: creation venv conservee, installation pip ignoree"
@@ -1133,12 +1380,12 @@ installer_dependances_python() {
   fi
 
   journaliser "Installation outils python globaux"
-  "${COMMANDE_PYTHON_VENV}" -m pip install --upgrade pip mkdocs pytest pylint
+  "${COMMANDE_PYTHON_VENV}" -m pip install "${arguments_pip_plateforme[@]}" --upgrade pip mkdocs pytest pylint
 
   local requirements
   while IFS= read -r requirements; do
     journaliser "Installation dependances python depuis ${requirements}"
-    "${COMMANDE_PYTHON_VENV}" -m pip install -r "${requirements}"
+    "${COMMANDE_PYTHON_VENV}" -m pip install "${arguments_pip_plateforme[@]}" -r "${requirements}"
   done < <(find "${REPERTOIRE_BORNE}/projet" -maxdepth 2 -name requirements.txt | sort)
 }
 

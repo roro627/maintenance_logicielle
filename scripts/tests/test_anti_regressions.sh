@@ -130,10 +130,14 @@ verifier_bootstrap_permissions_apres_sudo() {
     || arreter_sur_erreur "Helper commun de normalisation permissions absent de scripts/lib/outils_communs.sh"
   grep -Fq "lister_chemins_normalisables_borne()" "${RACINE_PROJET}/scripts/lib/outils_communs.sh" \
     || arreter_sur_erreur "Enumeration commune des chemins normalisables absente dans scripts/lib/outils_communs.sh"
+  grep -Fq "lister_scripts_executables_normalisables_borne()" "${RACINE_PROJET}/scripts/lib/outils_communs.sh" \
+    || arreter_sur_erreur "Enumeration des scripts executables normalisables absente dans scripts/lib/outils_communs.sh"
   grep -Fq -- "-path \"\${RACINE_PROJET}/.git\"" "${RACINE_PROJET}/scripts/lib/outils_communs.sh" \
     || arreter_sur_erreur "Exclusion explicite de .git absente dans la normalisation des permissions"
   grep -Fq -- "-path \"\${CHEMIN_MG2D}\"" "${RACINE_PROJET}/scripts/lib/outils_communs.sh" \
     || arreter_sur_erreur "Exclusion explicite de MG2D absente dans la normalisation des permissions"
+  grep -Fq "find \"\${RACINE_PROJET}/.githooks\" -mindepth 1 -maxdepth 1 -type f ! -name '*.*' -print" "${RACINE_PROJET}/scripts/lib/outils_communs.sh" \
+    || arreter_sur_erreur "Normalisation executable des hooks git absente dans scripts/lib/outils_communs.sh"
 }
 
 #######################################
@@ -242,7 +246,7 @@ verifier_invalidation_cache_mg2d_trop_recent() {
 #   0
 #######################################
 verifier_detection_npm_nodesource() {
-  local motif_boucle_dependances="if dependance_systeme_disponible \"\${paquet}\"; then"
+  local motif_boucle_dependances="if dependance_systeme_disponible \"\${dependance}\"; then"
 
   grep -Fq "dependance_systeme_disponible()" "${RACINE_PROJET}/scripts/install/installer_borne.sh" \
     || arreter_sur_erreur "Helper de detection dependance systeme absent de installer_borne.sh"
@@ -252,6 +256,87 @@ verifier_detection_npm_nodesource() {
     || arreter_sur_erreur "Detection npm via commande absente de installer_borne.sh"
   grep -Fq "${motif_boucle_dependances}" "${RACINE_PROJET}/scripts/install/installer_borne.sh" \
     || arreter_sur_erreur "Boucle dependances systeme n utilise pas le helper de detection portable"
+}
+
+#######################################
+# Verifie que l installateur resout un
+# JDK compatible selon la distribution
+# et ne masque plus un echec apt sous
+# un faux diagnostic love.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+verifier_resolution_jdk_et_diagnostic_love() {
+  local installateur="${RACINE_PROJET}/scripts/install/installer_borne.sh"
+
+  grep -Fq "java-jdk" "${installateur}" \
+    || arreter_sur_erreur "Dependance logique java-jdk absente de installer_borne.sh"
+  grep -Fq "resoudre_paquet_apt_dependance()" "${installateur}" \
+    || arreter_sur_erreur "Resolution de paquet apt portable absente de installer_borne.sh"
+  grep -Fq "candidats=(openjdk-17-jdk default-jdk)" "${installateur}" \
+    || arreter_sur_erreur "Fallback default-jdk absent de installer_borne.sh"
+  grep -Fq "paquet_apt_candidat_disponible()" "${installateur}" \
+    || arreter_sur_erreur "Detection de paquet apt candidat absente de installer_borne.sh"
+  grep -Fq "java_jdk_compatible_disponible()" "${installateur}" \
+    || arreter_sur_erreur "Detection d un JDK compatible absent de installer_borne.sh"
+  grep -Fq "love_postinstall_casse_detecte && appliquer_contournement_postinstall_love" "${installateur}" \
+    || arreter_sur_erreur "Contournement love non conditionne a un vrai etat casse dans installer_borne.sh"
+
+  if grep -Fq "printf '%s\\n' \"\${paquets_obligatoires_manquants[@]}\" | grep -qx \"love\"" "${installateur}"; then
+    arreter_sur_erreur "Ancien faux diagnostic love encore present dans installer_borne.sh"
+  fi
+}
+
+#######################################
+# Verifie que l installation Docker
+# reste compatible avec Raspberry Pi OS
+# et conserve un fallback distribution.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+verifier_fallback_docker_raspberry_pi() {
+  local installateur="${RACINE_PROJET}/scripts/install/installer_borne.sh"
+
+  grep -Fq "systeme_raspberry_pi_os()" "${installateur}" \
+    || arreter_sur_erreur "Detection Raspberry Pi OS absente de installer_borne.sh"
+  grep -Fq "Raspberry Pi OS detecte: utilisation du depot officiel Docker Debian" "${installateur}" \
+    || arreter_sur_erreur "Journalisation du mapping Docker Debian pour Raspberry Pi OS absente"
+  grep -Fq "raspbian)" "${installateur}" \
+    || arreter_sur_erreur "Cas raspbian absent de obtenir_distribution_docker"
+  grep -Fq "printf '%s\\n' \"debian\"" "${installateur}" \
+    || arreter_sur_erreur "Fallback depot Docker Debian absent pour Raspberry Pi OS"
+  grep -Fq "installer_docker_engine_paquets_distribution()" "${installateur}" \
+    || arreter_sur_erreur "Fallback Docker via paquets distribution absent"
+  grep -Fq "docker.io" "${installateur}" \
+    || arreter_sur_erreur "Paquet docker.io absent du fallback Docker"
+  grep -Fq "docker-cli" "${installateur}" \
+    || arreter_sur_erreur "Paquet docker-cli absent du fallback Docker"
+}
+
+#######################################
+# Verifie que l installation Python
+# couvre le runtime pygame minimal et
+# force piwheels sur Raspberry Pi OS.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+verifier_runtime_pygame_et_piwheels() {
+  local installateur="${RACINE_PROJET}/scripts/install/installer_borne.sh"
+
+  grep -Fq "python3-pygame" "${installateur}" \
+    || arreter_sur_erreur "Dependance systeme python3-pygame absente de installer_borne.sh"
+  grep -Fq "obtenir_arguments_pip_plateforme()" "${installateur}" \
+    || arreter_sur_erreur "Helper pip plateforme absent de installer_borne.sh"
+  grep -Fq "https://www.piwheels.org/simple" "${installateur}" \
+    || arreter_sur_erreur "Fallback piwheels absent de installer_borne.sh"
+  grep -Fq "mapfile -t arguments_pip_plateforme < <(obtenir_arguments_pip_plateforme)" "${installateur}" \
+    || arreter_sur_erreur "Installation pip n utilise pas le helper plateforme"
 }
 
 #######################################
@@ -286,6 +371,23 @@ verifier_execution_shell_portable() {
 }
 
 #######################################
+# Verifie que les hooks git critiques
+# sont re-normalises comme executables
+# par le bootstrap et controles par
+# les tests d installation.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+verifier_hook_git_executable_normalise() {
+  grep -Fq "\"\${RACINE_PROJET}/.githooks/post-merge\"" "${RACINE_PROJET}/scripts/tests/test_installation.sh" \
+    || arreter_sur_erreur "Test installation ne controle pas .githooks/post-merge"
+  grep -Fq "\"\${RACINE_PROJET}/.githooks/post-merge\"" "${RACINE_PROJET}/scripts/tests/test_deploiement.sh" \
+    || arreter_sur_erreur "Test deploiement ne controle pas .githooks/post-merge"
+}
+
+#######################################
 # Point d entree du test anti regressions.
 # Arguments:
 #   aucun
@@ -306,7 +408,11 @@ main() {
   verifier_encodage_java_explicite
   verifier_invalidation_cache_mg2d_trop_recent
   verifier_detection_npm_nodesource
+  verifier_resolution_jdk_et_diagnostic_love
+  verifier_fallback_docker_raspberry_pi
+  verifier_runtime_pygame_et_piwheels
   verifier_execution_shell_portable
+  verifier_hook_git_executable_normalise
   journaliser "Test anti regressions: OK"
 }
 
