@@ -22,9 +22,9 @@ Documenter le bilan final des travaux avec une verification point par point de `
 14. Workflow migration borne finalise: CLI stable `tsv/json`, selection cible dans `MaintenanceMode`, session persistante hors git, assistant IA `Codex/Ollama` avec brief Markdown+JSON + reponse Markdown + trace JSONL, rapport qualite JSON et garde-fous avant `gh pr create`.
 15. README de jeux industrialises: template unique, metadonnees editoriales centralisees, generation deterministe et verification automatique du nommage/contenu.
 16. Affichage borne unifie: resolution `1280x1024` propagee par les lanceurs, `MaintenanceMode` adapte en mode sans bordure/plein ecran et journal vertical etendu sans zone morte.
-16. Menu borne fiabilise: ordre alphabetique, selection initiale coherente et panneau descriptif aligne sur le jeu lance.
-17. Workflow reel Debian 11 fiabilise: compilations Java shell forcees en `UTF-8` via configuration centralisee et garde anti-regression contre les echecs de locale `US-ASCII`.
-18. Validation locale durcie: le cache MG2D est maintenant invalide automatiquement s il a ete compile avec une version Java plus recente que le `javac` disponible.
+17. Menu borne fiabilise: ordre alphabetique, selection initiale coherente et panneau descriptif aligne sur le jeu lance.
+18. Workflow reel Debian 11 fiabilise: compilations Java shell forcees en `UTF-8` via configuration centralisee et garde anti-regression contre les echecs de locale `US-ASCII`.
+19. Validation locale durcie: le cache MG2D est maintenant invalide automatiquement s il a ete compile avec une version Java plus recente que le `javac` disponible.
 
 ## Conformite `consignes.md` (point par point)
 
