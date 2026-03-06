@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Automatisation SAE - ArcadeCare</title>
+  <style>
+    :root {
+      --fond: #f6f3ec;
+      --fond-secondaire: #fffdf9;
+      --texte: #122033;
+      --texte-doux: #536176;
+      --accent: #0c7c86;
+      --accent-doux: #dff5f4;
+      --accent-chaud: #f1a32d;
+      --bordure: #dfe6ea;
+      --ombre: 0 24px 60px rgba(28, 42, 61, 0.12);
+      --fond-code: #142236;
+      --texte-code: #f4f6fa;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      font-family: "Aptos", "Segoe UI", sans-serif;
+      color: var(--texte);
+      background:
+        radial-gradient(circle at top left, rgba(12, 124, 134, 0.09), transparent 26%),
+        radial-gradient(circle at bottom right, rgba(241, 163, 45, 0.1), transparent 24%),
+        linear-gradient(180deg, #f8f5ef, #f0ece4);
+    }
+
+    .stage {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      place-items: center;
+      padding: 22px 22px 96px;
+    }
+
+    .slide {
+      display: none;
+      width: min(95vw, 1480px);
+      height: min(82vh, 800px);
+      padding: 42px 48px 28px;
+      background: rgba(255, 253, 249, 0.95);
+      border: 1px solid rgba(18, 32, 51, 0.07);
+      border-radius: 30px;
+      box-shadow: var(--ombre);
+      grid-template-rows: auto 1fr auto;
+      gap: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .slide.active {
+      display: grid;
+    }
+
+    .slide::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto auto 0;
+      width: 100%;
+      height: 8px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-chaud));
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 24px;
+    }
+
+    .eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: var(--accent);
+      margin-bottom: 14px;
+    }
+
+    h1,
+    h2 {
+      margin: 0;
+      line-height: 1.02;
+      letter-spacing: -0.04em;
+      max-width: 980px;
+    }
+
+    h1 {
+      font-size: 3.45rem;
+    }
+
+    h2 {
+      font-size: 2.4rem;
+    }
+
+    .intro {
+      margin-top: 14px;
+      max-width: 860px;
+      font-size: 1.08rem;
+      line-height: 1.44;
+      color: var(--texte-doux);
+    }
+
+    main {
+      min-height: 0;
+    }
+
+    .hero,
+    .grille-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      height: 100%;
+    }
+
+    .grille-4 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 8px;
+    }
+
+    .grille-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-top: 14px;
+    }
+
+    .bloc,
+    .tuile,
+    .raison {
+      border: 1px solid var(--bordure);
+      border-radius: 24px;
+      padding: 22px;
+      background: var(--fond-secondaire);
+    }
+
+    .bloc h3,
+    .tuile h3,
+    .raison h3 {
+      margin: 0 0 12px;
+      font-size: 1.22rem;
+      line-height: 1.1;
+    }
+
+    .bloc p,
+    .tuile p,
+    .raison p {
+      margin: 0;
+      color: var(--texte-doux);
+      line-height: 1.42;
+      font-size: 0.97rem;
+    }
+
+    .liste {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .item {
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: #fbfaf7;
+      border: 1px solid var(--bordure);
+      line-height: 1.38;
+      font-size: 0.95rem;
+      color: var(--texte-doux);
+    }
+
+    .item strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--texte);
+    }
+
+    .frise {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      margin-top: 12px;
+    }
+
+    .etape {
+      padding: 16px 14px;
+      border-radius: 20px;
+      background: var(--fond-secondaire);
+      border: 1px solid var(--bordure);
+    }
+
+    .numero {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      margin-bottom: 12px;
+      background: var(--accent-doux);
+      color: var(--accent);
+    }
+
+    .etape h4 {
+      margin: 0 0 8px;
+      font-size: 0.96rem;
+      line-height: 1.15;
+    }
+
+    .etape p {
+      margin: 0;
+      color: var(--texte-doux);
+      line-height: 1.33;
+      font-size: 0.86rem;
+    }
+
+    .code {
+      margin-top: 14px;
+      padding: 16px 18px;
+      border-radius: 20px;
+      background: var(--fond-code);
+      color: var(--texte-code);
+      font-family: "Cascadia Code", "Consolas", monospace;
+      font-size: 0.89rem;
+      line-height: 1.52;
+    }
+
+    .code .accent {
+      color: #7ff2ec;
+    }
+
+    .phrase-forte {
+      margin-top: 16px;
+      padding: 16px 18px;
+      border-radius: 20px;
+      background: linear-gradient(90deg, rgba(12, 124, 134, 0.1), rgba(241, 163, 45, 0.11));
+      border: 1px solid rgba(18, 32, 51, 0.06);
+      font-size: 1.02rem;
+      line-height: 1.35;
+      font-weight: 700;
+    }
+
+    .apercu-maintenance {
+      margin-top: 10px;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid var(--bordure);
+      background: #0d1728;
+      box-shadow: 0 10px 30px rgba(18, 32, 51, 0.12);
+    }
+
+    .apercu-maintenance img {
+      display: block;
+      width: 100%;
+      max-height: 330px;
+      height: auto;
+      object-fit: contain;
+      background: #0d1728;
+    }
+
+    .legende-image {
+      padding: 10px 12px;
+      font-size: 0.88rem;
+      color: var(--texte-doux);
+      background: rgba(255, 253, 249, 0.96);
+      border-top: 1px solid var(--bordure);
+    }
+
+    .mini-titre {
+      font-size: 0.84rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+
+    footer {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    .compteur {
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-weight: 700;
+      color: var(--accent);
+      font-size: 0.86rem;
+    }
+
+    .chrome {
+      position: fixed;
+      left: 24px;
+      right: 24px;
+      bottom: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .barre {
+      flex: 1;
+      max-width: 360px;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(18, 32, 51, 0.1);
+      overflow: hidden;
+    }
+
+    .barre > div {
+      width: 25%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent-chaud));
+      transition: width 180ms ease;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 9px 12px;
+      background: rgba(255, 253, 249, 0.9);
+      border-radius: 999px;
+      border: 1px solid rgba(18, 32, 51, 0.08);
+    }
+
+    .actions button {
+      border: 0;
+      background: var(--accent-doux);
+      color: var(--accent);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .actions span {
+      color: var(--texte-doux);
+      font-size: 0.92rem;
+    }
+
+    @media (max-width: 1180px) {
+      .slide {
+        width: 100vw;
+        height: 100vh;
+        border-radius: 0;
+        padding: 36px 28px 26px;
+      }
+
+      .hero,
+      .grille-2,
+      .grille-3,
+      .grille-4,
+      .frise {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 2.7rem;
+      }
+
+      h2 {
+        font-size: 2rem;
+      }
+
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <section class="slide active">
+      <header>
+        <div>
+          <div class="eyebrow">Automatisation</div>
+          <h1>J'ai automatise<br>la chaine complete</h1>
+          <div class="intro">
+            Documentation, installation, deploiement, verification
+            et migration assistee: tout est relie dans le meme flux.
+          </div>
+        </div>
+      </header>
+      <main class="hero">
+        <div class="bloc">
+          <h3>Ce que j'ai automatise</h3>
+          <div class="liste">
+            <div class="item">
+              <strong>Documentation</strong>
+              Generation des docs + site statique.
+            </div>
+            <div class="item">
+              <strong>Installation</strong>
+              Bootstrap complet de la borne.
+            </div>
+            <div class="item">
+              <strong>Deploiement</strong>
+              Mise a jour automatique apres <code>git pull</code>.
+            </div>
+          </div>
+        </div>
+        <div class="bloc">
+          <h3>Ce que cela resolvait</h3>
+          <div class="liste">
+            <div class="item">
+              <strong>Moins d'oublis</strong>
+              Les etapes critiques ne reposent plus sur la memoire.
+            </div>
+            <div class="item">
+              <strong>Moins de maintenance manuelle</strong>
+              La borne peut etre remise a niveau sans repasser par toute la procedure.
+            </div>
+            <div class="item">
+              <strong>Plus de fiabilite</strong>
+              Installation, docs, deploiement et qualite restent alignes.
+            </div>
+          </div>
+        </div>
+      </main>
+      <footer>
+        <div class="compteur">Slide 1 / 4</div>
+      </footer>
+    </section>
+
+    <section class="slide">
+      <header>
+        <div>
+          <div class="eyebrow">Zoom specifique</div>
+          <h2>Pourquoi Codex CLI<br>plutot qu'un wrapper plus simple ?</h2>
+        </div>
+      </header>
+      <main>
+        <div class="grille-3">
+          <div class="raison">
+            <div class="mini-titre">Codex CLI</div>
+            <h3>Un outil deja agentique</h3>
+            <p>
+              Il sait inspecter le depot, modifier, lancer des commandes
+              et verifier les resultats.
+            </p>
+          </div>
+          <div class="raison">
+            <div class="mini-titre">Wrapper simple</div>
+            <h3>Un script maison aurait ete plus limite</h3>
+            <p>
+              Moins d'acces au projet, moins d'autonomie,
+              et plus de logique a recoder nous-memes.
+            </p>
+          </div>
+          <div class="raison">
+            <div class="mini-titre">Choix retenu</div>
+            <h3>Je voulais automatiser l'adaptation du depot</h3>
+            <p>
+              Pas seulement appeler un modele:
+              il fallait aussi lire, modifier, tester et tracer.
+            </p>
+          </div>
+        </div>
+        <div class="phrase-forte">
+          Codex CLI etait le bon niveau d'abstraction:
+          plus puissant qu'un simple wrapper, sans avoir a reinventer un agent nous-memes.
+        </div>
+      </main>
+      <footer>
+        <div class="compteur">Slide 2 / 4</div>
+      </footer>
+    </section>
+
+    <section class="slide">
+      <header>
+        <div>
+          <div class="eyebrow">Zoom specifique</div>
+          <h2>Comment on interagit avec cette brique<br>via le jeu maintenance</h2>
+        </div>
+      </header>
+      <main class="grille-2">
+        <div class="bloc">
+          <h3>Depuis MaintenanceMode</h3>
+          <div class="liste">
+            <div class="item">
+              <strong>Interface unique</strong>
+              Pas besoin de lancer les scripts a la main.
+            </div>
+            <div class="item">
+              <strong>Choix de la cible</strong>
+              L'operateur selectionne la migration a executer.
+            </div>
+            <div class="item">
+              <strong>Journal temps reel</strong>
+              On voit l'avancement sans quitter le jeu.
+            </div>
+          </div>
+        </div>
+        <div class="bloc">
+          <h3>Apercu</h3>
+          <div class="apercu-maintenance">
+            <img src="../assets/images/maintenance_mode_borne.png" alt="Capture du jeu MaintenanceMode avec la cible de migration et le journal temps reel">
+            <div class="legende-image">Selection d'une cible de migration et suivi du journal en temps reel.</div>
+          </div>
+        </div>
+      </main>
+      <footer>
+        <div class="compteur">Slide 3 / 4</div>
+      </footer>
+    </section>
+
+    <section class="slide">
+      <header>
+        <div>
+          <div class="eyebrow">Insertion dans le workflow</div>
+          <h2>Ou cette brique intervient<br>et ce qu'elle change</h2>
+        </div>
+      </header>
+      <main class="grille-2">
+        <div class="bloc">
+          <h3>Place de <code>preparer-ia</code></h3>
+          <div class="frise">
+            <div class="etape">
+              <div class="numero">1</div>
+              <h4>lister-cibles</h4>
+              <p>Voir les versions disponibles.</p>
+            </div>
+            <div class="etape">
+              <div class="numero">2</div>
+              <h4>appliquer</h4>
+              <p>Faire la migration technique.</p>
+            </div>
+            <div class="etape">
+              <div class="numero">3</div>
+              <h4>preparer-ia</h4>
+              <p>Codex CLI + Ollama adaptent le depot.</p>
+            </div>
+            <div class="etape">
+              <div class="numero">4</div>
+              <h4>qualite</h4>
+              <p>Relancer toutes les verifications.</p>
+            </div>
+            <div class="etape">
+              <div class="numero">5</div>
+              <h4>proposer-pr</h4>
+              <p>Seulement si tout est coherent.</p>
+            </div>
+          </div>
+        </div>
+        <div class="bloc">
+          <h3>Ce que cela apporte</h3>
+          <div class="liste">
+            <div class="item">
+              <strong>Plus d'ambition</strong>
+              L'automatisation va jusqu'a l'adaptation du depot.
+            </div>
+            <div class="item">
+              <strong>Plus de traçabilite</strong>
+              Ce que fait l'IA reste lisible et rejouable.
+            </div>
+            <div class="item">
+              <strong>Plus de controle</strong>
+              La qualite et la PR gardent la main a la fin.
+            </div>
+          </div>
+          <div class="phrase-forte">
+            Conclusion :
+            <code>Codex CLI + Ollama</code> n'est pas un gadget.
+            C'est ce qui m'a permis de pousser l'automatisation jusqu'au coeur du depot.
+          </div>
+        </div>
+      </main>
+      <footer>
+        <div class="compteur">Slide 4 / 4</div>
+      </footer>
+    </section>
+  </div>
+
+  <div class="chrome">
+    <div class="barre"><div id="progression"></div></div>
+    <div class="actions">
+      <button type="button" data-nav="prev">←</button>
+      <button type="button" data-nav="next">→</button>
+      <span>F : plein ecran</span>
+    </div>
+  </div>
+
+  <script>
+    const slides = Array.from(document.querySelectorAll(".slide"));
+    const progression = document.getElementById("progression");
+    let index = 0;
+
+    function afficher(cible) {
+      index = (cible + slides.length) % slides.length;
+      slides.forEach((slide, i) => {
+        slide.classList.toggle("active", i === index);
+      });
+      progression.style.width = (((index + 1) / slides.length) * 100) + "%";
+      window.location.hash = "slide-" + (index + 1);
+    }
+
+    function suivant() {
+      afficher(index + 1);
+    }
+
+    function precedent() {
+      afficher(index - 1);
+    }
+
+    document.querySelectorAll("[data-nav='next']").forEach((bouton) => {
+      bouton.addEventListener("click", suivant);
+    });
+
+    document.querySelectorAll("[data-nav='prev']").forEach((bouton) => {
+      bouton.addEventListener("click", precedent);
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (["ArrowRight", "PageDown", " "].includes(event.key)) {
+        event.preventDefault();
+        suivant();
+      }
+      if (["ArrowLeft", "PageUp"].includes(event.key)) {
+        event.preventDefault();
+        precedent();
+      }
+      if (event.key.toLowerCase() === "f") {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+    });
+
+    afficher(0);
+  </script>
+</body>
+</html>
