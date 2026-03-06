@@ -63,6 +63,8 @@ gh --version
 
 L etape `preparer-ia` utilise `codex exec` avec un provider Ollama et le modele
 configure dans `config/assistant_ia_migration.json` (par defaut `qwen3:8b`).
+La meme configuration force aussi `codex.effort_raisonnement=high` pour garder
+le raisonnement explicite cote Codex CLI.
 Le bootstrap installe `codex` automatiquement via `npm`.
 Si la distribution expose un Node.js trop ancien pour Codex (cas typique Debian 11),
 le bootstrap prepare d abord Node.js 22.x via le depot officiel NodeSource, puis

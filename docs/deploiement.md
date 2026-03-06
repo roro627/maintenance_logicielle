@@ -56,7 +56,7 @@ python scripts/migration/workflow_migration.py proposer-pr --cible java17
 
 Contraintes:
 
-- `preparer-ia` genere un brief Markdown/JSON, lance `codex exec --json --oss --local-provider ollama` via `CODEX_OSS_BASE_URL` vers le serveur Ollama configure puis stocke une reponse Markdown et une trace JSONL.
+- `preparer-ia` genere un brief Markdown/JSON, lance `codex exec --json --oss --local-provider ollama -c model_reasoning_effort="high"` via `CODEX_OSS_BASE_URL` vers le serveur Ollama configure puis stocke une reponse Markdown et une trace JSONL.
 - le comportement IA est versionne dans `config/assistant_ia_migration.json` et `config/prompt_migration_ia.md`.
 - `proposer-pr` pousse la branche courante puis appelle `gh pr create`.
 - `qualite` peut etre relancee sur le commit courant apres revision locale; l etat de session est alors resynchronise avant `proposer-pr`.

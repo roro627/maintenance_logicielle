@@ -4,6 +4,7 @@
     "modele": "qwen3:8b",
     "fournisseur_local": "ollama",
     "utiliser_provider_oss": true,
+    "effort_raisonnement": "high",
     "activer_recherche_web": true,
     "sortie_json": true,
     "couleur": "never",

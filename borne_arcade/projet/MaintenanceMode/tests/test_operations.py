@@ -577,6 +577,7 @@ class TestOperationsMaintenance(unittest.TestCase):
                 "modele": "qwen3:8b",
                 "fournisseur_local": "ollama",
                 "utiliser_provider_oss": True,
+                "effort_raisonnement": "high",
                 "activer_recherche_web": True,
                 "sortie_json": True,
                 "couleur": "never",
@@ -628,6 +629,7 @@ class TestOperationsMaintenance(unittest.TestCase):
             self.assertIn("-m", commande)
             self.assertIn("qwen3:8b", commande)
             self.assertIn("--dangerously-bypass-approvals-and-sandbox", commande)
+            self.assertIn("model_reasoning_effort=\"high\"", commande)
             self.assertNotIn("-a", commande)
             self.assertIsNotNone(entree_texte)
             assert entree_texte is not None

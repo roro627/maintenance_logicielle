@@ -141,6 +141,7 @@ CONFIGURATION_ASSISTANT_IA_PAR_DEFAUT = {
         "modele": "qwen3:8b",
         "fournisseur_local": "ollama",
         "utiliser_provider_oss": True,
+        "effort_raisonnement": "high",
         "activer_recherche_web": True,
         "sortie_json": True,
         "couleur": "never",
@@ -1701,6 +1702,27 @@ def construire_surcharges_codex_context7(configuration_assistant: Dict[str, obje
     ]
 
 
+def construire_surcharges_codex_raisonnement(configuration_assistant: Dict[str, object]) -> List[str]:
+    """Construit les surcharges `-c` de raisonnement pour Codex CLI.
+
+    Args:
+        configuration_assistant: Configuration de l assistant IA.
+
+    Returns:
+        Liste des surcharges de raisonnement supportees par Codex CLI.
+    """
+
+    configuration_codex = configuration_assistant.get("codex", {})
+    if not isinstance(configuration_codex, dict):
+        return []
+
+    effort_raisonnement = str(configuration_codex.get("effort_raisonnement", "")).strip().lower()
+    if not effort_raisonnement:
+        return []
+
+    return [f"model_reasoning_effort={json.dumps(effort_raisonnement)}"]
+
+
 def normaliser_base_url_codex_oss(base_url: str) -> str:
     """Normalise l URL d un serveur OSS compatible Codex.
 
@@ -1797,6 +1819,9 @@ def construire_commande_codex_migration(
     commande.extend(["-C", str(racine_projet), "-o", str(chemin_reponse_ia)])
     if configuration_codex.get("ignorer_verification_git", False):
         commande.append("--skip-git-repo-check")
+
+    for surcharge in construire_surcharges_codex_raisonnement(configuration_assistant):
+        commande.extend(["-c", surcharge])
 
     for surcharge in construire_surcharges_codex_context7(configuration_assistant):
         commande.extend(["-c", surcharge])

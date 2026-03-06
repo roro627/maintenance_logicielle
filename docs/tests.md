@@ -77,7 +77,8 @@ TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 b
   retrait des anciennes options 10/11 du catalogue maintenance,
   capture des exceptions inattendues, persistence de session migration,
   execution IA `Codex/Ollama` avec brief Markdown+JSON, reponse Markdown, trace JSONL,
-  rapport qualite migration et gardes avant `proposer-pr`.
+  rapport qualite migration, gardes avant `proposer-pr`
+  et presence de la surcharge `model_reasoning_effort="high"` dans la commande Codex generee.
 - logique d interface maintenance (`borne_arcade/projet/MaintenanceMode/tests/test_interface.py`):
   defilement vertical/horizontal du journal, auto-scroll, bornage de l historique, extraction de segment horizontal,
   focus combobox cible, preservation de la cible selectionnee apres rechargement,

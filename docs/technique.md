@@ -73,10 +73,11 @@ qualite, configuration et contraintes MG2D.
   `logs/rapport_qualite_migration_<cible>_<timestamp>.json` fait foi avant `proposer-pr`.
 - Assistant IA migration:
   `config/assistant_ia_migration.json` pilote `Codex CLI + Ollama + Context7`;
+  `codex.effort_raisonnement=high` y force explicitement le raisonnement cote Codex CLI;
   `ollama.base_url` y pointe vers le serveur Ollama distant et est projete en `CODEX_OSS_BASE_URL` pour Codex;
   le prompt versionne vit dans `config/prompt_migration_ia.md`;
   l execution produit un brief Markdown/JSON, une reponse Markdown et une trace JSONL temps reel;
-  la commande CLI supportee repose sur `codex exec --json --oss --local-provider ollama`.
+  la commande CLI supportee repose sur `codex exec --json --oss --local-provider ollama -c model_reasoning_effort="high"`.
 - Diagnostic maintenance durci: verification explicite des pre-requis borne et gestion robuste des sorties vides/commandes absentes.
 - Operations git maintenance durcies: `git pull` et `retour commit precedent` verifient d abord la presence de git, puis retournent une erreur actionnable.
 - Catalogue maintenance recentre: les anciennes options 10/11 ne sont plus exposees dans l interface; le panneau operations reste focalise sur diagnostic, git, pipeline et migration cible.
