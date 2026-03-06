@@ -25,8 +25,8 @@ You have access to external tools and should use them when it improves correctne
 8. **No magic numbers**: avoid scattering hard-coded constants; name and centralize them in configuration files or constants classes.
 9. **Centralize configuration**: behavior knobs must live in configuration files (`bouton.txt`, `description.txt`, etc.).
 10. **Anti-regression**: when fixing a bug, add or update a test that would have caught it.
-11. **Messages d erreur clairs**: all error messages shown to users/operators must be clear, understandable, and actionable (cause + concrete next step).
-12. **CI/CD vert en fin de run**: at the end of every user request/change, CI/CD must be green. Validate with:
+11. **Clear error messages**: all error messages shown to users/operators must be clear, understandable, and actionable (cause + concrete next step).
+12. **CI/CD green at the end of each run**: at the end of every user request/change, CI/CD must be green. Validate with:
 
 - `~/.local/bin/act -W .github/workflows/qualite.yml -j verification --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:act-latest`
 - `~/.local/bin/act -W .github/workflows/verification_reelle.yml -j verification_reelle_debian11 --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:act-latest`
