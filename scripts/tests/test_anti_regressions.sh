@@ -294,6 +294,54 @@ verifier_resolution_jdk_et_diagnostic_love() {
 }
 
 #######################################
+# Verifie que les appels apt critiques
+# gerent les erreurs reseau transitoires
+# et que le workflow Debian 11 ne tourne
+# plus en cron quotidien.
+# Arguments:
+#   aucun
+# Retour:
+#   0
+#######################################
+verifier_resilience_apt_et_workflow_reel() {
+  local installateur="${RACINE_PROJET}/scripts/install/installer_borne.sh"
+  local workflow_reel="${RACINE_PROJET}/.github/workflows/verification_reelle.yml"
+  local workflow_qualite="${RACINE_PROJET}/.github/workflows/qualite.yml"
+
+  grep -Fq "APT_NOMBRE_TENTATIVES_MAX" "${installateur}" \
+    || arreter_sur_erreur "Constante de tentatives apt absente de installer_borne.sh"
+  grep -Fq "obtenir_arguments_resilience_apt()" "${installateur}" \
+    || arreter_sur_erreur "Helper des options de resilience apt absent de installer_borne.sh"
+  grep -Fq "executer_commande_apt_avec_reessais()" "${installateur}" \
+    || arreter_sur_erreur "Helper de reessais apt absent de installer_borne.sh"
+  grep -Fq "Acquire::Retries=\${APT_NOMBRE_REESSAIS_TELECHARGEMENT}" "${installateur}" \
+    || arreter_sur_erreur "Reessais natifs apt absents de installer_borne.sh"
+  grep -Fq "install -y --fix-missing" "${installateur}" \
+    || arreter_sur_erreur "Installation apt ne force pas --fix-missing dans installer_borne.sh"
+  grep -Fq "reessayer_apt()" "${workflow_reel}" \
+    || arreter_sur_erreur "Workflow verification_reelle ne protege pas l apt initial par reessais"
+  grep -Fq "actions/checkout@v5" "${workflow_reel}" \
+    || arreter_sur_erreur "Workflow verification_reelle n utilise pas actions/checkout@v5"
+  grep -Fq "push:" "${workflow_reel}" \
+    || arreter_sur_erreur "Workflow verification_reelle n est pas declenche au push"
+
+  if grep -Fq "schedule:" "${workflow_reel}"; then
+    arreter_sur_erreur "Workflow verification_reelle contient encore un cron quotidien"
+  fi
+
+  if grep -Fq "workflow_dispatch:" "${workflow_reel}"; then
+    arreter_sur_erreur "Workflow verification_reelle doit rester limite aux commits"
+  fi
+
+  grep -Fq "actions/checkout@v5" "${workflow_qualite}" \
+    || arreter_sur_erreur "Workflow qualite n utilise pas actions/checkout@v5"
+  grep -Fq "actions/setup-java@v5" "${workflow_qualite}" \
+    || arreter_sur_erreur "Workflow qualite n utilise pas actions/setup-java@v5"
+  grep -Fq "actions/setup-python@v6" "${workflow_qualite}" \
+    || arreter_sur_erreur "Workflow qualite n utilise pas actions/setup-python@v6"
+}
+
+#######################################
 # Verifie que l installation Docker
 # reste compatible avec Raspberry Pi OS
 # et conserve un fallback distribution.
@@ -413,6 +461,7 @@ main() {
   verifier_invalidation_cache_mg2d_trop_recent
   verifier_detection_npm_nodesource
   verifier_resolution_jdk_et_diagnostic_love
+  verifier_resilience_apt_et_workflow_reel
   verifier_fallback_docker_raspberry_pi
   verifier_runtime_pygame_et_piwheels
   verifier_execution_shell_portable

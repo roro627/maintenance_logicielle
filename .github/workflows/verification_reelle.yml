@@ -1,9 +1,9 @@
 name: Verification Reelle Debian 11
 
 on:
-  workflow_dispatch:
-  schedule:
-    - cron: "30 2 * * *"
+  push:
+    branches:
+      - "**"
 
 jobs:
   verification_reelle_debian11:
@@ -15,14 +15,47 @@ jobs:
     env:
       URL_DEPOT_OFFICIEL: https://github.com/roro627/maintenance_logicielle.git
       DOSSIER_TRAVAIL: /opt/maintenance_logicielle
+      DEBIAN_FRONTEND: noninteractive
     steps:
       - name: Installer outils de base Debian 11 minimal
         run: |
-          apt-get update
-          apt-get install -y --no-install-recommends ca-certificates git sudo bash
+          nombre_tentatives_max=3
+          delai_reessai_secondes=5
+
+          reessayer_apt() {
+            local description="$1"
+            shift
+            local tentative=1
+            local code_retour=0
+
+            while [ "${tentative}" -le "${nombre_tentatives_max}" ]; do
+              echo "INFO: ${description} (tentative ${tentative}/${nombre_tentatives_max})"
+              if "$@"; then
+                return 0
+              fi
+              code_retour=$?
+
+              if [ "${tentative}" -ge "${nombre_tentatives_max}" ]; then
+                return "${code_retour}"
+              fi
+
+              echo "ATTENTION: ${description} en echec (code=${code_retour}), nouvelle tentative dans ${delai_reessai_secondes}s."
+              sleep "${delai_reessai_secondes}"
+              tentative=$((tentative + 1))
+            done
+
+            return "${code_retour}"
+          }
+
+          reessayer_apt \
+            "Mise a jour index apt minimal Debian 11" \
+            apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update
+          reessayer_apt \
+            "Installation outils de base Debian 11 minimal" \
+            apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 install -y --no-install-recommends ca-certificates git sudo bash
 
       - name: Recuperer workspace local (support act)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Cloner le depot depuis GitHub (scenario reel)
         run: |

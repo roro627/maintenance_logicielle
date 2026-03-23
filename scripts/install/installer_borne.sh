@@ -10,6 +10,10 @@ PRIVILEGES_SYSTEME_ACTIFS=0
 INSTALLATION_SYSTEME_OPTIONNEL="${INSTALLATION_SYSTEME_OPTIONNEL:-0}"
 DOSSIER_INSTALLATION_ACT_SYSTEME="${DOSSIER_INSTALLATION_ACT_SYSTEME:-/usr/local/bin}"
 GROUPE_DOCKER_UTILISATEUR_AJOUTE=0
+APT_NOMBRE_TENTATIVES_MAX="${APT_NOMBRE_TENTATIVES_MAX:-3}"
+APT_NOMBRE_REESSAIS_TELECHARGEMENT="${APT_NOMBRE_REESSAIS_TELECHARGEMENT:-3}"
+APT_DELAI_REESSAI_SECONDES="${APT_DELAI_REESSAI_SECONDES:-5}"
+APT_TIMEOUT_RESEAU_SECONDES="${APT_TIMEOUT_RESEAU_SECONDES:-30}"
 
 #######################################
 # Initialise la strategie de privileges
@@ -252,6 +256,61 @@ dependance_systeme_disponible() {
 #######################################
 obtenir_prefixe_elevation_apt() {
   obtenir_prefixe_elevation_systeme
+}
+
+#######################################
+# Retourne les options apt de
+# resilience reseau communes.
+# Arguments:
+#   aucun
+# Retour:
+#   ecrit un argument par ligne
+#######################################
+obtenir_arguments_resilience_apt() {
+  printf '%s\n' "-o"
+  printf '%s\n' "Acquire::Retries=${APT_NOMBRE_REESSAIS_TELECHARGEMENT}"
+  printf '%s\n' "-o"
+  printf '%s\n' "Acquire::http::Timeout=${APT_TIMEOUT_RESEAU_SECONDES}"
+  printf '%s\n' "-o"
+  printf '%s\n' "Acquire::https::Timeout=${APT_TIMEOUT_RESEAU_SECONDES}"
+}
+
+#######################################
+# Execute une commande apt avec
+# plusieurs tentatives pour absorber
+# les erreurs reseau transitoires.
+# Arguments:
+#   $1: description pour le journal
+#   $2...: commande apt complete
+# Retour:
+#   0 si la commande reussit
+#######################################
+executer_commande_apt_avec_reessais() {
+  local description="$1"
+  shift
+  local -a commande_apt=("$@")
+  local tentative=1
+  local code_retour=0
+
+  while (( tentative <= APT_NOMBRE_TENTATIVES_MAX )); do
+    journaliser "${description} (tentative ${tentative}/${APT_NOMBRE_TENTATIVES_MAX})"
+    if "${commande_apt[@]}"; then
+      return 0
+    else
+      code_retour=$?
+    fi
+
+    if (( tentative == APT_NOMBRE_TENTATIVES_MAX )); then
+      journaliser "${description}: echec final apres ${APT_NOMBRE_TENTATIVES_MAX} tentatives (code=${code_retour})."
+      return "${code_retour}"
+    fi
+
+    journaliser "${description}: echec transitoire detecte (code=${code_retour}), nouvelle tentative dans ${APT_DELAI_REESSAI_SECONDES}s."
+    sleep "${APT_DELAI_REESSAI_SECONDES}"
+    tentative=$((tentative + 1))
+  done
+
+  return "${code_retour}"
 }
 
 #######################################
@@ -616,6 +675,7 @@ love_postinstall_casse_detecte() {
 #######################################
 appliquer_contournement_postinstall_love() {
   local -a commande_apt=("$@")
+  local -a arguments_resilience_apt=()
   local fichier_postinst_love="/var/lib/dpkg/info/love.postinst"
   local fichier_manquant_love=""
 
@@ -641,7 +701,10 @@ appliquer_contournement_postinstall_love() {
     : > "${fichier_manquant_love}"
   fi
 
-  if "${commande_apt[@]}" -f install -y; then
+  mapfile -t arguments_resilience_apt < <(obtenir_arguments_resilience_apt)
+  if executer_commande_apt_avec_reessais \
+    "Correction de l etat dpkg apres contournement love" \
+    "${commande_apt[@]}" "${arguments_resilience_apt[@]}" -f install -y; then
     return 0
   fi
 
@@ -671,6 +734,7 @@ installer_dependances_systeme() {
   local paquets_apt_a_installer=()
   local prefixe_elevation=""
   local -a commande_apt=()
+  local -a arguments_resilience_apt=()
   local dependance=""
   local paquet_resolu=""
   dependances_obligatoires=(ca-certificates git curl nodejs npm java-jdk python3 python3-venv python3-pip python3-pygame checkstyle pylint shellcheck xdotool lua5.4 libsndfile1 love)
@@ -703,8 +767,13 @@ installer_dependances_systeme() {
     commande_apt=(apt-get)
   fi
 
-  journaliser "Mise a jour index apt"
-  "${commande_apt[@]}" update
+  mapfile -t arguments_resilience_apt < <(obtenir_arguments_resilience_apt)
+  executer_commande_apt_avec_reessais \
+    "Mise a jour index apt" \
+    "${commande_apt[@]}" "${arguments_resilience_apt[@]}" update \
+    || arreter_sur_erreur \
+      "Impossible de mettre a jour l index apt avant installation systeme." \
+      "Verifiez la connectivite apt, les depots actifs et les droits root, puis relancez scripts/install/installer_borne.sh."
 
   for dependance in "${dependances_obligatoires_manquantes[@]}"; do
     paquet_resolu="$(resoudre_paquet_apt_dependance "${dependance}")" \
@@ -722,7 +791,9 @@ installer_dependances_systeme() {
   done
 
   journaliser "Installation dependances systeme obligatoires: ${paquets_apt_a_installer[*]}"
-  if ! "${commande_apt[@]}" install -y "${paquets_apt_a_installer[@]}"; then
+  if ! executer_commande_apt_avec_reessais \
+    "Installation dependances systeme obligatoires" \
+    "${commande_apt[@]}" "${arguments_resilience_apt[@]}" install -y --fix-missing "${paquets_apt_a_installer[@]}"; then
     journaliser "Echec installation apt detecte: verification d un eventuel post-install love casse."
     if love_postinstall_casse_detecte && appliquer_contournement_postinstall_love "${commande_apt[@]}"; then
       journaliser "Contournement post-install love applique avec succes."
@@ -751,6 +822,7 @@ installer_dependances_systeme() {
 #######################################
 supprimer_paquets_docker_conflits() {
   local -a commande_apt=("$@")
+  local -a arguments_resilience_apt=()
   local paquets_conflits=(
     docker.io
     docker-cli
@@ -779,7 +851,10 @@ supprimer_paquets_docker_conflits() {
   fi
 
   journaliser "Suppression paquets Docker en conflit: ${paquets_presents[*]}"
-  "${commande_apt[@]}" remove -y "${paquets_presents[@]}"
+  mapfile -t arguments_resilience_apt < <(obtenir_arguments_resilience_apt)
+  executer_commande_apt_avec_reessais \
+    "Suppression paquets Docker en conflit" \
+    "${commande_apt[@]}" "${arguments_resilience_apt[@]}" remove -y "${paquets_presents[@]}"
 }
 
 #######################################
@@ -792,6 +867,7 @@ supprimer_paquets_docker_conflits() {
 #######################################
 installer_docker_engine_paquets_distribution() {
   local -a commande_apt=("$@")
+  local -a arguments_resilience_apt=()
   local paquets_docker=(docker.io)
 
   if paquet_apt_candidat_disponible docker-cli; then
@@ -803,8 +879,13 @@ installer_docker_engine_paquets_distribution() {
   fi
 
   journaliser "Fallback Docker: installation via paquets distribution (${paquets_docker[*]})"
-  "${commande_apt[@]}" update
-  "${commande_apt[@]}" install -y "${paquets_docker[@]}"
+  mapfile -t arguments_resilience_apt < <(obtenir_arguments_resilience_apt)
+  executer_commande_apt_avec_reessais \
+    "Mise a jour index apt pour le fallback Docker" \
+    "${commande_apt[@]}" "${arguments_resilience_apt[@]}" update \
+    && executer_commande_apt_avec_reessais \
+      "Installation Docker via paquets distribution" \
+      "${commande_apt[@]}" "${arguments_resilience_apt[@]}" install -y "${paquets_docker[@]}"
 }
 
 #######################################
@@ -821,6 +902,7 @@ installer_docker_engine() {
   local codename_distribution=""
   local architecture_dpkg=""
   local -a commande_apt=()
+  local -a arguments_resilience_apt=()
   local -a prefixe_systeme=()
   local installation_officielle_reussie=0
 
@@ -857,18 +939,27 @@ installer_docker_engine() {
   fi
 
   supprimer_paquets_docker_conflits "${commande_apt[@]}"
+  mapfile -t arguments_resilience_apt < <(obtenir_arguments_resilience_apt)
 
   journaliser "Preparation depot officiel Docker (${distribution_docker} ${codename_distribution})"
-  if "${commande_apt[@]}" update \
-    && "${commande_apt[@]}" install -y ca-certificates curl \
+  if executer_commande_apt_avec_reessais \
+      "Mise a jour index apt pour Docker" \
+      "${commande_apt[@]}" "${arguments_resilience_apt[@]}" update \
+    && executer_commande_apt_avec_reessais \
+      "Installation prerequis apt Docker" \
+      "${commande_apt[@]}" "${arguments_resilience_apt[@]}" install -y ca-certificates curl \
     && "${prefixe_systeme[@]}" install -m 0755 -d /etc/apt/keyrings \
     && "${prefixe_systeme[@]}" curl -fsSL "https://download.docker.com/linux/${distribution_docker}/gpg" -o /etc/apt/keyrings/docker.asc \
     && "${prefixe_systeme[@]}" chmod a+r /etc/apt/keyrings/docker.asc \
     && { printf 'deb [arch=%s signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/%s %s stable\n' \
       "${architecture_dpkg}" "${distribution_docker}" "${codename_distribution}" \
       | "${prefixe_systeme[@]}" tee /etc/apt/sources.list.d/docker.list >/dev/null; } \
-    && "${commande_apt[@]}" update \
-    && "${commande_apt[@]}" install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin; then
+    && executer_commande_apt_avec_reessais \
+      "Mise a jour index apt apres ajout du depot Docker" \
+      "${commande_apt[@]}" "${arguments_resilience_apt[@]}" update \
+    && executer_commande_apt_avec_reessais \
+      "Installation Docker Engine officiel" \
+      "${commande_apt[@]}" "${arguments_resilience_apt[@]}" install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin; then
     installation_officielle_reussie=1
   fi
 
@@ -1087,6 +1178,7 @@ garantir_nodejs_compatible_codex() {
   local version_node=""
   local prefixe_elevation=""
   local -a commande_apt=()
+  local -a arguments_resilience_apt=()
   local -a prefixe_systeme=()
   local script_setup_nodesource=""
   local url_setup_nodesource="https://deb.nodesource.com/setup_${VERSION_NODE_SOURCE_MAJEURE}.x"
@@ -1126,9 +1218,20 @@ garantir_nodejs_compatible_codex() {
     commande_apt=(apt-get)
   fi
 
+  mapfile -t arguments_resilience_apt < <(obtenir_arguments_resilience_apt)
   journaliser "Installation Node.js ${VERSION_NODE_SOURCE_MAJEURE}.x via NodeSource pour compatibilite Codex"
-  "${commande_apt[@]}" update
-  "${commande_apt[@]}" install -y ca-certificates curl gnupg
+  executer_commande_apt_avec_reessais \
+    "Mise a jour index apt pour NodeSource" \
+    "${commande_apt[@]}" "${arguments_resilience_apt[@]}" update \
+    || arreter_sur_erreur \
+      "Impossible de mettre a jour l index apt avant preparation NodeSource." \
+      "Verifiez la connectivite apt, les depots actifs et les droits root, puis relancez scripts/install/installer_borne.sh."
+  executer_commande_apt_avec_reessais \
+    "Installation prerequis apt NodeSource" \
+    "${commande_apt[@]}" "${arguments_resilience_apt[@]}" install -y ca-certificates curl gnupg \
+    || arreter_sur_erreur \
+      "Impossible d installer les prerequis systeme NodeSource." \
+      "Verifiez la connectivite apt, les depots actifs et les droits root, puis relancez scripts/install/installer_borne.sh."
 
   script_setup_nodesource="$(mktemp)"
   curl -fsSL "${url_setup_nodesource}" -o "${script_setup_nodesource}" \
@@ -1144,7 +1247,9 @@ garantir_nodejs_compatible_codex() {
   fi
   rm -f "${script_setup_nodesource}"
 
-  "${commande_apt[@]}" install -y nodejs \
+  executer_commande_apt_avec_reessais \
+    "Installation Node.js ${VERSION_NODE_SOURCE_MAJEURE}.x" \
+    "${commande_apt[@]}" "${arguments_resilience_apt[@]}" install -y nodejs \
     || arreter_sur_erreur \
       "Impossible d installer Node.js ${VERSION_NODE_SOURCE_MAJEURE}.x depuis NodeSource." \
       "Verifiez le depot NodeSource puis relancez scripts/install/installer_borne.sh."

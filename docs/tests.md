@@ -31,6 +31,8 @@ TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 b
 ~/.local/bin/act -W .github/workflows/verification_reelle.yml -j verification_reelle_debian11 --container-architecture linux/amd64 -P ubuntu-latest=catthehacker/ubuntu:act-latest
 ```
 
+Le workflow GitHub reel est declenche sur chaque `push` et n execute plus de cron quotidien.
+
 ## Couverture
 
 ### Contrat global vs test cible
@@ -121,6 +123,9 @@ TEST_INSTALLATION_SIMULATION=1 TEST_DEPLOIEMENT_SIMULATION=1 BORNE_MODE_TEST=1 b
   garde `codex` inactive en mode test et mise a niveau automatique Node.js via NodeSource si la distribution est trop ancienne,
 - bootstrap robuste pour Raspberry Pi OS:
   mapping `raspbian` vers le depot Docker Debian quand necessaire, fallback `docker.io`/`docker-cli` et fallback `piwheels` pour les installations Python lourdes,
+- bootstrap robuste face aux erreurs reseau `apt`:
+  helper de reessais, `Acquire::Retries`, timeouts HTTP(S), `--fix-missing` sur l installation principale
+  et garde anti-regression sur le workflow reel Debian 11,
 - compilations Java deterministes:
   toutes les commandes shell `javac` passent par un encodage source explicite `UTF-8`,
   ce qui evite les echecs `unmappable character ... for encoding US-ASCII` dans le workflow reel Debian 11 minimal,
@@ -170,6 +175,7 @@ Scripts principaux:
 - Si `CursedWare` echoue sans `lua`, corriger d abord le validateur portable `scripts/tests/test_cursedware_minijeux.py`; si `lua` est disponible, verifier aussi `borne_arcade/projet/CursedWare/tests/test_contrat_minijeux.lua`.
 - Si le workflow migration refuse `proposer-pr`, verifier d abord `.cache/maintenance_logicielle/etat_migration.json` puis le dernier `logs/rapport_qualite_migration_*.json`.
 - Si le workflow reel Debian 11 echoue en compilation Java avec `US-ASCII`, verifier d abord `ENCODAGE_SOURCES_JAVA` dans `borne_arcade/config/borne.env` et l usage exclusif du helper `executer_javac`.
+- Si le workflow reel Debian 11 echoue sur `apt` avec `Connection reset by peer` ou `Failed to fetch`, verifier d abord si l echec persiste au-dela des reessais automatiques du bootstrap; si oui, controler les miroirs Debian et la connectivite reseau du runner.
 - Consulter `logs/` pour les pipelines post-pull/bootstrap.
 - Corriger la cause puis relancer `bash ./scripts/tests/lancer_suite.sh`.
 - En cas d echec CI locale, corriger puis relancer `act` jusqu a statut vert.

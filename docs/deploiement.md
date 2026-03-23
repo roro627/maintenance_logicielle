@@ -74,10 +74,13 @@ Contraintes:
 
 Pipeline dedie: `.github/workflows/verification_reelle.yml`
 
+- declenchement automatique sur chaque commit (`push`), sans cron quotidien,
 - environnement conteneur Debian 11 minimal,
+- installation `apt` initiale du job protegee par plusieurs tentatives et timeouts reseau,
 - limite memoire `2g`,
 - clonage du depot depuis GitHub (`https://github.com/roro627/maintenance_logicielle`),
 - execution complete sans variables de simulation.
+- actions GitHub officielles alignees sur des versions Node 24 (`actions/checkout@v5`).
 
 Execution locale equivalente via `act`:
 

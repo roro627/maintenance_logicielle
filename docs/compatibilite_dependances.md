@@ -63,6 +63,7 @@ pour Raspberry Pi OS et la borne arcade.
 - Le script `scripts/tests/test_versions_compatibilite.sh` valide Java, Python, pip, pytest, mkdocs, pygame,
   puis Lua et LÖVE (obligatoires des qu un jeu Lua est present).
 - L installation auto verifie et installe les paquets systeme manquants (dont `libsndfile1`) via `scripts/install/installer_borne.sh`.
+- Les commandes `apt` critiques du bootstrap appliquent maintenant `Acquire::Retries`, des timeouts reseau et plusieurs tentatives explicites; l installation principale ajoute aussi `--fix-missing` pour limiter les faux negatifs sur Debian 11 minimal.
 - Pour les dependances Python lourdes sur Raspberry Pi OS, l installateur ajoute
   `https://www.piwheels.org/simple` comme index pip supplementaire de secours
   afin d eviter autant que possible les compilations locales de `pygame`,
@@ -92,6 +93,7 @@ pour Raspberry Pi OS et la borne arcade.
 - Si `pygame` importe mal sur une image minimale malgre la venv: verifier que `python3-pygame` est bien installe, puis relancer `sudo bash ./bootstrap_borne.sh`.
 - Si librosa manque: relancer `./scripts/install/installer_borne.sh` ou installer via `./.venv/bin/pip install -r borne_arcade/projet/PianoTile/requirements.txt`.
 - Si `love` echoue sur Debian 11 minimal: le bootstrap applique un contournement automatique uniquement si `dpkg` montre un `love` non configure, puis relance `apt -f install`.
+- Si `apt` coupe pendant un telechargement Debian 11 (`Connection reset by peer`, `Failed to fetch`): relancer `sudo bash ./bootstrap_borne.sh`; le bootstrap reessaie deja les commandes critiques avec `Acquire::Retries`, timeouts reseau et `--fix-missing` sur l installation principale.
 - Si `openjdk-17-jdk` est introuvable sur une distribution recente (ex: Raspberry Pi OS / Debian `trixie`): relancer `sudo bash ./bootstrap_borne.sh`; le bootstrap bascule automatiquement sur `default-jdk` puis verifie que Java 17 minimum est bien atteint.
 - Si Docker echoue sur Raspberry Pi OS 32 bits ou `trixie`: relancer `sudo bash ./bootstrap_borne.sh`; le bootstrap reessaie maintenant via le depot Docker Debian, puis via `docker.io`/`docker-cli` si le depot officiel n expose pas les paquets attendus.
 - Si `codex` echoue avec un message de version Node.js: relancer `sudo bash ./bootstrap_borne.sh` pour forcer l installation de Node.js 22.x via NodeSource.

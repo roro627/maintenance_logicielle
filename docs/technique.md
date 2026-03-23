@@ -86,6 +86,7 @@ qualite, configuration et contraintes MG2D.
 - Si Node.js est absent ou trop ancien pour Codex, l installateur prepare d abord Node.js 22.x via le depot officiel NodeSource.
 - Relance idempotente Debian 11/NodeSource: la detection des dependances systeme considere `node`/`npm` disponibles par la commande, ce qui evite de tenter un `apt install npm` conflictuel apres installation de `nodejs` via NodeSource.
 - Resolution JDK portable: l installateur traite Java comme une dependance logique `java-jdk`, retombe sur `default-jdk` quand `openjdk-17-jdk` a disparu des depots recents, puis valide quand meme un JDK >= 17 avant de continuer.
+- Resilience apt centralisee: `installer_borne.sh` regroupe les options reseau `apt` (`Acquire::Retries`, timeouts HTTP(S)) et un helper de reessais explicites pour `update`, `install` et `remove`; l installation principale passe aussi `--fix-missing` pour absorber les coupures miroir transitoires constatees sur Debian 11.
 - Docker Raspberry Pi OS durci: l installateur mappe `raspbian` vers le depot Docker Debian officiel pour rester compatible avec les trajectoires 32 bits/`trixie`, puis retombe sur `docker.io`/`docker-cli` si le depot officiel ne livre pas les paquets attendus.
 - En mode `BORNE_MODE_TEST=1`, l installation et la verification de Codex CLI sont ignorees pour garder les validations de simulation deterministes.
 - Preparation `act` integree au bootstrap sur machine locale: installation/reutilisation de Docker Engine, ajout de l utilisateur appelant au groupe `docker`, installation de `act` dans `/usr/local/bin`, lien `~/.local/bin/act`, puis verification `docker info` et `act -W .github/workflows -l`.
@@ -121,7 +122,8 @@ qualite, configuration et contraintes MG2D.
   reprennent desormais `BORNE_RESOLUTION_X/Y` et `BORNE_MODE_AFFICHAGE`
   pour rester dans `1280x1024` sans barre de titre ou en plein ecran.
 - CI/CD et tests automatisees via `.github/workflows/qualite.yml` et `bash ./scripts/tests/lancer_suite.sh`.
-- Pipeline reel ajoute: `.github/workflows/verification_reelle.yml` (Debian 11 minimal, 2 Go RAM, sans variables de simulation).
+- CI GitHub officielle alignee Node 24: `.github/workflows/qualite.yml` utilise `actions/checkout@v5`, `actions/setup-java@v5` et `actions/setup-python@v6`; `.github/workflows/verification_reelle.yml` utilise `actions/checkout@v5`.
+- Pipeline reel ajoute: `.github/workflows/verification_reelle.yml` (Debian 11 minimal, 2 Go RAM, sans variables de simulation, declenche au `push` uniquement, installation `apt` initiale protegee par reessais).
 - Garde anti-regression encodage Java: `scripts/tests/test_anti_regressions.sh` refuse toute invocation shell de `javac` hors helper centralise.
 - Cache MG2D durci: les classes compilees en cache sont maintenant revalidees contre la version majeure supportee par le `javac` courant, ce qui evite de reutiliser un cache genere avec une JDK plus recente que l environnement de test.
 - Garde anti-regression permissions: `scripts/tests/test_deploiement.sh` verifie maintenant que tous les wrappers/lanceurs `borne_arcade/**/*.sh` restent executables apres pipeline/normalisation.

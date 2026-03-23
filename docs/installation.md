@@ -16,6 +16,7 @@ sudo bash ./bootstrap_borne.sh
 Le script `bootstrap_borne.sh` enchaine:
 
 - installation systeme ciblee (paquet par paquet si manquant),
+- reessais automatiques sur les commandes `apt` critiques (`update`, `install`, `remove`) avec timeouts reseau et `--fix-missing` sur l installation principale, pour absorber les erreurs transitoires de miroir Debian observees en CI Debian 11,
 - installation de `Docker Engine` depuis le depot officiel si absent, avec mapping automatique Raspberry Pi OS -> depot Docker Debian quand `raspbian` n est plus adapte, puis fallback vers `docker.io`/`docker-cli` si le depot officiel echoue,
 - installation de `act` depuis la release officielle (`/usr/local/bin/act`) avec lien utilisateur `~/.local/bin/act`,
 - ajout de l utilisateur appelant au groupe `docker` pour executer `act` sans `sudo`,
@@ -171,6 +172,7 @@ Le journal bootstrap est ecrit dans `logs/bootstrap_borne_YYYYMMDD_HHMMSS.log`.
 - Emplacement recommande du depot: dossier utilisateur (ex: `~/git/maintenance_logicielle`),
   pas un dossier systeme ou verrouille.
 - Si `love` echoue sur Debian 11 minimal: le script applique automatiquement un contournement uniquement quand le paquet `love` est reellement casse en post-installation, puis corrige l etat `dpkg`.
+- Si `apt` echoue avec `Connection reset by peer`, `Failed to fetch` ou `Unable to fetch some archives`: relancer `sudo bash ./bootstrap_borne.sh`; le bootstrap reessaie maintenant automatiquement les commandes `apt` critiques avec timeouts reseau et `--fix-missing` sur l installation principale.
 - Si `apt` signale `Unable to locate package openjdk-17-jdk` sur Raspberry Pi OS / Debian `trixie`: relancer `sudo bash ./bootstrap_borne.sh`; le bootstrap choisit maintenant automatiquement `default-jdk` sur cette generation de distribution.
 - Si Docker echoue sur Raspberry Pi OS: le bootstrap bascule deja sur le depot Docker Debian, puis tente `docker.io`/`docker-cli` si le depot officiel echoue. Si l erreur persiste, verifier `docker version`, `docker info` et les depots apt actifs.
 - Si `pip install` est lent ou tente de compiler `pygame`/`numba` depuis les sources sur Raspberry Pi OS: verifier la connectivite vers `https://www.piwheels.org`; le bootstrap ajoute maintenant `piwheels` comme index supplementaire de secours.

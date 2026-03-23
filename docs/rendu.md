@@ -25,6 +25,7 @@ Documenter le bilan final des travaux avec une verification point par point de `
 17. Menu borne fiabilise: ordre alphabetique, selection initiale coherente et panneau descriptif aligne sur le jeu lance.
 18. Workflow reel Debian 11 fiabilise: compilations Java shell forcees en `UTF-8` via configuration centralisee et garde anti-regression contre les echecs de locale `US-ASCII`.
 19. Validation locale durcie: le cache MG2D est maintenant invalide automatiquement s il a ete compile avec une version Java plus recente que le `javac` disponible.
+20. CI Debian 11 stabilisee sur le reseau et les actions GitHub: reessais `apt` centralises, installation principale avec `--fix-missing`, workflow reel declenche au `push` uniquement et actions officielles migrees vers des versions Node 24.
 
 ## Conformite `consignes.md` (point par point)
 
